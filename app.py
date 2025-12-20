@@ -987,7 +987,7 @@ def build_prompt(mode, language, style_modifier, is_vip, input_type="image"):
 
 def process_and_save(inputs, mode, output_lang, style, is_vip, ui_text, input_type):
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
     
     loading_messages = ["AI is dreaming...", "Analyzing...", "Extracting magic...", "Polishing words..."]
 
@@ -1319,4 +1319,5 @@ st.markdown(f"""
     {get_text(t, 'footer_disclaimer')}<br>
     <span style="font-size: 0.8em; opacity: 0.6; font-family: monospace;">System Version: v2.5 (International Edition)</span>
 </div>
+
 """, unsafe_allow_html=True)
