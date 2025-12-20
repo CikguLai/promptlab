@@ -987,7 +987,7 @@ def build_prompt(mode, language, style_modifier, is_vip, input_type="image"):
 
 def process_and_save(inputs, mode, output_lang, style, is_vip, ui_text, input_type):
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     
     loading_messages = ["AI is dreaming...", "Analyzing...", "Extracting magic...", "Polishing words..."]
 
@@ -1321,4 +1321,5 @@ st.markdown(f"""
 </div>
 
 """, unsafe_allow_html=True)
+
 
