@@ -7,8 +7,9 @@
 import streamlit as st
 import time
 import base64
-import prompt_data as pd   # 导入数据仓库
-import prompt_logic as pl  # 导入逻辑引擎
+import pandas as pds     # 🛡️ 全局引入 pandas 并改名为 pds (防止冲突)
+import prompt_data as pd # 导入数据仓库 (pd 指代 Prompt Data)
+import prompt_logic as pl # 导入逻辑引擎
 
 # 1. 页面配置 (Page Config)
 # ------------------------------------------
@@ -16,7 +17,7 @@ st.set_page_config(
     page_title="PromptLab AI V7.3",
     page_icon="🧠",
     layout="wide",
-    initial_sidebar_state="collapsed" 
+    initial_sidebar_state="collapsed"
 )
 
 # 2. 样式注入 (CSS Injection)
@@ -89,7 +90,7 @@ def render_sidebar():
             st.caption("User Identity")
             st.info(f"**{role_badge}**\n\nEmail: {st.session_state.user_email}\nEngine: {engine_status}")
             
-            # 3. 语言切换 (Guest 3种, PRO 15种)
+            # 3. 语言切换
             avail_langs = list(pd.LANG_DICT.keys()) if is_pro else ["English", "简体中文", "Español"]
             st.session_state.lang = st.selectbox("🌐 Language", avail_langs, index=0 if "English" in avail_langs else 0)
             
@@ -101,7 +102,7 @@ def render_sidebar():
                     <div style="font-size:12px; font-weight:bold; color:#ff4b4b;">{get_ui('sticky_ad_title')}</div>
                     <div style="font-size:24px; font-weight:800; color:#333;">$12.90</div>
                     <div style="font-size:12px; text-decoration:line-through; color:grey;">$39.90</div>
-                    <a href="https://promptlab.lemonsqueezy.com/checkout" target="_blank" style="text-decoration:none;">
+                    <a href="https://cikgulai.lemonsqueezy.com/checkout/buy/6b49b11a-830a-46e3-a458-0d8f2d2b160c?discount=PROMPTLAB" target="_blank" style="text-decoration:none;">
                         <button style="background:#ff4b4b; color:white; border:none; width:100%; padding:8px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">
                             {get_ui('sticky_ad_btn')}
                         </button>
@@ -113,19 +114,19 @@ def render_sidebar():
             
             # 5. 智能工单
             with st.expander(get_ui('ticket_title')):
-                 ticket_type = st.selectbox("Category", [
+                ticket_type = st.selectbox("Category", [
                     "Bug / Error", 
                     "Billing Issue", 
                     "Feature Request", 
                     "Partnership / Sponsorship", 
                     "Others"
                 ])
-                # ====================
-
+                
+                # 🛠️ 修复点：确保这里缩进正确 (4个空格)
                 sub = st.text_input(get_ui('ticket_sub'))
                 msg = st.text_area(get_ui('ticket_msg'))
                 
-                # 实时拦截检查 (这段不要漏掉)
+                # 实时拦截检查
                 should_intercept, reply = pl.check_ticket_intercept(sub, msg)
                 if should_intercept:
                     st.warning(reply)
@@ -134,7 +135,6 @@ def render_sidebar():
                     if st.button(btn_txt):
                         if sub and msg:
                             st.success("✅ Ticket Sent!")
-                            # 这里可以接入 pl.send_telegram_alert (如有配置)
                         else:
                             st.error("Please fill all fields.")
             
@@ -208,74 +208,43 @@ if st.session_state.page == 1:
                     st.error("Invalid License Key")
 
     with col2:
-# ==========================================
-    # 3. 🆚 完整对比表格 (终极防冲突版)
-    # ==========================================
-    st.header("🆚 Compare Plans")
-    
-    # 🛡️ 关键操作：单独引入 pandas 并改名叫 pds
-    # 这样绝对不会跟您的 Prompt Database (pd) 打架！
-    import pandas as pds
-
-    # 豪华版数据
-    compare_data = {
-        "Feature": [
-            "🧠 AI Engine", 
-            "📝 Daily Text Gen", 
-            "🎨 Daily Image Gen", 
-            "🌍 Languages", 
-            "📂 Batch Upload", 
-            "💼 Commercial License", 
-            "⚡ Support Speed"
-        ],
-        "👤 Free Guest": [
-            "🐢 Standard", 
-            "🔒 5 / Day", 
-            "🔒 3 / Day", 
-            "🔒 3 (Basic)", 
-            "🔒 1 File", 
-            "❌ No", 
-            "🐢 Standard"
-        ],
-        "💎 PRO ($12.90)": [
-            "🚀 Turbo Mode", 
-            "✅ Unlimited", 
-            "✅ 200 / Day", 
-            "✅ 15 Global", 
-            "✅ Batch 50+", 
-            "✅ Included", 
-            "⚡ Priority"
-        ]
-    }
-    
-    # 渲染表格 (注意：这里用 pds.DataFrame)
-    df_compare = pds.DataFrame(compare_data)
-    
-    st.dataframe(
-        df_compare, 
-        hide_index=True, 
-        use_container_width=True, 
-        column_config={
-            "Feature": st.column_config.TextColumn("Feature", width="medium"),
-            "👤 Free Guest": st.column_config.TextColumn("Free Guest", width="small"),
-            "💎 PRO ($12.90)": st.column_config.TextColumn("💎 PRO Lifetime", width="small"),
+        # ==========================================
+        # 3. 🆚 完整对比表格 (终极防冲突版)
+        # ==========================================
+        st.header("🆚 Compare Plans")
+        
+        # 豪华版数据
+        compare_data = {
+            "Feature": ["🧠 AI Engine", "📝 Daily Text", "🎨 Daily Image", "🌍 Languages", "📂 Uploads", "💼 Commercial", "⚡ Support"],
+            "👤 Free Guest": ["🐢 Standard", "🔒 5 / Day", "🔒 3 / Day", "🔒 3 (Basic)", "🔒 1 File", "❌ No", "🐢 Standard"],
+            "💎 PRO ($12.90)": ["🚀 Turbo Mode", "✅ Unlimited", "✅ 200 / Day", "✅ 15 Global", "✅ Batch 50+", "✅ Included", "⚡ Priority"]
         }
-    )
+        
+        # 🛡️ 渲染表格 (使用 pds 避免冲突)
+        df_compare = pds.DataFrame(compare_data)
+        
+        st.dataframe(
+            df_compare, 
+            hide_index=True, 
+            use_container_width=True, 
+            column_config={
+                "Feature": st.column_config.TextColumn("Feature", width="medium"),
+                "👤 Free Guest": st.column_config.TextColumn("Free Guest", width="small"),
+                "💎 PRO ($12.90)": st.column_config.TextColumn("💎 PRO Lifetime", width="small"),
+            }
+        )
 
-    # Full Specs 展开项
-    with st.expander("🔍 Click to view Full Specs (All 15 Languages & Modes)"):
-        st.markdown("### 🌍 15 Supported Languages")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.markdown("- English\n- 简体中文\n- 繁體中文\n- Bahasa Melayu\n- 日本語")
-        with c2:
-            st.markdown("- 한국어 (Korean)\n- Español (Spanish)\n- Français (French)\n- Deutsch (German)\n- Русский (Russian)")
-        with c3:
-            st.markdown("- Português\n- Italiano\n- العربية (Arabic)\n- हिन्दी (Hindi)\n- ไทย (Thai)")
+        # Full Specs 展开项
+        with st.expander("🔍 Click to view Full Specs (All 15 Languages & Modes)"):
+            st.markdown("### 🌍 15 Supported Languages")
+            c1, c2, c3 = st.columns(3)
+            with c1: st.markdown("- English\n- 简体中文\n- 繁體中文\n- Bahasa Melayu\n- 日本語")
+            with c2: st.markdown("- 한국어\n- Español\n- Français\n- Deutsch\n- Русский")
+            with c3: st.markdown("- Português\n- Italiano\n- العربية\n- हिन्दी\n- ไทย")
 
-        st.markdown("---")
-        st.markdown("### 🛠️ 18 Professional Modes")
-        st.markdown("**Pedagogy, Creative Writing, Coding, SEO, Roleplay, Data Analysis, and more!**")
+            st.markdown("---")
+            st.markdown("### 🛠️ 18 Professional Modes")
+            st.markdown("**Pedagogy, Creative Writing, Coding, SEO, Roleplay, Data Analysis, and more!**")
         
 # === PAGE 2: ROLE HALL (侧边栏滑出) ===
 elif st.session_state.page == 2:
@@ -326,26 +295,24 @@ elif st.session_state.page == 3:
     c_f1, c_f2 = st.columns([1, 1])
     
     with c_f1:
-        # 1. 模式选择 (Mode Lock)
-        # Guest 只能看到第一个，或者看到全部但点其他的报错
-        # 这里为了体验，展示全部，但选2/3时提示
+        # 1. 模式选择
         sel_mode = st.selectbox(get_ui('mode_sel'), mode_names)
         
         if not is_pro and sel_mode != mode_names[0]:
             st.error(f"🔒 {sel_mode} is locked for PRO users.")
             st.stop()
             
-        # 2. 选项选择 (144+ Options)
+        # 2. 选项选择
         mode_data = role_data[sel_mode]
         sel_option = st.selectbox(get_ui('opt_sel'), mode_data["options"])
         
-        # 3. 平台选择 (仅视觉类)
+        # 3. 平台选择
         platform = "General AI"
         if sel_mode in ["Visuals", "Thumbnail", "Product Shot"]:
             platform = st.selectbox("🎨 Platform", ["Midjourney v6", "Stable Diffusion", "DALL-E 3", "General AI"])
 
     with c_f2:
-        # 4. 上传 (Upload Lock)
+        # 4. 上传
         help_txt = get_ui('batch_true') if is_pro else get_ui('batch_false')
         up_files = st.file_uploader(get_ui('upload'), accept_multiple_files=is_pro, help=help_txt)
         
@@ -354,7 +321,6 @@ elif st.session_state.page == 3:
 
     # 生成按钮
     if st.button(get_ui('generate'), type="primary", use_container_width=True):
-        # 额度检查
         has_img = up_files is not None and (len(up_files) > 0 if isinstance(up_files, list) else True)
         u_type = "image" if has_img else "text"
         cur_usage = usage['image_count'] if has_img else usage['text_count']
@@ -366,17 +332,16 @@ elif st.session_state.page == 3:
             # 扣费
             pl.update_user_usage(st.session_state.user_email, u_type, 1)
             
-            # 模拟生成 (Waiting Theater)
+            # 模拟生成
             with st.status(get_ui('wait'), expanded=True) as status:
                 if not is_pro:
                     st.write("🐢 Standard Queue: Processing...")
                     progress_bar = status.progress(0)
                     for i in range(100):
-                        time.sleep(0.03) # 3秒等待
+                        time.sleep(0.03)
                         progress_bar.progress(i+1)
-                        if i == 50: st.write("💡 Tip: Upgrade to PRO for 0.5s speed...")
                 else:
-                    time.sleep(0.5) # PRO 极速
+                    time.sleep(0.5)
                 status.update(label=get_ui('done'), state="complete")
             
             # 调用核心引擎
@@ -392,67 +357,28 @@ elif st.session_state.page == 3:
             st.session_state.result = final_prompt
             st.rerun()
 
-    # 结果展示 (5-Layer Deck)
+    # 结果展示
     if 'result' in st.session_state:
         st.markdown("---")
         st.subheader("🎉 Result")
         st.text_area("Output", st.session_state.result, height=300)
         
-        # Layer 1: Copy
         st.button(f"📋 {get_ui('copy')}", use_container_width=True)
         
-        # Layer 2: AI Connect
+        # AI Connect
         st.caption(f"🤖 {get_ui('connect')}")
-        ai_links = [
-            ("Gemini", "https://gemini.google.com"), ("ChatGPT", "https://chat.openai.com"),
-            ("Claude", "https://claude.ai"), ("Midjourney", "https://discord.com"),
-            ("Canva", "https://canva.com"), ("Notion", "https://notion.so")
-        ]
-        cols_ai = st.columns(6)
+        ai_links = [("Gemini", "https://gemini.google.com"), ("ChatGPT", "https://chat.openai.com"),
+                    ("Claude", "https://claude.ai"), ("Midjourney", "https://discord.com")]
+        cols_ai = st.columns(4)
         for i, (name, link) in enumerate(ai_links):
             cols_ai[i].link_button(name, link)
             
-        # Layer 3: Social
-        st.caption("📤 Social Share")
-        c_s1, c_s2, c_s3 = st.columns(3)
-        # 微信 (绿色按钮)
-        if c_s1.button("🟢 WeChat", disabled=not is_pro, help="Click to open system share menu"):
-            st.info("📲 Please use your phone's 'Share' menu to send to WeChat.")
-        # 系统分享
-        c_s2.button("📤 System", help="Use native sharing")
-        # WhatsApp
-        txt_encoded = base64.b64encode(st.session_state.result.encode()).decode()
-        c_s3.link_button("WhatsApp", f"https://wa.me/?text={st.session_state.result[:100]}...")
-
-        # Layer 4: App Portals
-        st.caption("📱 App Portals")
-        c_a1, c_a2, c_a3 = st.columns(3)
-        # 简单的链接跳转
-        if is_pro:
-            c_a1.link_button("Instagram", "https://instagram.com")
-            c_a2.link_button("📕 XiaoHongShu", "https://xiaohongshu.com")
-            c_a3.link_button("TikTok", "https://tiktok.com")
-        else:
-            st.warning("🔒 Upgrade to unlock App Portals")
-
-        # Layer 5: Download
+        # Download
         st.caption(f"💾 {get_ui('download')}")
-        d_c1, d_c2, d_c3 = st.columns(3)
-        
-        # TXT
-        d_c1.download_button("📄 TXT", st.session_state.result, "prompt.txt")
-        
-        # PDF (防崩溃)
+        d1, d2 = st.columns(2)
+        d1.download_button("📄 TXT", st.session_state.result, "prompt.txt")
         if is_pro:
             pdf_bytes = pl.create_pdf_bytes(st.session_state.result)
-            d_c2.download_button("📕 PDF", pdf_bytes, "prompt.pdf", mime="application/pdf")
+            d2.download_button("📕 PDF", pdf_bytes, "prompt.pdf", mime="application/pdf")
         else:
-            d_c2.button("🔒 PDF", disabled=True)
-            
-        # CSV
-        if is_pro:
-            csv_data = "\ufeff" + st.session_state.result # BOM
-            d_c3.download_button("📊 CSV", csv_data, "prompt.csv", mime="text/csv")
-        else:
-            d_c3.button("🔒 CSV", disabled=True)
-
+            d2.button("🔒 PDF", disabled=True)
