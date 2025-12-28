@@ -208,10 +208,13 @@ if st.session_state.page == 1:
                     st.error("Invalid License Key")
 
     with col2:
-        st.header("🆚 Compare Plans")
+# ==========================================
+    # 3. 🆚 完整对比表格 (终极防冲突版)
+    # ==========================================
+    st.header("🆚 Compare Plans")
     
-    # 🛡️ 关键修复：在这里单独引入 pandas 并改名为 pds
-    # 这样无论外面的 pd 是什么，这里的表格都能正常工作！
+    # 🛡️ 关键操作：单独引入 pandas 并改名叫 pds
+    # 这样绝对不会跟您的 Prompt Database (pd) 打架！
     import pandas as pds
 
     # 豪华版数据
@@ -245,7 +248,7 @@ if st.session_state.page == 1:
         ]
     }
     
-    # 渲染表格 (注意：这里使用的是 pds，不是 pd)
+    # 渲染表格 (注意：这里用 pds.DataFrame)
     df_compare = pds.DataFrame(compare_data)
     
     st.dataframe(
@@ -273,6 +276,7 @@ if st.session_state.page == 1:
         st.markdown("---")
         st.markdown("### 🛠️ 18 Professional Modes")
         st.markdown("**Pedagogy, Creative Writing, Coding, SEO, Roleplay, Data Analysis, and more!**")
+        
 # === PAGE 2: ROLE HALL (侧边栏滑出) ===
 elif st.session_state.page == 2:
     st.button(f"⬅️ {get_ui('back_home')}", on_click=lambda: st.session_state.update(page=1))
@@ -451,3 +455,4 @@ elif st.session_state.page == 3:
             d_c3.download_button("📊 CSV", csv_data, "prompt.csv", mime="text/csv")
         else:
             d_c3.button("🔒 CSV", disabled=True)
+
