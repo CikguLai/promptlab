@@ -194,21 +194,69 @@ if st.session_state.page == 1:
                 else:
                     st.error("Invalid License Key")
 
-    with col2:
-        st.subheader("🆚 Compare Plans")
-        st.markdown("""
-        | Feature | 👤 Free Guest | 💎 PRO ($12.90) |
-        | :--- | :--- | :--- |
-        | **Engine** | 🐢 Standard | 🚀 **Turbo** |
-        | **Daily Text** | 🔒 5 / Day | ✅ **Unlimited** |
-        | **Daily Img** | 🔒 3 / Day | ✅ **200 / Day** |
-        | **Languages** | 🔒 3 (Intl.) | ✅ **15 Global** |
-        | **Uploads** | 🔒 1 File | ✅ **Batch 50** |
-        """)
-        
-        with st.expander(f"🔍 Click to view Full Specs"):
-            st.write("**15 Languages:** English, Chinese, Spanish, Russian, Japanese...")
-            st.write("**18 Modes:** Pedagogy, Scripting, Copywriting, Strategy...")
+   # ==========================================
+    # 3. 🆚 完整对比表格 (修复版 - 全宽展示)
+    # ==========================================
+    st.header("🆚 Compare Plans")
+    
+    # 豪华版数据
+    compare_data = {
+        "Feature": [
+            "🧠 AI Engine", 
+            "📝 Daily Text Gen", 
+            "🎨 Daily Image Gen", 
+            "🌍 Languages", 
+            "📂 Batch Upload", 
+            "💼 Commercial License", 
+            "⚡ Support Speed"
+        ],
+        "👤 Free Guest": [
+            "🐢 Standard", 
+            "🔒 5 / Day", 
+            "🔒 3 / Day", 
+            "🔒 3 (Basic)", 
+            "🔒 1 File", 
+            "❌ No", 
+            "🐢 Standard"
+        ],
+        "💎 PRO ($12.90)": [
+            "🚀 Turbo Mode", 
+            "✅ Unlimited", 
+            "✅ 200 / Day", 
+            "✅ 15 Global", 
+            "✅ Batch 50+", 
+            "✅ Included", 
+            "⚡ Priority"
+        ]
+    }
+    
+    # 渲染表格
+    df_compare = pd.DataFrame(compare_data)
+    st.dataframe(
+        df_compare, 
+        hide_index=True, 
+        use_container_width=True, 
+        column_config={
+            "Feature": st.column_config.TextColumn("Feature", width="medium"),
+            "👤 Free Guest": st.column_config.TextColumn("Free Guest", width="small"),
+            "💎 PRO ($12.90)": st.column_config.TextColumn("💎 PRO Lifetime", width="small"),
+        }
+    )
+
+    # Full Specs 展开项
+    with st.expander("🔍 Click to view Full Specs (All 15 Languages & Modes)"):
+        st.markdown("### 🌍 15 Supported Languages")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("- English\n- 简体中文\n- 繁體中文\n- Bahasa Melayu\n- 日本語")
+        with c2:
+            st.markdown("- 한국어 (Korean)\n- Español (Spanish)\n- Français (French)\n- Deutsch (German)\n- Русский (Russian)")
+        with c3:
+            st.markdown("- Português\n- Italiano\n- العربية (Arabic)\n- हिन्दी (Hindi)\n- ไทย (Thai)")
+
+        st.markdown("---")
+        st.markdown("### 🛠️ 18 Professional Modes")
+        st.markdown("**Pedagogy, Creative Writing, Coding, SEO, Roleplay, Data Analysis, and more!**")
 
 # === PAGE 2: ROLE HALL (侧边栏滑出) ===
 elif st.session_state.page == 2:
@@ -389,3 +437,4 @@ elif st.session_state.page == 3:
         else:
 
             d_c3.button("🔒 CSV", disabled=True)
+
