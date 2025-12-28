@@ -1,4 +1,4 @@
-df_compare = pd.DataFrame(compare_data)# app.py
+# app.py
 # ==========================================
 # PromptLab AI V7.3 Ultimate Edition
 # 主程序界面 (Main Interface)
@@ -71,74 +71,87 @@ def get_ui(key):
 # 4. 全局侧边栏 (仅在 Page 2, 3 显示)
 # ------------------------------------------
 def render_sidebar():
-    # 只在非首页显示侧边栏
     if st.session_state.page > 1:
         with st.sidebar:
-            # 1. Logo 显示
+            # 1. Logo
             try:
                 st.image("logo.png", width=120)
             except:
                 st.markdown("## 🧠 PromptLab")
             
             st.markdown("---")
-
+            
             # 2. 用户卡片
             is_pro = st.session_state.user_role == "PRO"
             role_badge = "💎 PRO Enterprise" if is_pro else "👤 Free Guest"
             engine_status = "🚀 Turbo" if is_pro else "🐢 Standard"
-
+            
             st.caption("User Identity")
             st.info(f"**{role_badge}**\n\nEmail: {st.session_state.user_email}\nEngine: {engine_status}")
-
-            # 3. 语言切换
+            
+            # 3. 语言切换 (Guest 3种, PRO 15种)
             avail_langs = list(pd.LANG_DICT.keys()) if is_pro else ["English", "简体中文", "Español"]
-            st.session_state.lang = st.selectbox("🌐 Language", avail_langs, index=0)
-
-            # 4. 🔥 逼单广告 (仅 Guest 可见)
+            st.session_state.lang = st.selectbox("🌐 Language", avail_langs, index=0 if "English" in avail_langs else 0)
+            
+            # 4. 🔥 逼单广告 (仅 Guest)
             if not is_pro:
                 st.markdown("---")
                 st.markdown(f"""
-                <div style="border: 2px solid #ff4b4b; padding: 15px; border-radius: 10px; background-color: #fff5f5; text-align: center;">
-                    <div style="font-size:14px; font-weight:bold; color:#ff4b4b; margin-bottom:5px;">
-                        {get_ui('sticky_ad_title')}
-                    </div>
-                    <div style="font-size:26px; font-weight:900; color:#333;">$12.90</div>
-                    <div style="font-size:14px; text-decoration:line-through; color:grey; margin-bottom:10px;">$39.90</div>
-                    
-                    <a href="https://cikgulai.lemonsqueezy.com/checkout/buy/6b49b11a-830a-46e3-a458-0d8f2d2b160c?discount=PROMPTLAB" target="_blank" style="text-decoration:none;">
-                        <button style="background-color:#ff4b4b; color:white; border:none; width:100%; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:16px;">
+                <div class="sticky-ad">
+                    <div style="font-size:12px; font-weight:bold; color:#ff4b4b;">{get_ui('sticky_ad_title')}</div>
+                    <div style="font-size:24px; font-weight:800; color:#333;">$12.90</div>
+                    <div style="font-size:12px; text-decoration:line-through; color:grey;">$39.90</div>
+                    <a href="https://promptlab.lemonsqueezy.com/checkout" target="_blank" style="text-decoration:none;">
+                        <button style="background:#ff4b4b; color:white; border:none; width:100%; padding:8px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">
                             {get_ui('sticky_ad_btn')}
                         </button>
                     </a>
-                    <div style="font-size:10px; color:grey; margin-top:5px;">One-time payment. Lifetime access.</div>
                 </div>
                 """, unsafe_allow_html=True)
-                st.markdown("---")
-
-            # 5. 🔑 激活码输入框 (License Key)
-            st.markdown(f"### {get_ui('ticket_title')}")
-            sub = st.text_input(get_ui('ticket_sub'), type="password", placeholder="Paste License Key here...")
             
-            if st.button(get_ui('ticket_btn'), use_container_width=True):
-                if sub:
-                    # 这里假设您有 verify_ticket 函数，如果没有，请告诉我
-                    if verify_ticket(sub): 
-                        st.balloons()
-                        st.success("✅ Activation Successful!")
-                        time.sleep(1)
-                        st.rerun()
-                    else:
-                        st.error("❌ Invalid License Key")
-                else:
-                    st.warning("Please enter a key.")
-
-            # 6. 退出登录按钮 (Logout) - 帮您保留下来了！
             st.markdown("---")
-            if st.button(get_ui('logout'), use_container_width=True):
+            
+            # 5. 智能工单
+            with st.expander(get_ui('ticket_title')):
+                 ticket_type = st.selectbox("Category", [
+                    "Bug / Error", 
+                    "Billing Issue", 
+                    "Feature Request", 
+                    "Partnership / Sponsorship", 
+                    "Others"
+                ])
+                # ====================
+
+                sub = st.text_input(get_ui('ticket_sub'))
+                msg = st.text_area(get_ui('ticket_msg'))
+                
+                # 实时拦截检查 (这段不要漏掉)
+                should_intercept, reply = pl.check_ticket_intercept(sub, msg)
+                if should_intercept:
+                    st.warning(reply)
+                else:
+                    btn_txt = get_ui('ticket_btn_pro') if is_pro else get_ui('ticket_btn_guest')
+                    if st.button(btn_txt):
+                        if sub and msg:
+                            st.success("✅ Ticket Sent!")
+                            # 这里可以接入 pl.send_telegram_alert (如有配置)
+                        else:
+                            st.error("Please fill all fields.")
+            
+            # 6. 完整 FAQ
+            st.caption("📚 Knowledge Base")
+            for cat, qas in pd.FAQ_DB.items():
+                with st.expander(cat):
+                    for q, a in qas:
+                        st.markdown(f"**Q: {q}**\n\n{a}")
+            
+            # 7. 退出
+            st.markdown("---")
+            if st.button(get_ui('logout')):
                 st.session_state.page = 1
                 st.session_state.user_role = "Guest"
                 st.rerun()
-                
+
 render_sidebar()
 
 # 5. 页面路由逻辑
@@ -194,82 +207,21 @@ if st.session_state.page == 1:
                 else:
                     st.error("Invalid License Key")
 
-   # ==========================================
-    # 3. 🆚 完整对比表格 (修复版 - 全宽展示)
-    # ==========================================
-    st.header("🆚 Compare Plans")
-    
-    # 豪华版数据
-    compare_data = {
-        "Feature": [
-            "🧠 AI Engine", 
-            "📝 Daily Text Gen", 
-            "🎨 Daily Image Gen", 
-            "🌍 Languages", 
-            "📂 Batch Upload", 
-            "💼 Commercial License", 
-            "⚡ Support Speed"
-        ],
-        "👤 Free Guest": [
-            "🐢 Standard", 
-            "🔒 5 / Day", 
-            "🔒 3 / Day", 
-            "🔒 3 (Basic)", 
-            "🔒 1 File", 
-            "❌ No", 
-            "🐢 Standard"
-        ],
-        "💎 PRO ($12.90)": [
-            "🚀 Turbo Mode", 
-            "✅ Unlimited", 
-            "✅ 200 / Day", 
-            "✅ 15 Global", 
-            "✅ Batch 50+", 
-            "✅ Included", 
-            "⚡ Priority"
-        ]
-    }
-    
-    # 渲染表格
-    # 渲染表格 (修复版：使用 pds 避免与 pd 语言包冲突)
-    import pandas as pds
-    
-    df_compare = pds.DataFrame(compare_data)
-    st.dataframe(
-        df_compare, 
-        hide_index=True, 
-        use_container_width=True, 
-        column_config={
-            "Feature": st.column_config.TextColumn("Feature", width="medium"),
-            "👤 Free Guest": st.column_config.TextColumn("Free Guest", width="small"),
-            "💎 PRO ($12.90)": st.column_config.TextColumn("💎 PRO Lifetime", width="small"),
-        }
-    )
-    st.dataframe(
-        df_compare, 
-        hide_index=True, 
-        use_container_width=True, 
-        column_config={
-            "Feature": st.column_config.TextColumn("Feature", width="medium"),
-            "👤 Free Guest": st.column_config.TextColumn("Free Guest", width="small"),
-            "💎 PRO ($12.90)": st.column_config.TextColumn("💎 PRO Lifetime", width="small"),
-        }
-    )
-
-    # Full Specs 展开项
-    with st.expander("🔍 Click to view Full Specs (All 15 Languages & Modes)"):
-        st.markdown("### 🌍 15 Supported Languages")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.markdown("- English\n- 简体中文\n- 繁體中文\n- Bahasa Melayu\n- 日本語")
-        with c2:
-            st.markdown("- 한국어 (Korean)\n- Español (Spanish)\n- Français (French)\n- Deutsch (German)\n- Русский (Russian)")
-        with c3:
-            st.markdown("- Português\n- Italiano\n- العربية (Arabic)\n- हिन्दी (Hindi)\n- ไทย (Thai)")
-
-        st.markdown("---")
-        st.markdown("### 🛠️ 18 Professional Modes")
-        st.markdown("**Pedagogy, Creative Writing, Coding, SEO, Roleplay, Data Analysis, and more!**")
+    with col2:
+        st.subheader("🆚 Compare Plans")
+        st.markdown("""
+        | Feature | 👤 Free Guest | 💎 PRO ($12.90) |
+        | :--- | :--- | :--- |
+        | **Engine** | 🐢 Standard | 🚀 **Turbo** |
+        | **Daily Text** | 🔒 5 / Day | ✅ **Unlimited** |
+        | **Daily Img** | 🔒 3 / Day | ✅ **200 / Day** |
+        | **Languages** | 🔒 3 (Intl.) | ✅ **15 Global** |
+        | **Uploads** | 🔒 1 File | ✅ **Batch 50** |
+        """)
+        
+        with st.expander(f"🔍 Click to view Full Specs"):
+            st.write("**15 Languages:** English, Chinese, Spanish, Russian, Japanese...")
+            st.write("**18 Modes:** Pedagogy, Scripting, Copywriting, Strategy...")
 
 # === PAGE 2: ROLE HALL (侧边栏滑出) ===
 elif st.session_state.page == 2:
@@ -448,7 +400,4 @@ elif st.session_state.page == 3:
             csv_data = "\ufeff" + st.session_state.result # BOM
             d_c3.download_button("📊 CSV", csv_data, "prompt.csv", mime="text/csv")
         else:
-
             d_c3.button("🔒 CSV", disabled=True)
-
-
