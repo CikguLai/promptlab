@@ -1,4 +1,4 @@
-# app.py
+df_compare = pd.DataFrame(compare_data)# app.py
 # ==========================================
 # PromptLab AI V7.3 Ultimate Edition
 # 主程序界面 (Main Interface)
@@ -231,7 +231,20 @@ if st.session_state.page == 1:
     }
     
     # 渲染表格
-    df_compare = pd.DataFrame(compare_data)
+    # 渲染表格 (修复版：使用 pds 避免与 pd 语言包冲突)
+    import pandas as pds
+    
+    df_compare = pds.DataFrame(compare_data)
+    st.dataframe(
+        df_compare, 
+        hide_index=True, 
+        use_container_width=True, 
+        column_config={
+            "Feature": st.column_config.TextColumn("Feature", width="medium"),
+            "👤 Free Guest": st.column_config.TextColumn("Free Guest", width="small"),
+            "💎 PRO ($12.90)": st.column_config.TextColumn("💎 PRO Lifetime", width="small"),
+        }
+    )
     st.dataframe(
         df_compare, 
         hide_index=True, 
@@ -437,4 +450,5 @@ elif st.session_state.page == 3:
         else:
 
             d_c3.button("🔒 CSV", disabled=True)
+
 
