@@ -210,6 +210,10 @@ if st.session_state.page == 1:
     with col2:
         st.header("🆚 Compare Plans")
     
+    # 🛡️ 关键修复：在这里单独引入 pandas 并改名为 pds
+    # 这样无论外面的 pd 是什么，这里的表格都能正常工作！
+    import pandas as pds
+
     # 豪华版数据
     compare_data = {
         "Feature": [
@@ -240,8 +244,10 @@ if st.session_state.page == 1:
             "⚡ Priority"
         ]
     }
-        
-        df_compare = pd.DataFrame(compare_data)
+    
+    # 渲染表格 (注意：这里使用的是 pds，不是 pd)
+    df_compare = pds.DataFrame(compare_data)
+    
     st.dataframe(
         df_compare, 
         hide_index=True, 
@@ -445,4 +451,3 @@ elif st.session_state.page == 3:
             d_c3.download_button("📊 CSV", csv_data, "prompt.csv", mime="text/csv")
         else:
             d_c3.button("🔒 CSV", disabled=True)
-
