@@ -1,7 +1,7 @@
 # app.py
 # ==========================================
-# PromptLab AI V8.2 Enterprise Ultimate Final
-# 修复：Logo尺寸、移除多余提示、找回Full Specs、定制HTML表格
+# PromptLab AI V8.6 Enterprise Ultimate Final
+# 更新：2026 版权、专业法律免责声明 (Legal Disclaimer)
 # ==========================================
 
 import streamlit as st
@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. 企业级 CSS 注入 (核心机密)
+# 2. 企业级 CSS 注入
 st.markdown("""
 <style>
     /* --- 核心主题色 --- */
@@ -47,7 +47,7 @@ st.markdown("""
     .stButton>button[kind="primary"] { background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)) !important; border: none; box-shadow: 0 4px 10px rgba(15, 82, 186, 0.3); font-weight: 700; }
     .stButton>button[kind="secondary"] { color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; background: transparent !important; font-weight: 700; }
     
-    /* --- 定制 HTML 表格样式 (新) --- */
+    /* --- 定制 HTML 表格样式 --- */
     .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #E0E6ED; border-radius: 12px; overflow: hidden; }
     .custom-table th { background-color: var(--primary-blue); color: white; padding: 15px; text-align: left; font-weight: 700; }
     .custom-table td { padding: 12px 15px; border-bottom: 1px solid #E0E6ED; color: var(--text-dark); }
@@ -55,16 +55,66 @@ st.markdown("""
     .custom-table tr:nth-child(even) { background-color: #F8FAFC; } /* 斑马纹 */
     .pro-feature { color: var(--primary-blue); font-weight: 700; }
 
+    /* --- Footer 样式 (专业版) --- */
+    .footer {
+        width: 100%;
+        text-align: center;
+        padding: 40px 20px;
+        margin-top: 60px;
+        border-top: 1px solid #E0E6ED;
+        color: #95a5a6;
+        font-size: 13px;
+        line-height: 1.6;
+        background-color: #fff; /* 底部白色背景 */
+    }
+    .footer b { color: #2C3E50; }
+    .footer-links { margin-bottom: 10px; }
+    .footer-links a { color: #0F52BA; text-decoration: none; margin: 0 12px; font-weight: 500; transition: color 0.2s;}
+    .footer-links a:hover { color: #1e62c9; text-decoration: underline; }
+    
+    .footer-disclaimer {
+        font-size: 11px;
+        color: #bdc3c7;
+        max-width: 600px;
+        margin: 10px auto;
+        font-style: normal;
+    }
+
     /* 隐藏元素 */
     #MainMenu, footer, header, section[data-testid="stSidebar"] > div:first-child {visibility: hidden;}
     /* 侧边栏背景 */
     section[data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #E0E6ED; }
     /* 逼单广告 */
     .sticky-ad { background: linear-gradient(to bottom right, #fff5f5, #ffebeb); border-left: 4px solid #ff4b4b; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(255, 75, 75, 0.1); }
+    
+    /* Hero 区域样式 */
+    .hero-container { display: flex; align-items: center; justify-content: center; gap: 40px; margin-bottom: 40px; padding: 20px 0; }
 </style>
 """, unsafe_allow_html=True)
 
 def enterprise_card(): st.markdown('<div class="enterprise-card-marker"></div>', unsafe_allow_html=True)
+
+# --- 🌟 新增：专业法律 Footer 函数 ---
+def render_footer():
+    st.markdown("""
+    <div class="footer">
+        <div style="margin-bottom: 8px;">
+            &copy; 2026 <b>Lai's Lab</b> • Enterprise Edition V8.5
+        </div>
+        
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a> • 
+            <a href="#">Terms of Service</a> • 
+            <a href="#">Usage Guidelines</a>
+        </div>
+
+        <div class="footer-disclaimer">
+            <b>Disclaimer:</b> PromptLab AI can make mistakes. Please verify important information independently. 
+            Users are solely responsible for the content they generate and how they use it. 
+            Lai's Lab assumes no liability for actions taken based on these outputs.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # 3. Session 初始化
 if 'page' not in st.session_state: st.session_state.page = 1
@@ -82,13 +132,10 @@ def render_sidebar():
     if st.session_state.page > 1:
         with st.sidebar:
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-            try:
-                # 修复：侧边栏 Logo 也限制宽度
-                st.image("logo.png", width=120) 
-            except:
-                st.markdown("## 🧠 Lai's Lab")
+            try: st.image("logo.png", width=120) 
+            except: st.markdown("## 🧠 Lai's Lab")
             st.markdown("### **Enterprise Workspace**")
-            st.caption("V8.2 Professional Edition")
+            st.caption("V8.5 Professional Edition")
             st.markdown("---")
             is_pro = st.session_state.user_role == "PRO"
             with st.container():
@@ -112,37 +159,34 @@ render_sidebar()
 
 # 5. 页面路由逻辑
 
-# === PAGE 1: LANDING (首页 - 终极修复版) ===
+# === PAGE 1: LANDING (首页) ===
 if st.session_state.page == 1:
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
     c_top1, c_top2 = st.columns([9, 1])
     with c_top2: st.session_state.lang = st.selectbox("🌐", ["English", "简体中文", "Español"], label_visibility="collapsed")
 
-    # 🌟 HERO 区域 (Logo 修复 + Slogan)
+    # HERO (横向排版)
     with st.container():
-        c_hero1, c_hero2, c_hero3 = st.columns([1, 2, 1])
-        with c_hero2:
-            try:
-                # 🛠️ 修复重点：强制设置宽度为 180px，不再使用 use_column_width
-                st.image("logo.png", width=180)
-            except:
-                st.markdown("# 🧠 Lai's Lab")
-            
+        c_hero_logo, c_hero_text = st.columns([1, 3]) 
+        with c_hero_logo:
+            try: st.image("logo.png", width=160)
+            except: st.markdown("# 🧠 Lai's Lab")     
+        with c_hero_text:
             st.markdown("""
-            <div style='text-align: center; margin-top: -10px; margin-bottom: 40px;'>
+            <div style='text-align: left;'>
                 <h1 style='color: #0F52BA; font-size: 2.5rem; margin-bottom: 10px;'>The Ultimate Enterprise Prompt Engine</h1>
                 <p style='color: #5d6d7e; font-size: 1.2rem; font-weight: 500;'>Empowering Educators with Scale, Security & Pedagogical Impact.</p>
-                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
-                    <span style="background:#eef2f7; padding:5px 10px; border-radius:15px;">🛡️ Secure & Private</span>
-                    <span style="background:#eef2f7; padding:5px 10px; border-radius:15px;">🚀 Turbo Engine</span>
-                    <span style="background:#eef2f7; padding:5px 10px; border-radius:15px;">🌍 15+ Languages</span>
+                <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
+                    <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🛡️ Secure & Private</span>
+                    <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🚀 Turbo Engine</span>
+                    <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🌍 15+ Languages</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
     main_c1, main_c2 = st.columns([4, 5], gap="large")
     
-    # 左侧：登录
+    # 登录区
     with main_c1:
         with st.container():
             enterprise_card()
@@ -165,21 +209,15 @@ if st.session_state.page == 1:
                     if st.session_state.g_email:
                         st.session_state.user_email = st.session_state.g_email; st.session_state.user_role = "Guest"; st.session_state.page = 2; st.rerun()
 
-    # 右侧：全新定制 HTML 对比表 (修复重点)
+    # 对比表
     with main_c2:
         with st.container():
             enterprise_card()
             st.subheader("📋 Plan Comparison")
-            
-            # 🛠️ 使用定制 HTML 表格替代 datafram，更专业
             st.markdown("""
             <table class="custom-table">
                 <thead>
-                    <tr>
-                        <th>Capability</th>
-                        <th style="background:#e3f2fd; color:#0F52BA;">Starter (Guest)</th>
-                        <th>💎 Enterprise (PRO)</th>
-                    </tr>
+                    <tr><th>Capability</th><th style="background:#e3f2fd; color:#0F52BA;">Starter (Guest)</th><th>💎 Enterprise (PRO)</th></tr>
                 </thead>
                 <tbody>
                     <tr><td>🤖 AI Model</td><td>Standard Shared</td><td class="pro-feature">⚡ Dedicated Turbo</td></tr>
@@ -192,22 +230,17 @@ if st.session_state.page == 1:
                 </tbody>
             </table>
             """, unsafe_allow_html=True)
-            
-            # 🛠️ 修复重点：找回 Full Specs 列表，并美化
             st.markdown("<br>", unsafe_allow_html=True)
             with st.expander("🔍 View Full Enterprise Specifications"):
                  c_spec1, c_spec2 = st.columns(2)
-                 with c_spec1:
-                     st.markdown("**🌍 15+ Supported Languages:**")
-                     st.caption("English, Chinese (Simplified/Traditional), Malay, Japanese, Korean, Spanish, French, German, Russian, Portuguese, Italian, Arabic, Hindi, Thai.")
-                 with c_spec2:
-                     st.markdown("**🛠️ 18 Professional Modes:**")
-                     st.caption("Pedagogy, Creative Writing, Coding (Python/HTML), SEO, Roleplay, Data Analysis, Scriptwriting, Email Wizard, Marketing Copy, and more.")
-            
-            # 🛠️ 修复重点：已移除底部的蓝色 st.info 提示框
+                 with c_spec1: st.markdown("**🌍 15+ Languages:**"); st.caption("English, Chinese, Malay, Japanese, Korean, Spanish, French, German, Russian, etc.")
+                 with c_spec2: st.markdown("**🛠️ 18 Modes:**"); st.caption("Pedagogy, Writing, Coding, SEO, Roleplay, Analysis, Email, Marketing, Scripting, etc.")
 
-# === PAGE 2 & 3 (保持不变，省略以节省篇幅，请使用您现有的 Page 2/3 代码或我上一个完整版中的) ===
-# 为了确保代码完整运行，我这里还是放上简化的 Page 2/3，您也可以直接用之前的完整版
+    # 🚀 在 Page 1 底部添加 Footer
+    render_footer()
+
+
+# === PAGE 2: ROLE HALL ===
 elif st.session_state.page == 2:
     st.button(f"⬅️ Dashboard", on_click=lambda: st.session_state.update(page=1), type="secondary")
     st.title("Select Persona"); st.markdown("---")
@@ -219,7 +252,52 @@ elif st.session_state.page == 2:
                 if st.button(f"Launch {role}", key=f"btn_{i}", use_container_width=True, type="primary" if i==0 else "secondary"):
                     st.session_state.current_role_card = role; st.session_state.page = 3; st.rerun()
             st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    
+    render_footer()
+
+
+# === PAGE 3: WORKSPACE ===
 elif st.session_state.page == 3:
-    # ... (使用您现有的 Page 3 代码) ...
-    st.title("Workspace (Page 3 Placeholder)")
-    st.button("⬅️ Back", on_click=lambda: st.session_state.update(page=2))
+    is_pro = st.session_state.user_role == "PRO"
+    usage = pl.get_user_usage(st.session_state.user_email)
+    
+    with st.container():
+        enterprise_card()
+        c1, c2 = st.columns([1, 6])
+        with c1:
+            if st.button("⬅️ Change", type="secondary"): st.session_state.page = 2; st.rerun()
+        with c2: st.markdown(f"### 🛠️ Active: **{st.session_state.current_role_card}**")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    role_data = pd.ROLES_DB[st.session_state.current_role_card]; mode_names = list(role_data.keys())
+    c_main1, c_main2 = st.columns([1, 1], gap="large")
+    
+    with c_main1:
+        with st.container():
+            enterprise_card(); st.subheader("1. Configuration")
+            sel_mode = st.selectbox(get_ui('mode_sel'), mode_names)
+            if not is_pro and sel_mode != mode_names[0]: st.warning(f"🔒 Enterprise Only"); st.stop()
+            mode_data = role_data[sel_mode]; sel_option = st.selectbox(get_ui('opt_sel'), mode_data["options"])
+
+    with c_main2:
+        with st.container():
+            enterprise_card(); st.subheader("2. Context & Input")
+            st.file_uploader("📂 Attach Files", accept_multiple_files=is_pro)
+            user_input = st.text_area("Instructions", height=150, placeholder=mode_data["placeholder"])
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("✨ Generate Output", type="primary", use_container_width=True):
+        pl.update_user_usage(st.session_state.user_email, "text", 1)
+        with st.status("🚀 Processing...", expanded=True):
+            time.sleep(1); st.write("✅ Done!")
+        st.session_state.result = pl.generate_pasec_prompt(st.session_state.current_role_card, sel_mode, sel_option, user_input, 0, st.session_state.lang, is_pro)
+        st.rerun()
+
+    if 'result' in st.session_state:
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.container():
+            enterprise_card(); st.subheader("🎉 Output")
+            st.text_area("Result", st.session_state.result, height=350)
+            st.button("📋 Copy", use_container_width=True)
+
+    render_footer()
