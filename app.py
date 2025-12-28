@@ -71,87 +71,74 @@ def get_ui(key):
 # 4. 全局侧边栏 (仅在 Page 2, 3 显示)
 # ------------------------------------------
 def render_sidebar():
+    # 只在非首页显示侧边栏
     if st.session_state.page > 1:
         with st.sidebar:
-            # 1. Logo
+            # 1. Logo 显示
             try:
                 st.image("logo.png", width=120)
             except:
                 st.markdown("## 🧠 PromptLab")
             
             st.markdown("---")
-            
+
             # 2. 用户卡片
             is_pro = st.session_state.user_role == "PRO"
             role_badge = "💎 PRO Enterprise" if is_pro else "👤 Free Guest"
             engine_status = "🚀 Turbo" if is_pro else "🐢 Standard"
-            
+
             st.caption("User Identity")
             st.info(f"**{role_badge}**\n\nEmail: {st.session_state.user_email}\nEngine: {engine_status}")
-            
-            # 3. 语言切换 (Guest 3种, PRO 15种)
+
+            # 3. 语言切换
             avail_langs = list(pd.LANG_DICT.keys()) if is_pro else ["English", "简体中文", "Español"]
-            st.session_state.lang = st.selectbox("🌐 Language", avail_langs, index=0 if "English" in avail_langs else 0)
-            
-            # 4. 🔥 逼单广告 (仅 Guest)
+            st.session_state.lang = st.selectbox("🌐 Language", avail_langs, index=0)
+
+            # 4. 🔥 逼单广告 (仅 Guest 可见)
             if not is_pro:
                 st.markdown("---")
                 st.markdown(f"""
-                <div class="sticky-ad">
-                    <div style="font-size:12px; font-weight:bold; color:#ff4b4b;">{get_ui('sticky_ad_title')}</div>
-                    <div style="font-size:24px; font-weight:800; color:#333;">$12.90</div>
-                    <div style="font-size:12px; text-decoration:line-through; color:grey;">$39.90</div>
-                    <a href="https://promptlab.lemonsqueezy.com/checkout" target="_blank" style="text-decoration:none;">
-                        <button style="background:#ff4b4b; color:white; border:none; width:100%; padding:8px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">
+                <div style="border: 2px solid #ff4b4b; padding: 15px; border-radius: 10px; background-color: #fff5f5; text-align: center;">
+                    <div style="font-size:14px; font-weight:bold; color:#ff4b4b; margin-bottom:5px;">
+                        {get_ui('sticky_ad_title')}
+                    </div>
+                    <div style="font-size:26px; font-weight:900; color:#333;">$12.90</div>
+                    <div style="font-size:14px; text-decoration:line-through; color:grey; margin-bottom:10px;">$39.90</div>
+                    
+                    <a href="https://cikgulai.lemonsqueezy.com/checkout/buy/6b49b11a-830a-46e3-a458-0d8f2d2b160c?discount=PROMPTLAB" target="_blank" style="text-decoration:none;">
+                        <button style="background-color:#ff4b4b; color:white; border:none; width:100%; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:16px;">
                             {get_ui('sticky_ad_btn')}
                         </button>
                     </a>
+                    <div style="font-size:10px; color:grey; margin-top:5px;">One-time payment. Lifetime access.</div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            
-            # 5. 智能工单
-            with st.expander(get_ui('ticket_title')):
-                 ticket_type = st.selectbox("Category", [
-                    "Bug / Error", 
-                    "Billing Issue", 
-                    "Feature Request", 
-                    "Partnership / Sponsorship", 
-                    "Others"
-                ])
-                # ====================
+                st.markdown("---")
 
-                sub = st.text_input(get_ui('ticket_sub'))
-                msg = st.text_area(get_ui('ticket_msg'))
-                
-                # 实时拦截检查 (这段不要漏掉)
-                should_intercept, reply = pl.check_ticket_intercept(sub, msg)
-                if should_intercept:
-                    st.warning(reply)
+            # 5. 🔑 激活码输入框 (License Key)
+            st.markdown(f"### {get_ui('ticket_title')}")
+            sub = st.text_input(get_ui('ticket_sub'), type="password", placeholder="Paste License Key here...")
+            
+            if st.button(get_ui('ticket_btn'), use_container_width=True):
+                if sub:
+                    # 这里假设您有 verify_ticket 函数，如果没有，请告诉我
+                    if verify_ticket(sub): 
+                        st.balloons()
+                        st.success("✅ Activation Successful!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ Invalid License Key")
                 else:
-                    btn_txt = get_ui('ticket_btn_pro') if is_pro else get_ui('ticket_btn_guest')
-                    if st.button(btn_txt):
-                        if sub and msg:
-                            st.success("✅ Ticket Sent!")
-                            # 这里可以接入 pl.send_telegram_alert (如有配置)
-                        else:
-                            st.error("Please fill all fields.")
-            
-            # 6. 完整 FAQ
-            st.caption("📚 Knowledge Base")
-            for cat, qas in pd.FAQ_DB.items():
-                with st.expander(cat):
-                    for q, a in qas:
-                        st.markdown(f"**Q: {q}**\n\n{a}")
-            
-            # 7. 退出
+                    st.warning("Please enter a key.")
+
+            # 6. 退出登录按钮 (Logout) - 帮您保留下来了！
             st.markdown("---")
-            if st.button(get_ui('logout')):
+            if st.button(get_ui('logout'), use_container_width=True):
                 st.session_state.page = 1
                 st.session_state.user_role = "Guest"
                 st.rerun()
-
+                
 render_sidebar()
 
 # 5. 页面路由逻辑
@@ -400,4 +387,5 @@ elif st.session_state.page == 3:
             csv_data = "\ufeff" + st.session_state.result # BOM
             d_c3.download_button("📊 CSV", csv_data, "prompt.csv", mime="text/csv")
         else:
+
             d_c3.button("🔒 CSV", disabled=True)
