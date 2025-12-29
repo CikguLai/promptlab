@@ -1,355 +1,443 @@
 # app.py
-# ==========================================
-# PromptLab AI V9.0 Enterprise Final
-# 架构：MVC 分离版 (UI Only)
-# 功能：侧边栏7大模块 + 首页对比表 + 紧凑Hero布局
-# ==========================================
+# Lai's Lab V9.3 - 终极界面层 (Enterprise Edition)
+# 负责：UI渲染、Secrets安全注入、真实PDF生成、大企业级品牌规范、彻底隐藏Streamlit特征
 
 import streamlit as st
 import time
-import pandas as pds       # 表格处理
-import prompt_data as pd   # 📚 数据仓库 (Data)
-import prompt_logic as pl  # ⚙️ 逻辑引擎 (Logic)
+import base64
+import os
+from fpdf import FPDF 
 
-# 1. 页面配置 (必须在第一行)
+# 引入本地模块
+import data_matrix as dm
+import logic_core as lc
+
+# ==========================================
+# 1. 核心初始化 & 安全注入 (Init & Security)
+# ==========================================
+
 st.set_page_config(
-    page_title="Lai's Lab Enterprise",
-    page_icon="🧠",
+    page_title="Lai's Lab AI",
+    page_icon="🧬",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# 2. 企业级 CSS 样式注入
-st.markdown("""
-<style>
-    /* --- 核心配色 --- */
-    :root { --primary-blue: #0F52BA; --text-dark: #2C3E50; --bg-gray: #F4F7F9; }
+# 🔐 安全注入：从 Streamlit Secrets 读取密码并注入 Logic Core
+if "general" in st.secrets:
+    secrets = st.secrets["general"]
     
-    /* 全局字体与背景 */
-    .stApp { background-color: var(--bg-gray); font-family: 'Inter', sans-serif; color: var(--text-dark); }
-    h1, h2, h3 { color: var(--text-dark) !important; font-weight: 800 !important; }
+    # 注入 Gmail 配置
+    if "email_app_password" in secrets:
+        lc.CONFIG["EMAIL_APP_PASSWORD"] = secrets["email_app_password"]
+    if "email_sender" in secrets:
+        lc.CONFIG["EMAIL_SENDER_ADDRESS"] = secrets["email_sender"]
+    if "email_admin" in secrets:
+        lc.CONFIG["EMAIL_ADMIN_ADDRESS"] = secrets["email_admin"]
+        
+    # 注入 API Keys
+    if "telegram_token" in secrets:
+        lc.CONFIG["TELEGRAM_BOT_TOKEN"] = secrets["telegram_token"]
+    if "telegram_chat_id" in secrets:
+        lc.CONFIG["TELEGRAM_CHAT_ID"] = secrets["telegram_chat_id"]
+    if "airtable_key" in secrets:
+        lc.CONFIG["AIRTABLE_API_KEY"] = secrets["airtable_key"]
+    if "lemonsqueezy_key" in secrets:
+        lc.CONFIG["LEMONSQUEEZY_API_KEY"] = secrets["lemonsqueezy_key"]
 
-    /* --- 卡片容器样式 --- */
-    div[data-testid="stVerticalBlock"] > div:has(> .enterprise-card-marker) {
-        background-color: white; padding: 25px; border-radius: 15px;
-        border: 1px solid rgba(15, 82, 186, 0.1); 
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
+# 初始化 Session State
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'user_tier' not in st.session_state:
+    st.session_state.user_tier = "Guest"
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = ""
+if 'language' not in st.session_state:
+    st.session_state.language = "English"
+if 'daily_usage' not in st.session_state:
+    st.session_state.daily_usage = 0
 
-    /* --- 侧边栏样式 --- */
-    section[data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #E0E6ED; }
+# ==========================================
+# 2. 辅助函数 (Helper UI Functions)
+# ==========================================
+
+def render_download_button(text, filename="prompt.txt"):
+    """生成 TXT 下载按钮"""
+    b64 = base64.b64encode(text.encode()).decode()
+    href = f'<a href="data:file/txt;base64,{b64}" download="{filename}" class="download-btn">📄 Download TXT</a>'
+    st.markdown(href, unsafe_allow_html=True)
+
+def create_pdf(content, role, mode):
+    """
+    生成 PDF 文件 (支持中文)
+    依赖项目根目录下的 font.ttf (必须支持中文，如 NotoSansCJKtc)
+    """
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
     
-    /* 侧边栏: 逼单广告 (红框) */
-    .sticky-ad {
-        background-color: #fff5f5; border: 2px solid #ff4b4b;
-        border-radius: 12px; padding: 15px; text-align: center;
-        margin-top: 20px; box-shadow: 0 4px 12px rgba(255, 75, 75, 0.1);
-    }
+    # 字体加载逻辑
+    font_path = "font.ttf"
+    if os.path.exists(font_path):
+        # 使用自定义中文字体
+        pdf.add_font('CustomFont', '', font_path, uni=True)
+        pdf.set_font("CustomFont", size=12)
+    else:
+        # 回退到标准字体 (不支持中文)
+        pdf.set_font("Arial", size=12)
+        # 简单过滤防止报错
+        content = content.encode('latin-1', 'replace').decode('latin-1') 
+
+    # 写入标题
+    pdf.set_font_size(16)
+    pdf.cell(0, 10, txt=f"Lai's Lab Export - {role} / {mode}", ln=True, align='C')
+    pdf.ln(10)
     
-    /* --- 表格样式 (Plan Comparison) --- */
-    .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #E0E6ED; border-radius: 12px; overflow: hidden; }
-    .custom-table th { background: #0F52BA; color: white; padding: 12px; text-align: left; font-weight: 700; }
-    .custom-table td { padding: 12px; border-bottom: 1px solid #eee; background: white; color: #333; font-size: 14px; }
-    .custom-table tr:last-child td { border-bottom: none; }
-    .pro-tag { color: #0F52BA; font-weight: 800; }
+    # 写入内容
+    pdf.set_font_size(12)
+    pdf.multi_cell(0, 10, txt=content)
+    
+    # 写入页脚
+    pdf.ln(20)
+    pdf.set_font_size(10)
+    pdf.cell(0, 10, txt="Generated by Lai's Lab Enterprise Engine", ln=True, align='C')
+    
+    return pdf.output(dest="S").encode("latin-1")
 
-    /* --- Footer 样式 --- */
-    .footer {
-        width: 100%; text-align: center; padding: 40px 20px; margin-top: 60px;
-        border-top: 1px solid #E0E6ED; color: #95a5a6; font-size: 13px; line-height: 1.6;
-        background-color: #fff;
-    }
-    .footer b { color: #2C3E50; }
-    .footer-links a { color: #0F52BA; text-decoration: none; margin: 0 10px; transition: 0.3s; }
-    .footer-links a:hover { text-decoration: underline; color: #1e62c9; }
-    .footer-disclaimer { font-size: 11px; color: #bdc3c7; max-width: 600px; margin: 10px auto; font-style: normal; }
-
-    /* 隐藏默认元素 */
-    #MainMenu, footer, header {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
-
-# 辅助函数：卡片标记
-def enterprise_card(): 
-    st.markdown('<div class="enterprise-card-marker"></div>', unsafe_allow_html=True)
-
-# Footer 渲染函数 (2026版)
 def render_footer():
-    st.markdown("""
-    <div class="footer">
-        <div style="margin-bottom: 8px;">&copy; 2026 <b>Lai's Lab</b> • Enterprise Edition V9.0</div>
-        <div class="footer-links">
-            <a href="#">Privacy Policy</a> • <a href="#">Terms of Service</a> • <a href="#">Usage Guidelines</a>
-        </div>
-        <div class="footer-disclaimer">
-            <b>Disclaimer:</b> PromptLab AI can make mistakes. Please verify important information independently. 
-            Users are solely responsible for the content they generate. 
+    """渲染全局页脚 (隐形战机版 - 彻底隐藏 Streamlit 特征 + 硅谷大厂排版)"""
+    
+    # 1. 核弹级 CSS：隐藏所有 Streamlit 原生 UI 元素
+    hide_st_style = """
+        <style>
+        /* 隐藏顶部的主菜单 (三道杠) */
+        #MainMenu {visibility: hidden;}
+        
+        /* 隐藏顶部的 Header 条 (包含 Share, Edit 等按钮) */
+        header {visibility: hidden;}
+        
+        /* 隐藏底部的 "Made with Streamlit" */
+        footer {visibility: hidden;}
+        
+        /* 隐藏顶部的彩色装饰条 (Rainbow decoration) */
+        div[data-testid="stDecoration"] {
+            visibility: hidden;
+            height: 0px;
+        }
+        
+        /* 隐藏右上角的 "Running" 状态小人/动画 */
+        div[data-testid="stStatusWidget"] {
+            visibility: hidden;
+        }
+
+        /* 隐藏可能残留的 Toolbar */
+        div[data-testid="stToolbar"] {
+            visibility: hidden;
+        }
+
+        /* 调整顶部空白，因为 Header 隐藏后上面会空出一块 */
+        .block-container {
+            padding-top: 2rem !important; 
+            padding-bottom: 5rem;
+        }
+        
+        /* 链接悬停变色 (保留原本的设计) */
+        a:hover {
+            color: #333 !important;
+            text-decoration: underline !important;
+        }
+        </style>
+    """
+    st.markdown(hide_st_style, unsafe_allow_html=True)
+
+    # 2. 极简分割线
+    st.markdown("---")
+    
+    # 3. 企业级 HTML 排版
+    footer_html = """
+    <div style="text-align: center; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding-top: 10px;">
+        
+        <p style="font-size: 12px; color: #666; margin-bottom: 15px;">
+            <a href="#" style="color: #666; text-decoration: none; margin: 0 10px;">Privacy Policy</a> | 
+            <a href="#" style="color: #666; text-decoration: none; margin: 0 10px;">Terms of Service</a> | 
+            <a href="mailto:support@laislab.com" style="color: #666; text-decoration: none; margin: 0 10px;">Support</a>
+        </p>
+
+        <div style="font-size: 11px; color: #999; line-height: 1.4; max-width: 800px; margin: 0 auto 20px auto;">
+            Generative AI can make mistakes; please verify important information. 
+            Users are solely responsible for how they use the generated content. 
             Lai's Lab assumes no liability for actions taken based on these outputs.
         </div>
+
+        <p style="font-size: 12px; color: #444;">
+            © 2025 <b>Lai's Lab</b> <span style="color: #ccc; margin: 0 5px;">|</span> 
+            <span style="color: #888; font-size: 11px;">System V9.3 Enterprise</span>
+        </p>
+        
     </div>
-    """, unsafe_allow_html=True)
+    """
+    st.markdown(footer_html, unsafe_allow_html=True)
 
-# 3. Session 初始化
-if 'page' not in st.session_state: st.session_state.page = 1
-if 'user_role' not in st.session_state: st.session_state.user_role = "Guest"
-if 'user_email' not in st.session_state: st.session_state.user_email = ""
-if 'current_role_card' not in st.session_state: st.session_state.current_role_card = "Global Educator"
-if 'lang' not in st.session_state: st.session_state.lang = "English"
+def logout():
+    """登出清理"""
+    lc.perform_logout()
+    st.session_state.clear()
+    st.rerun()
 
-# UI 文本获取 (从 pd 拿数据)
-def get_ui(key):
-    lang_pack = pd.LANG_DICT.get(st.session_state.lang, pd.LANG_DICT["English"])
-    return lang_pack.get(key, pd.LANG_DICT["English"].get(key, key))
+# ==========================================
+# 3. 登录页 (Landing Page)
+# ==========================================
 
-# 4. 侧边栏逻辑 (Sidebar Logic) - 7大模块完整版
-def render_sidebar():
-    if st.session_state.page > 1:
-        with st.sidebar:
-            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-            try: st.image("logo.png", width=140) 
-            except: st.markdown("## 🧠 Lai's Lab")
+def show_login_page():
+    col1, col2 = st.columns([1, 1.5])
+    
+    with col1:
+        st.image("https://via.placeholder.com/150", width=100) # 请替换您的Logo
+        st.title("PromptLab AI V9.3")
+        st.markdown("**The Ultimate Enterprise Prompt Engine**")
+        st.markdown("---")
+        
+        # 广告位
+        st.error("🔥 **Limited Deal:** Lifetime Pro Access for **$12.90** ~~$39.90~~")
+        
+        tab_guest, tab_pro = st.tabs(["👤 Guest Trial", "💎 Activate Pro"])
+        
+        with tab_guest:
+            email = st.text_input("Enter Email to Start", placeholder="you@example.com")
+            if st.button("🚀 Start Free Trial", use_container_width=True):
+                if "@" in email:
+                    st.session_state.user_email = email
+                    st.session_state.user_tier = "Guest"
+                    st.session_state.logged_in = True
+                    st.rerun()
+                else:
+                    st.warning("Please enter a valid email.")
+                    
+        with tab_pro:
+            pro_email = st.text_input("Pro Email", placeholder="Email used for purchase")
+            license_key = st.text_input("License Key", placeholder="LAI-XXXX-XXXX")
             
-            st.markdown("### **Enterprise Workspace**")
-            st.caption("V9.0 Professional Edition")
-            st.markdown("---")
+            if st.button("💎 Activate License", type="primary", use_container_width=True):
+                status = lc.check_user_tier(pro_email, license_key)
+                if status == "Pro":
+                    st.session_state.user_email = pro_email
+                    st.session_state.user_tier = "Pro"
+                    st.session_state.logged_in = True
+                    st.balloons()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("Invalid Key. Please check again.")
             
-            is_pro = st.session_state.user_role == "PRO"
+            st.markdown("[❓ Lost License Key?](https://app.lemonsqueezy.com/my-orders)", unsafe_allow_html=True)
+
+    with col2:
+        # 右侧对比表
+        st.markdown("### Why Go Pro?")
+        st.markdown("""
+        | Feature | 👤 Guest | 💎 Pro Enterprise |
+        | :--- | :--- | :--- |
+        | **Daily Limit** | 🔒 5 Gens/Day | ✅ **Unlimited** (FUP 1k) |
+        | **Modes** | 🔒 1 Mode Only | ✅ **All 18 Modes** |
+        | **Watermark** | 🔒 Yes | ✅ **None (Clean)** |
+        | **Speed** | 🐢 Standard Queue | 🚀 **VIP Priority** |
+        | **Support** | 3-5 Days | **1-2 Days** |
+        """)
+        st.info("💡 Join 10,000+ Educators & Creators today.")
+
+    # 底部调用 Footer
+    render_footer()
+
+# ==========================================
+# 4. 主工作台 (Main Workspace)
+# ==========================================
+
+def show_main_app():
+    # --- A. 侧边栏 (Sidebar) ---
+    with st.sidebar:
+        st.title("🧬 Lai's Lab")
+        
+        # 1. 用户信息卡片
+        tier_icon = "💎" if st.session_state.user_tier == "Pro" else "👤"
+        st.caption(f"{tier_icon} {st.session_state.user_tier} Plan")
+        st.caption(f"📧 {st.session_state.user_email}")
+        
+        # 用量进度条
+        can_generate, remaining, max_limit = lc.check_daily_limit_by_email(
+            st.session_state.user_email, 
+            st.session_state.user_tier, 
+            st.session_state.daily_usage
+        )
+        progress_val = st.session_state.daily_usage / max_limit if max_limit > 0 else 0
+        st.progress(min(progress_val, 1.0))
+        st.caption(f"Usage: {st.session_state.daily_usage} / {max_limit}")
+
+        st.divider()
+
+        # 2. 全局设置
+        selected_lang = st.selectbox("🌐 Language", list(dm.LANG_MAP.keys()))
+        st.session_state.language = selected_lang
+        
+        # 角色选择器 (核心)
+        role_list = list(dm.ROLES_CONFIG.keys())
+        selected_role = st.selectbox("🎭 Role", role_list)
+        
+        st.divider()
+
+        # 3. 智能客服 (Smart Support)
+        with st.expander("🎫 Support / Ticket"):
+            ticket_subject = st.text_input("Subject", placeholder="Refund, Key, Bug...")
             
-            # --- 1. 用户身份卡 (Identity) ---
-            with st.container():
-                enterprise_card() # 卡片背景
-                role_badge = "💎 **PRO Enterprise**" if is_pro else "👤 Guest Trial"
-                st.markdown(f"{role_badge}")
-                st.caption(f"ID: {st.session_state.user_email or 'Guest_User'}")
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            # --- 2. 语言切换 (Language) ---
-            # 逻辑：PRO看15种，Guest看3种
-            avail_langs = list(pd.LANG_DICT.keys()) if is_pro else ["English", "简体中文", "Español"]
-            st.selectbox("🌐 Global Language", avail_langs, key="lang_sidebar")
-            st.session_state.lang = st.session_state.lang_sidebar
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            # --- 3. 使用次数表 (Usage Stats) ---
-            # 逻辑：绑定 Email 查询用量
-            usage = pl.get_user_usage(st.session_state.user_email)
-            limits = pl.LIMITS["PRO"] if is_pro else pl.LIMITS["FREE"]
-            
-            st.caption("📊 Daily Usage Stats")
-            # 文本进度条
-            txt_max = "∞" if is_pro else limits['text_daily']
-            st.progress(0 if is_pro else min(usage['text_count']/5, 1.0), 
-                        f"Text Gen: {usage['text_count']} / {txt_max}")
-            # 图片进度条
-            img_max = 200 if is_pro else limits['image_daily']
-            st.progress(min(usage['image_count']/img_max, 1.0), 
-                        f"Image Gen: {usage['image_count']} / {img_max}")
-
-            # --- 4. 逼单广告 (Sticky Ad) ---
-            # 逻辑：仅 Guest 可见
-            if not is_pro:
-                st.markdown("""
-                <div class="sticky-ad">
-                    <div style="color:#ff4b4b; font-weight:800; font-size:12px;">⚡ LIMITED UPGRADE</div>
-                    <div style="color:#2C3E50; font-weight:900; font-size:24px;">$12.90</div>
-                    <div style="color:grey; font-size:12px; margin-bottom:8px;">Lifetime Enterprise License</div>
-                    <a href="https://cikgulai.lemonsqueezy.com/checkout/buy/6b49b11a-830a-46e3-a458-0d8f2d2b160c?discount=PROMPTLAB" target="_blank" style="text-decoration:none;">
-                        <button style="background:#ff4b4b; color:white; border:none; width:100%; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;">👉 Activate Now</button>
-                    </a>
-                </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("---")
-            
-            # --- 5. 智能工单系统 (Smart Ticket) ---
-            with st.expander(get_ui('ticket_title')): # "Submit Ticket"
-                cat = st.selectbox("Category", [
-                    "Bug / Error",
-                    "Billing Issue",
-                    "Feature Request", 
-                    "Partnership / Sponsorship", 
-                    "Others"
-                ])
-                sub = st.text_input(get_ui('ticket_sub')) # "Subject"
-                msg = st.text_area(get_ui('ticket_msg'))  # "Message"
-                
-                # 拦截逻辑 (调用 Logic 层)
-                should_intercept, reply = pl.check_ticket_intercept(sub, msg)
-                
+            # 智能拦截逻辑
+            if ticket_subject:
+                should_intercept, reply = lc.smart_intercept(ticket_subject)
                 if should_intercept:
                     st.warning(reply)
+            
+            ticket_msg = st.text_area("Message", height=100)
+            
+            if st.button("Submit Ticket"):
+                if not ticket_subject or not ticket_msg:
+                    st.error("Please fill all fields.")
                 else:
-                    if st.button("Submit Ticket"):
-                        if sub and msg:
-                            st.success("✅ Ticket Sent! Support team will reply in 24h.")
-                            # 这里实际上 pl 可以处理发送逻辑
+                    # 假装发邮件
+                    ticket_id = int(time.time())
+                    # 记录到 Airtable
+                    lc.log_ticket_to_airtable(ticket_id, st.session_state.user_email, st.session_state.user_tier, ticket_subject)
+                    # 发送真实回执
+                    success_msg = lc.send_auto_reply_email(st.session_state.user_email, st.session_state.user_tier, ticket_id, ticket_subject)
+                    
+                    if success_msg == "Email Sent Successfully":
+                        if st.session_state.user_tier == "Pro":
+                            st.success(f"💎 VIP Ticket #{ticket_id} Sent! Reply in 1-2 days.")
                         else:
-                            st.error("Please fill all fields.")
+                            st.success(f"✅ Ticket #{ticket_id} Queued. Reply in 3-5 days.")
+                    else:
+                        st.error(f"System Error: {success_msg}")
 
-            # --- 6. FAQ 知识库 (Knowledge Base) ---
-            st.caption("📚 Knowledge Base")
-            # 逻辑：遍历 pd.FAQ_DB，自动显示 Affiliate 等所有分类
-            for cat, qas in pd.FAQ_DB.items():
-                with st.expander(cat):
-                    for q, a in qas:
-                        st.markdown(f"**Q: {q}**\n\n{a}")
-            
-            st.markdown("---")
-            
-            # --- 7. 登出按钮 (Logout) ---
-            if st.button("🚪 " + get_ui('logout'), use_container_width=True):
-                st.session_state.page = 1
-                st.session_state.user_role = "Guest"
-                st.rerun()
+        # 4. 退出
+        st.divider()
+        if st.button("🚪 Logout"):
+            logout()
 
-render_sidebar()
-
-# 5. 页面路由逻辑
-
-# === PAGE 1: LANDING (首页) ===
-if st.session_state.page == 1:
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-    c_top1, c_top2 = st.columns([9, 1])
-    with c_top2: st.session_state.lang = st.selectbox("🌐", ["English", "简体中文", "Español"], label_visibility="collapsed")
-
-    # HERO (紧凑版横向排版)
-    # [1.2, 8.8] 比例能让文字紧贴 Logo
-    with st.container():
-        c1, c2 = st.columns([1.2, 8.8]) 
-        with c1:
-            try: st.image("logo.png", width=150) # 微调大小至 150px
-            except: st.markdown("# 🧠")
-        with c2:
-            st.markdown("""
-            <div style='text-align: left; padding-top: 10px;'>
-                <h1 style='color: #0F52BA; font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;'>The Ultimate Enterprise Prompt Engine</h1>
-                <p style='color: #5d6d7e; font-size: 1.2rem; font-weight: 500;'>Empowering Knowledge Professionals with Scale, Security & Precision.</p>
-                <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
-                    <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🛡️ Secure & Private</span>
-                    <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🚀 Turbo Engine</span>
-                    <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🌍 15+ Languages</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    main_c1, main_c2 = st.columns([4, 6], gap="large") # 调整比例给表格更多空间
+    # --- B. 主界面 (Main Area) ---
     
-    # 左侧：登录区
-    with main_c1:
-        with st.container():
-            enterprise_card()
-            st.subheader("🔐 Secure Access")
-            t1, t2 = st.tabs(["💎 PRO Login", "👤 Guest"])
-            with t1:
-                st.text_input("Enterprise Email", key="p_e")
-                st.text_input("License Key", type="password", key="p_k")
-                if st.button("Login PRO", type="primary", use_container_width=True):
-                    # 调用 pl 验证
-                    if pl.validate_license_key(st.session_state.p_k):
-                        st.session_state.user_email=st.session_state.p_e; st.session_state.user_role="PRO"; st.session_state.page=2; st.rerun()
-                    else: st.error("Invalid Key")
-            with t2:
-                st.text_input("Email", key="g_e")
-                if st.button("Guest Trial", type="secondary", use_container_width=True):
-                    if st.session_state.g_e:
-                        st.session_state.user_email=st.session_state.g_e; st.session_state.user_role="Guest"; st.session_state.page=2; st.rerun()
+    # 获取当前语言的UI文本
+    lang_pack = dm.LANG_MAP.get(selected_lang, dm.LANG_MAP["English"])
+    
+    st.header(f"{selected_role} Workspace")
+    
+    # 1. 模式选择 (Mode Selector)
+    modes = list(dm.ROLES_CONFIG[selected_role].keys())
+    selected_mode = st.selectbox("Select Mode", modes)
+    
+    # 权限锁判断
+    is_locked = lc.check_mode_lock(st.session_state.user_tier, selected_mode)
+    
+    if is_locked:
+        st.error(f"🔒 {selected_mode} is locked for Guest users.")
+        st.info("💎 Upgrade to Pro to unlock this mode and remove watermarks.")
+        st.button("👉 Get Pro Access ($12.90)", disabled=True) 
+    else:
+        # 2. 选项选择 (Option Selector)
+        options = dm.ROLES_CONFIG[selected_role][selected_mode]
+        option_labels = [opt["label"] for opt in options]
+        selected_option_label = st.selectbox("Select Action", option_labels)
+        
+        # 3. 动态输入区
+        # Custom 选项特别提示
+        if "Custom" in selected_option_label:
+            input_ph = "Describe specifically what you need..."
+        else:
+            input_ph = lang_pack["input_ph"]
+            
+        user_input = st.text_area("📝 Context / Details", placeholder=input_ph, height=150)
+        
+        # 4. 生成按钮
+        if st.button(lang_pack["generate"], type="primary", use_container_width=True):
+            if not user_input:
+                st.warning("Please enter some context first.")
+            elif not can_generate:
+                st.error("🚫 Daily Limit Reached. Please come back tomorrow or Upgrade.")
+            else:
+                # === 生成流程 ===
+                st.session_state.daily_usage += 1
+                output_placeholder = st.empty()
+                
+                # Guest 的假进度条逻辑
+                if st.session_state.user_tier == "Guest":
+                    loading_msgs = lc.get_guest_loading_messages()
+                    progress_bar = st.progress(0)
+                    for i in range(100):
+                        time.sleep(0.03) # 故意慢
+                        progress_bar.progress(i + 1)
+                        if i % 20 == 0:
+                            output_placeholder.info(loading_msgs[i // 20 % len(loading_msgs)])
+                    progress_bar.empty()
+                else:
+                    # Pro 秒开
+                    with st.spinner("⚡ Pro Turbo Engine Generating..."):
+                        time.sleep(0.8)
 
-    # 右侧：对比表 (最终逻辑版)
-    with main_c2:
-        with st.container():
-            enterprise_card()
-            st.subheader("📋 Plan Comparison")
-            st.markdown("""
-            <table class="custom-table">
-                <thead>
-                    <tr><th>Capability</th><th style="background:#e3f2fd; color:#0F52BA;">Starter (Guest)</th><th>💎 Enterprise (PRO)</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>🧠 AI Core</td><td>🐢 Standard (Queue)</td><td class="pro-tag">🚀 Turbo (0.5s Instant)</td></tr>
-                    <tr><td>🎭 Role Access</td><td>✅ All Roles Open</td><td class="pro-tag">✅ All Roles Open</td></tr>
-                    <tr><td>🔓 Mode Access</td><td>🔒 1 Free Mode / Role</td><td class="pro-tag">✅ All 18+ Modes</td></tr>
-                    <tr><td>📝 Daily Text</td><td>🔒 5 / Day</td><td class="pro-tag">✅ Unlimited</td></tr>
-                    <tr><td>🎨 Daily Image</td><td>🔒 3 / Day</td><td class="pro-tag">✅ Max 200 / Day</td></tr>
-                    <tr><td>📂 Uploads</td><td>🔒 Single File</td><td class="pro-tag">✅ Batch 50+ Files</td></tr>
-                    <tr><td>🌍 Languages</td><td>🔒 3 (Basic)</td><td class="pro-tag">✅ 15 Global</td></tr>
-                    <tr><td>📤 Sharing</td><td>🔒 WhatsApp Only</td><td class="pro-tag">✅ All (No Watermark)</td></tr>
-                    <tr><td>💾 Downloads</td><td>🔒 TXT (Watermarked)</td><td class="pro-tag">✅ PDF, CSV, TXT</td></tr>
-                    <tr><td>©️ License</td><td>❌ Personal Use</td><td class="pro-tag">✅ Commercial Included</td></tr>
-                </tbody>
-            </table>
-            """, unsafe_allow_html=True)
-
+                # 调用大脑生成
+                final_output, _ = lc.generate_ai_response_mock(
+                    selected_role, selected_mode, selected_option_label, 
+                    user_input, st.session_state.user_tier, selected_lang
+                )
+                
+                # 展示结果
+                output_placeholder.markdown("### ✨ Generated Result")
+                st.text_area("Result", value=final_output, height=300)
+                
+                # --- C. 结果操作塔 (Action Deck) ---
+                col_a, col_b, col_c = st.columns([1, 1, 1])
+                
+                with col_a:
+                    render_download_button(final_output)
+                
+                with col_b:
+                    st.link_button("🎨 Open Midjourney", "https://www.midjourney.com/app/")
+                    
+                with col_c:
+                    encoded_text = final_output[:500] 
+                    wa_link = f"https://wa.me/?text={encoded_text}..."
+                    st.link_button("💬 Share WhatsApp", wa_link)
+                
+                # 💎 Pro 专属导出区 (真实 PDF)
+                if st.session_state.user_tier == "Pro":
+                    st.divider()
+                    st.markdown("#### 💎 Pro Export Options")
+                    
+                    # 生成 PDF 的二进制数据
+                    pdf_bytes = create_pdf(final_output, selected_role, selected_mode)
+                    
+                    col_d, col_e = st.columns(2)
+                    with col_d:
+                        st.download_button(
+                            label="📕 Download PDF Report",
+                            data=pdf_bytes,
+                            file_name=f"LaisLab_{int(time.time())}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    with col_e:
+                         st.download_button(
+                            label="📊 Download CSV (Coming Soon)",
+                            data=final_output,
+                            file_name="export.csv",
+                            disabled=True,
+                            use_container_width=True
+                        )
+    
+    # 底部调用 Footer
     render_footer()
 
-# === PAGE 2: ROLE HALL ===
-elif st.session_state.page == 2:
-    st.button("⬅️ Dashboard", on_click=lambda: st.session_state.update(page=1))
-    st.title("Select Persona"); st.write("---")
-    
-    # 从 pd 读取角色列表
-    roles = list(pd.ROLES_DB.keys())
-    cols = st.columns(3)
-    for i, r in enumerate(roles):
-        with cols[i%3]:
-            with st.container():
-                enterprise_card(); st.subheader(f"🎭 {r}")
-                if st.button(f"Launch {r}", key=f"b{i}", use_container_width=True, type="primary" if i==0 else "secondary"):
-                    st.session_state.current_role_card=r; st.session_state.page=3; st.rerun()
-    render_footer()
+# ==========================================
+# 5. 程序入口
+# ==========================================
 
-# === PAGE 3: WORKSPACE ===
-elif st.session_state.page == 3:
-    # 顶部
-    with st.container():
-        enterprise_card()
-        c1, c2 = st.columns([1,6])
-        with c1: 
-            if st.button("⬅️ Back"): st.session_state.page=2; st.rerun()
-        with c2: st.markdown(f"### 🛠️ Active: **{st.session_state.current_role_card}**")
-    
-    st.write("<br>", unsafe_allow_html=True)
-    is_pro = st.session_state.user_role == "PRO"
-    
-    # 从 pd 读取当前角色的数据
-    role_data = pd.ROLES_DB[st.session_state.current_role_card]
-    
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
-        with st.container():
-            enterprise_card(); st.subheader("1. Config")
-            mode = st.selectbox(get_ui('mode_sel'), list(role_data.keys()))
-            
-            # PRO 锁 (只允许第1个模式)
-            if not is_pro and mode != list(role_data.keys())[0]: st.warning("🔒 PRO Only - Please Upgrade"); st.stop()
-            
-            opt = st.selectbox(get_ui('opt_sel'), role_data[mode]["options"])
-            
-    with c2:
-        with st.container():
-            enterprise_card(); st.subheader("2. Input")
-            st.file_uploader("Attach", accept_multiple_files=is_pro)
-            txt = st.text_area("Context", height=150, placeholder=role_data[mode]["placeholder"])
-            
-    if st.button("✨ Generate", type="primary", use_container_width=True):
-        # 调用 pl 更新用量
-        pl.update_user_usage(st.session_state.user_email, "text", 1)
-        
-        with st.status("🚀 Processing..."):
-            time.sleep(1); st.write("✅ Done")
-        
-        # 调用 pl 生成核心 Prompt
-        st.session_state.result = pl.generate_pasec_prompt(
-            st.session_state.current_role_card, mode, opt, txt, 0, st.session_state.lang, is_pro
-        )
-        st.rerun()
-        
-    if 'result' in st.session_state:
-        st.write("---")
-        with st.container():
-            enterprise_card(); st.subheader("🎉 Result")
-            st.text_area("Output", st.session_state.result, height=300)
-            
-    render_footer()
-
+if __name__ == "__main__":
+    if st.session_state.logged_in:
+        show_main_app()
+    else:
+        show_login_page()
