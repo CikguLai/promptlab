@@ -225,7 +225,7 @@ if st.session_state.page == 1:
             st.markdown("""
             <div style='text-align: left; padding-top: 10px;'>
                 <h1 style='color: #0F52BA; font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;'>The Ultimate Enterprise Prompt Engine</h1>
-                <p style='color: #5d6d7e; font-size: 1.2rem; font-weight: 500;'>Empowering Educators with Scale, Security & Pedagogical Impact.</p>
+                <p style='color: #5d6d7e; font-size: 1.2rem; font-weight: 500;'>Empowering Knowledge Professionals with Scale, Security & Precision.</p>
                 <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
                     <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🛡️ Secure & Private</span>
                     <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🚀 Turbo Engine</span>
@@ -352,3 +352,4 @@ elif st.session_state.page == 3:
             st.text_area("Output", st.session_state.result, height=300)
             
     render_footer()
+
