@@ -2,7 +2,7 @@
 # ==========================================
 # PromptLab AI V9.0 Enterprise Final
 # 架构：MVC 分离版 (UI Only)
-# 功能：侧边栏7大模块 + 底部Footer + 企业级UI
+# 功能：侧边栏7大模块 + 首页对比表 + 紧凑Hero布局
 # ==========================================
 
 import streamlit as st
@@ -46,11 +46,12 @@ st.markdown("""
         margin-top: 20px; box-shadow: 0 4px 12px rgba(255, 75, 75, 0.1);
     }
     
-    /* --- 表格样式 --- */
+    /* --- 表格样式 (Plan Comparison) --- */
     .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #E0E6ED; border-radius: 12px; overflow: hidden; }
-    .custom-table th { background: #0F52BA; color: white; padding: 12px; text-align: left; }
-    .custom-table td { padding: 12px; border-bottom: 1px solid #eee; background: white; color: #333; }
-    .pro-tag { color: #0F52BA; font-weight: bold; }
+    .custom-table th { background: #0F52BA; color: white; padding: 12px; text-align: left; font-weight: 700; }
+    .custom-table td { padding: 12px; border-bottom: 1px solid #eee; background: white; color: #333; font-size: 14px; }
+    .custom-table tr:last-child td { border-bottom: none; }
+    .pro-tag { color: #0F52BA; font-weight: 800; }
 
     /* --- Footer 样式 --- */
     .footer {
@@ -59,14 +60,12 @@ st.markdown("""
         background-color: #fff;
     }
     .footer b { color: #2C3E50; }
-    .footer-links a { color: #0F52BA; text-decoration: none; margin: 0 10px; }
+    .footer-links a { color: #0F52BA; text-decoration: none; margin: 0 10px; transition: 0.3s; }
+    .footer-links a:hover { text-decoration: underline; color: #1e62c9; }
     .footer-disclaimer { font-size: 11px; color: #bdc3c7; max-width: 600px; margin: 10px auto; font-style: normal; }
 
     /* 隐藏默认元素 */
     #MainMenu, footer, header {visibility: hidden;}
-    
-    /* Hero 布局 */
-    .hero-container { display: flex; align-items: center; justify-content: center; gap: 40px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -74,7 +73,7 @@ st.markdown("""
 def enterprise_card(): 
     st.markdown('<div class="enterprise-card-marker"></div>', unsafe_allow_html=True)
 
-# Footer 渲染函数
+# Footer 渲染函数 (2026版)
 def render_footer():
     st.markdown("""
     <div class="footer">
@@ -176,7 +175,7 @@ def render_sidebar():
                 sub = st.text_input(get_ui('ticket_sub')) # "Subject"
                 msg = st.text_area(get_ui('ticket_msg'))  # "Message"
                 
-                # 拦截逻辑 check_ticket_intercept
+                # 拦截逻辑 (调用 Logic 层)
                 should_intercept, reply = pl.check_ticket_intercept(sub, msg)
                 
                 if should_intercept:
@@ -215,16 +214,17 @@ if st.session_state.page == 1:
     c_top1, c_top2 = st.columns([9, 1])
     with c_top2: st.session_state.lang = st.selectbox("🌐", ["English", "简体中文", "Español"], label_visibility="collapsed")
 
-    # HERO (横向 Logo + Slogan)
+    # HERO (紧凑版横向排版)
+    # [1.2, 8.8] 比例能让文字紧贴 Logo
     with st.container():
-        c1, c2 = st.columns([1, 3])
+        c1, c2 = st.columns([1.2, 8.8]) 
         with c1:
-            try: st.image("logo.png", width=160)
+            try: st.image("logo.png", width=150) # 微调大小至 150px
             except: st.markdown("# 🧠")
         with c2:
             st.markdown("""
-            <div style='text-align: left;'>
-                <h1 style='color: #0F52BA; font-size: 2.5rem; margin-bottom: 10px;'>The Ultimate Enterprise Prompt Engine</h1>
+            <div style='text-align: left; padding-top: 10px;'>
+                <h1 style='color: #0F52BA; font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;'>The Ultimate Enterprise Prompt Engine</h1>
                 <p style='color: #5d6d7e; font-size: 1.2rem; font-weight: 500;'>Empowering Educators with Scale, Security & Pedagogical Impact.</p>
                 <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
                     <span style="background:#eef2f7; padding:5px 12px; border-radius:15px; display: flex; align-items: center; gap: 5px;">🛡️ Secure & Private</span>
@@ -234,9 +234,9 @@ if st.session_state.page == 1:
             </div>
             """, unsafe_allow_html=True)
 
-    main_c1, main_c2 = st.columns([4, 5], gap="large")
+    main_c1, main_c2 = st.columns([4, 6], gap="large") # 调整比例给表格更多空间
     
-    # 登录区
+    # 左侧：登录区
     with main_c1:
         with st.container():
             enterprise_card()
@@ -256,7 +256,7 @@ if st.session_state.page == 1:
                     if st.session_state.g_e:
                         st.session_state.user_email=st.session_state.g_e; st.session_state.user_role="Guest"; st.session_state.page=2; st.rerun()
 
-    # 对比表 (HTML)
+    # 右侧：对比表 (最终逻辑版)
     with main_c2:
         with st.container():
             enterprise_card()
@@ -267,17 +267,19 @@ if st.session_state.page == 1:
                     <tr><th>Capability</th><th style="background:#e3f2fd; color:#0F52BA;">Starter (Guest)</th><th>💎 Enterprise (PRO)</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>🤖 AI Model</td><td>Standard Shared</td><td class="pro-tag">⚡ Dedicated Turbo</td></tr>
-                    <tr><td>📝 Text Gen</td><td>5 / day</td><td class="pro-tag">✅ Unlimited</td></tr>
-                    <tr><td>🎨 Image Gen</td><td>3 / day</td><td class="pro-tag">✅ 200 / day</td></tr>
-                    <tr><td>🌍 Languages</td><td>3 Basic</td><td class="pro-tag">✅ 15+ Global</td></tr>
-                    <tr><td>📂 Batch Upload</td><td>Single File</td><td class="pro-tag">✅ Bulk (50+)</td></tr>
-                    <tr><td>💼 Commercial</td><td>❌ No</td><td class="pro-tag">✅ Included</td></tr>
+                    <tr><td>🧠 AI Core</td><td>🐢 Standard (Queue)</td><td class="pro-tag">🚀 Turbo (0.5s Instant)</td></tr>
+                    <tr><td>🎭 Role Access</td><td>✅ All Roles Open</td><td class="pro-tag">✅ All Roles Open</td></tr>
+                    <tr><td>🔓 Mode Access</td><td>🔒 1 Free Mode / Role</td><td class="pro-tag">✅ All 18+ Modes</td></tr>
+                    <tr><td>📝 Daily Text</td><td>🔒 5 / Day</td><td class="pro-tag">✅ Unlimited</td></tr>
+                    <tr><td>🎨 Daily Image</td><td>🔒 3 / Day</td><td class="pro-tag">✅ Max 200 / Day</td></tr>
+                    <tr><td>📂 Uploads</td><td>🔒 Single File</td><td class="pro-tag">✅ Batch 50+ Files</td></tr>
+                    <tr><td>🌍 Languages</td><td>🔒 3 (Basic)</td><td class="pro-tag">✅ 15 Global</td></tr>
+                    <tr><td>📤 Sharing</td><td>🔒 WhatsApp Only</td><td class="pro-tag">✅ All (No Watermark)</td></tr>
+                    <tr><td>💾 Downloads</td><td>🔒 TXT (Watermarked)</td><td class="pro-tag">✅ PDF, CSV, TXT</td></tr>
+                    <tr><td>©️ License</td><td>❌ Personal Use</td><td class="pro-tag">✅ Commercial Included</td></tr>
                 </tbody>
             </table>
             """, unsafe_allow_html=True)
-            with st.expander("🔍 Full Specs"):
-                 st.write("Full support for 15+ languages and 18+ pedagogical modes.")
 
     render_footer()
 
@@ -319,8 +321,8 @@ elif st.session_state.page == 3:
             enterprise_card(); st.subheader("1. Config")
             mode = st.selectbox(get_ui('mode_sel'), list(role_data.keys()))
             
-            # PRO 锁
-            if not is_pro and mode != list(role_data.keys())[0]: st.warning("🔒 PRO Only"); st.stop()
+            # PRO 锁 (只允许第1个模式)
+            if not is_pro and mode != list(role_data.keys())[0]: st.warning("🔒 PRO Only - Please Upgrade"); st.stop()
             
             opt = st.selectbox(get_ui('opt_sel'), role_data[mode]["options"])
             
