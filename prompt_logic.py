@@ -1,242 +1,311 @@
-# prompt_logic.py
-# ==========================================
-# PromptLab AI V7.3 Ultimate Edition
-# 核心逻辑引擎 (Core Logic Engine)
-# 包含: PASEC生成, PDF渲染, 数据库管理, 验证逻辑
-# ==========================================
+# logic_core.py
+# Lai's Lab V9.2 - 逻辑大脑 (最终纯净版)
+# 负责：权限判断、Prompt组装、智能拦截、邮件自动化、Telegram通知、Airtable备份
 
-import json
-import os
-import datetime
 import time
 import requests
-import base64
-import re
-from fpdf import FPDF
+import smtplib
+import random
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
-# 1. 商业限制常量 (The Paywall Matrix)
-# ------------------------------------------
-LIMITS = {
-    "FREE": {
-        "text_daily": 5,
-        "image_daily": 3,
-        "batch_size": 1,
-        "can_access_all_modes": False,
-        "show_watermark": True
-    },
-    "PRO": {
-        "text_daily": 1000,  # Unlimited
-        "image_daily": 200,   # Fair Use
-        "batch_size": 50,
-        "can_access_all_modes": True,
-        "show_watermark": False
-    }
+# 引入数据库
+from data_matrix import ROLES_CONFIG, FAQ_DATABASE
+
+# ==========================================
+# 1. 核心配置区域 (Config Zone)
+# ==========================================
+# ⚠️ 注意：这里全部留空！
+# 所有的密码和 Key 都会由 app.py 从 .streamlit/secrets.toml 读取并注入进来。
+
+CONFIG = {
+    # 邮件发送配置
+    "EMAIL_SENDER_ADDRESS": "", # 会由 Secrets 注入
+    "EMAIL_APP_PASSWORD": "",   # 会由 Secrets 注入
+    
+    # 管理员配置
+    "EMAIL_ADMIN_ADDRESS": "",  # 会由 Secrets 注入
+    "EMAIL_REPLY_TO": "support@laislab.com", # 公开配置
+    
+    # 外部服务 API
+    "TELEGRAM_BOT_TOKEN": "",   # 会由 Secrets 注入
+    "TELEGRAM_CHAT_ID": "",     # 会由 Secrets 注入
+    "LEMONSQUEEZY_API_KEY": "", # 会由 Secrets 注入
+    
+    # Airtable 配置
+    "AIRTABLE_API_KEY": "",     # 会由 Secrets 注入
+    "AIRTABLE_BASE_ID": "",    
+    "AIRTABLE_TABLE_TICKETS": "Tickets",
+    "AIRTABLE_TABLE_USERS": "Users"
 }
 
-# 2. 本地数据库与持久化 (Persistence)
-# ------------------------------------------
-DB_FILE = 'user_db.json'
+# ==========================================
+# 2. 权限与用量逻辑 (Access & Quota)
+# ==========================================
 
-def load_db():
-    if not os.path.exists(DB_FILE):
-        return {}
-    try:
-        with open(DB_FILE, 'r') as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_db(db):
-    with open(DB_FILE, 'w') as f:
-        json.dump(db, f, indent=4)
-
-def get_user_usage(email):
-    """获取用户今日用量，自动处理跨天重置"""
-    db = load_db()
-    today_str = str(datetime.date.today())
+def check_user_tier(email, license_key=None):
+    """
+    验证用户身份。
+    """
+    if not license_key:
+        return "Guest"
     
-    if email not in db:
-        db[email] = {"date": today_str, "text_count": 0, "image_count": 0}
-        save_db(db)
-        return db[email]
-    
-    # 检查是否跨天
-    if db[email].get("date") != today_str:
-        db[email] = {"date": today_str, "text_count": 0, "image_count": 0}
-        save_db(db)
-    
-    return db[email]
-
-def update_user_usage(email, usage_type="text", count=1):
-    """更新用量"""
-    db = load_db()
-    today_str = str(datetime.date.today())
-    
-    if email not in db or db[email].get("date") != today_str:
-        db[email] = {"date": today_str, "text_count": 0, "image_count": 0}
-    
-    if usage_type == "image":
-        db[email]["image_count"] += count
+    # 模拟验证 (真实版这里可以调用 CONFIG["LEMONSQUEEZY_API_KEY"] 去查)
+    # 目前演示逻辑：只要以 LAI- 开头或者是管理员码就过
+    if license_key.startswith("LAI-") or license_key == "ADMIN-8888":
+        # 激活成功，记录到 Airtable
+        log_user_to_airtable(email, license_key, "Active")
+        return "Pro"
     else:
-        db[email]["text_count"] += count
-        
-    save_db(db)
+        return "Invalid"
 
-# 3. 激活码验证 (LemonSqueezy Real API)
-# ------------------------------------------
-def validate_license_key(key):
+def check_daily_limit_by_email(email, user_tier, current_usage):
     """
-    验证 License Key。
-    1. 检查后门 ADMIN-8888
-    2. 调用 LemonSqueezy API
+    检查每日用量 (绑定 Email)
+    返回: (是否允许生成, 剩余次数, 最大次数)
     """
-    key = key.strip()
-    if not key:
-        return False
+    if user_tier == "Guest":
+        max_limit = 5
+    else:
+        max_limit = 1000 # Pro 的防滥用软限 (FUP)
         
-    # 后门 (方便测试)
-    if key == "ADMIN-8888":
-        return True
-        
-    # 真实 API 验证
-    try:
-        url = "https://api.lemonsqueezy.com/v1/licenses/activate"
-        payload = {"license_key": key, "instance_name": "PromptLab_Web"}
-        headers = {"Accept": "application/json"}
-        
-        response = requests.post(url, data=payload, headers=headers, timeout=5)
-        data = response.json()
-        
-        # 只要 activated 为 True 即视为成功
-        if data.get("activated") is True:
-            return True
-    except:
-        # 如果网络不通，但 Key 格式看起来像 PRO，为了不卡住用户，可以放行(可选)
-        # 这里严格一点，只返回 False
-        pass
-        
-    return False
-
-# 4. PASEC 核心生成引擎 (The Brain)
-# ------------------------------------------
-def generate_pasec_prompt(role, mode, option, user_input, upload_count, language, is_pro):
-    """
-    生成符合 PASEC 结构的 Prompt。
-    """
-    # 1. 确定水印
-    watermark = ""
-    if not is_pro:
-        watermark = "\n\n---\n🔒 [Trial Version] Generated by PromptLab AI (Free)"
-
-    # 2. 根据选项构建内容 (Mock Logic)
-    # 这里模拟 AI 的思考过程，实际上是根据模板填空
+    if current_usage >= max_limit:
+        return False, 0, max_limit
     
-    context_str = f"User Input: {user_input}"
-    if upload_count > 0:
-        context_str += f"\n[System] Analyzed {upload_count} uploaded reference files."
+    remaining = max_limit - current_usage
+    return True, remaining, max_limit
 
-    # 3. 组装 PASEC 结构
-    # 强制包含 5 大标题
-    
-    prompt_content = f"""# Generated Prompt ({language})
-
-## 👤 P - Persona (角色)
-**Role**: {role}
-**Mode**: {mode}
-**Tone**: Professional & Engaging
-**Language**: Target Output in {language}
-
-## 🎯 A - Aim (目标)
-**Task**: Execute specific task based on option "{option}".
-**Goal**: Create high-quality content that meets professional standards.
-
-## 📂 S - Structure (格式)
-**Output Format**: Markdown
-**Layout**: Logical flow with clear headings and bullet points.
-
-## 📝 E - Effective (限制)
-**Constraints**: 
-- Avoid unnecessary fluff.
-- Maintain strict adherence to the requested tone.
-- Ensure cultural relevance for {language} audience.
-
-## 💡 C - Context (情境)
-{context_str}
-
----
-**[AI Generation Start]**
-
-(Here, the AI would generate the specific content for "{option}"...)
-
-Based on your request "{user_input}", here is the draft:
-
-1. **Core Concept**: Focusing on the key elements of {option}.
-2. **Details**: Expanding on the topic with depth and clarity.
-3. **Actionable Steps**: 
-   - Step 1: Analyze the requirements.
-   - Step 2: Apply the {mode} framework.
-   - Step 3: Review and refine.
-
-*(End of Generation)*{watermark}
-"""
-    return prompt_content
-
-# 5. PDF 生成器 (带防崩溃机制)
-# ------------------------------------------
-def create_pdf_bytes(content):
+def check_mode_lock(user_tier, mode_name):
     """
-    将文本转换为 PDF 二进制流。
-    包含字体回退逻辑。
+    检查模式是否被锁
+    逻辑：Mode 1 (Free) 对所有人开放，其他 Mode 对 Guest 锁住
     """
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+    if "Free" in mode_name:
+        return False # 不锁
     
-    font_path = 'font.ttf'
-    has_custom_font = False
-    
-    # 尝试加载中文字体
-    if os.path.exists(font_path):
-        try:
-            pdf.add_font('CustomFont', '', font_path, uni=True)
-            pdf.set_font('CustomFont', '', 12)
-            has_custom_font = True
-        except:
-            pass
+    if user_tier == "Pro":
+        return False # Pro 不锁
+        
+    return True # Guest 锁住
+
+def perform_logout():
+    """执行登出清理逻辑"""
+    return True
+
+# ==========================================
+# 3. 核心生成引擎 (The Engine)
+# ==========================================
+
+def get_guest_loading_messages():
+    """Guest 专属：温柔的排队/加载提示词"""
+    messages = [
+        "🔄 Connecting to Shared Server (Guest Queue)...",
+        "🐢 Warming up the AI engine...",
+        "⏳ Validating request in the public queue...",
+        "☕ Sipping coffee while we generate...",
+        "💡 Pro Tip: Enterprise members skip this queue...",
+        "✨ Refining the prompt structure..."
+    ]
+    return messages
+
+def generate_ai_response_mock(role, mode, option_label, user_input, user_tier, language):
+    """
+    生成逻辑 (包含假进度控制)
+    """
+    # 1. 查找模板
+    option_list = ROLES_CONFIG[role][mode]
+    template = "Act as an expert."
+    for opt in option_list:
+        if opt["label"] == option_label:
+            template = opt["template"]
+            break
             
-    # 如果没有字体，回退到 Arial 并过滤非拉丁字符
-    if not has_custom_font:
-        pdf.set_font("Arial", size=12)
-        pdf.set_text_color(255, 0, 0)
-        pdf.cell(0, 10, txt="[System Warning: 'font.ttf' not found. CJK characters removed.]", ln=True)
-        pdf.set_text_color(0, 0, 0)
+    # 2. 组装 Prompt
+    final_prompt = template.replace("{input}", user_input)
+    
+    # 3. 进度条逻辑 (Guest 慢, Pro 快)
+    delay_time = 0.8 if user_tier == "Pro" else 4.0
+    
+    # 4. 模拟生成结果
+    output = f"""[System: Generated Prompt for {language}]\n\n{final_prompt}\n\n(Instruction: Copy this prompt into ChatGPT/Gemini to get the best result in {language}.)"""
+    
+    # 5. 水印逻辑
+    if user_tier == "Guest":
+        watermark = "\n\n" + "-"*30 + "\nGenerated by Lai's Lab (Free Version)\n💎 Upgrade to Pro for Unlimited Access & No Watermark"
+        output += watermark
         
-        # 简单的过滤逻辑，只保留 Latin-1 字符，防止报错
-        safe_content = content.encode('latin-1', 'ignore').decode('latin-1')
-        pdf.multi_cell(0, 10, txt=safe_content)
-    else:
-        # 有字体，直接输出
-        pdf.multi_cell(0, 10, txt=content)
-        
-    return pdf.output(dest='S').encode('latin-1')
+    return output, delay_time
 
-# 6. 智能工单拦截逻辑
-# ------------------------------------------
-def check_ticket_intercept(subject, message):
+# ==========================================
+# 4. 智能客服与拦截 (Smart Support)
+# ==========================================
+
+def smart_intercept(subject):
     """
-    检查是否包含拦截关键词。
-    返回: (should_intercept, reply_message)
+    FAQ 拦截逻辑 (覆盖 16 项 FAQ)
     """
-    full_text = (subject + " " + message).lower()
+    subject_lower = subject.lower()
     
-    # 关键词库
-    refund_words = ["refund", "money back", "return", "cancel"]
-    key_words = ["key", "license", "code", "lost", "invalid"]
+    # 拦截词库映射
+    intercept_map = {
+        "refund": "Purchase & License",
+        "money": "Purchase & License",
+        "key": "Purchase & License",
+        "lost": "Purchase & License",
+        "pdf": "Technical Support",
+        "font": "Technical Support",
+        "limit": "Usage Limits",
+        "quota": "Usage Limits",
+        "share": "Privacy & Security",
+        "slow": "Technical Support",
+        "affiliate": "Business & Affiliate",
+        "invoice": "Business & Affiliate",
+        "receipt": "Business & Affiliate",
+        "commercial": "Usage Limits",
+        "offline": "Usage Limits"
+    }
     
-    if any(w in full_text for w in refund_words):
-        return True, "🚫 **Policy Notice**: As stated in our FAQ, digital products are **Non-Refundable**. Please check the 'Billing' section."
-        
-    if any(w in full_text for w in key_words):
-        return True, "💡 **AI Suggestion**: Lost your key? You can recover it instantly at [LemonSqueezy Orders](https://app.lemonsqueezy.com/my-orders)."
-        
+    for word, category in intercept_map.items():
+        if word in subject_lower:
+            faq_list = FAQ_DATABASE[category]
+            # 简单返回该分类下的第一条，实际可优化
+            best_match = faq_list[0] 
+            return True, f"💡 **Smart Answer:**\n\n**Q: {best_match['q']}**\n**A:** {best_match['a']}"
+            
     return False, None
+
+# ==========================================
+# 5. 自动化通知系统 (Automation)
+# ==========================================
+
+def log_user_to_airtable(email, key, status):
+    """记录新激活用户到 Airtable"""
+    if not CONFIG["AIRTABLE_API_KEY"]: return
+    
+    url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
+    headers = {
+        "Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "fields": {
+            "Email": email,
+            "License Key": key,
+            "Status": status,
+            "Date": datetime.now().isoformat()
+        }
+    }
+    try:
+        requests.post(url, headers=headers, json=data)
+        send_telegram_alert(f"💰 New Pro User!\nEmail: {email}\nKey: {key}")
+    except:
+        pass
+
+def log_ticket_to_airtable(ticket_id, email, tier, subject):
+    """记录工单到 Airtable"""
+    if not CONFIG["AIRTABLE_API_KEY"]: return
+    
+    url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
+    headers = {
+        "Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "fields": {
+            "Ticket ID": str(ticket_id),
+            "User Email": email,
+            "Tier": tier,
+            "Subject": subject,
+            "Status": "Pending"
+        }
+    }
+    try:
+        requests.post(url, headers=headers, json=data)
+    except:
+        pass
+
+def send_telegram_alert(message):
+    """发送 Telegram 通知"""
+    if not CONFIG["TELEGRAM_BOT_TOKEN"]: return
+    
+    url = f"https://api.telegram.org/bot{CONFIG['TELEGRAM_BOT_TOKEN']}/sendMessage"
+    payload = {
+        "chat_id": CONFIG["TELEGRAM_CHAT_ID"],
+        "text": message
+    }
+    try:
+        requests.post(url, json=payload)
+    except:
+        pass
+
+def send_auto_reply_email(user_email, user_tier, ticket_id, issue_subject):
+    """
+    真实邮件发送 (SMTP)
+    """
+    sender = CONFIG["EMAIL_SENDER_ADDRESS"]
+    password = CONFIG["EMAIL_APP_PASSWORD"]
+    admin_email = CONFIG["EMAIL_ADMIN_ADDRESS"]
+    reply_to = CONFIG["EMAIL_REPLY_TO"]
+    
+    if not sender or not password:
+        return "Simulation: Email Config Missing"
+
+    # 1. 区分 Guest/Pro 话术
+    if user_tier == "Pro":
+        email_subject = f"💎 [VIP Priority] Ticket #{ticket_id} - We are on it!"
+        wait_time = "1 - 2 business days"
+        queue_type = "VIP Priority Queue"
+        greeting = "Dear Pro Member,"
+    else:
+        email_subject = f"[Ticket Received] Case #{ticket_id}"
+        wait_time = "3 - 5 business days"
+        queue_type = "Standard Queue"
+        greeting = "Dear User,"
+
+    # 2. 邮件正文
+    body = f"""
+{greeting}
+
+We have received your support request regarding: "{issue_subject}".
+
+------------------------------------------------
+TICKET ID: #{ticket_id}
+STATUS: {queue_type}
+ESTIMATED REPLY: {wait_time}
+------------------------------------------------
+
+While you wait, please check the FAQ section in the sidebar. Many issues (like Lost Keys or PDF Fonts) can be solved instantly there.
+
+If this issue is resolved, no further action is needed.
+If you still need help, simply reply to this email.
+
+Best Regards,
+Lai's Lab Support Team
+    """
+
+    # 3. 构建邮件
+    msg = MIMEMultipart()
+    msg['From'] = f"Lai's Lab Support <{sender}>"
+    msg['To'] = user_email
+    msg['Subject'] = email_subject
+    msg.add_header('Reply-To', reply_to)
+    
+    msg.attach(MIMEText(body, 'plain'))
+
+    # 4. 发送过程
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login(sender, password)
+        
+        # 发送给用户
+        server.send_message(msg)
+        
+        # 通知管理员
+        send_telegram_alert(f"🆘 New Ticket (#{ticket_id})\nUser: {user_email}\nSubject: {issue_subject}")
+        
+        server.quit()
+        return "Email Sent Successfully"
+    except Exception as e:
+        print(f"SMTP Error: {e}")
+        return f"Email Failed: {e}"
