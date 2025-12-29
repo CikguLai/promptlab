@@ -192,7 +192,7 @@ def show_login_page():
     col1, col2 = st.columns([1, 1.5])
     
     with col1:
-        st.image("https://via.placeholder.com/150", width=100) # 请替换您的Logo
+        st.image("logo.png", width=100) # 请替换您的Logo
         st.title("PromptLab AI V9.3")
         st.markdown("**The Ultimate Enterprise Prompt Engine**")
         st.markdown("---")
@@ -441,3 +441,4 @@ if __name__ == "__main__":
         show_main_app()
     else:
         show_login_page()
+
