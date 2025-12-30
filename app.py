@@ -1,4 +1,4 @@
-# app.py (V9.28 - Global 15 & Lost Key Fixed)
+# app.py (V9.28 - Gold Master: Final Slogan & Features)
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
@@ -6,9 +6,10 @@ import time, os
 import random
 from datetime import datetime
 
-st.set_page_config(page_title="Lai's Lab AI", layout="wide")
+# 1. 网页标签图标设为 DNA
+st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# 全量 CSS：优化表格与链接样式
+# 全量 CSS：优化表格、链接、Slogan 样式
 st.markdown("""
 <style>
     .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; }
@@ -16,8 +17,17 @@ st.markdown("""
     .compare-table td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
     .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
     .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
-    /* 修复链接悬停效果 */
     a:hover { text-decoration: underline !important; }
+    
+    /* Slogan 终极样式：大厂灰，紧贴标题 */
+    .app-slogan { 
+        font-size: 18px; 
+        color: #555; 
+        margin-top: -15px; 
+        margin-bottom: 25px; 
+        font-weight: 500; 
+        letter-spacing: 0.5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -25,7 +35,7 @@ st.markdown("""
 for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
     if key not in st.session_state: st.session_state[key] = val
 
-# --- 每一页都出现的 3 段式大厂 Footer ---
+# --- Footer 渲染函数 (三段式大厂风) ---
 def render_footer():
     current_hour = datetime.now().hour
     online_count = 150 + (current_hour * 8) + random.randint(1, 15)
@@ -68,7 +78,13 @@ def show_login_page():
     col1, col2 = st.columns([1, 1.4], gap="large")
     with col1:
         if os.path.exists("logo.png"): st.image("logo.png", width=110)
-        st.title(ui.get('sidebar_title', "Lai's Lab"))
+        
+        # 2. DNA 标题
+        st.title(f"🧬 {ui.get('sidebar_title', 'Lai\\'s Lab')}")
+        
+        # ✅ 3. 终极 Slogan：简单、有力、一眼秒懂
+        st.markdown('<div class="app-slogan">🚀 Your Automated Prompt Engineer</div>', unsafe_allow_html=True)
+
         st.markdown(f'<p style="color:#e53935; background:#fff5f5; padding:10px; border-radius:5px;">🔥 <b>Lifetime Pro:</b> $12.90</p>', unsafe_allow_html=True)
         
         t1, t2 = st.tabs([ui['plan_guest'], ui['plan_pro']])
@@ -83,11 +99,11 @@ def show_login_page():
                 if lc.check_user_tier(pe, lk) == "Pro":
                     st.session_state.user_email, st.session_state.user_tier, st.session_state.logged_in = pe, "Pro", True
                     st.balloons(); st.rerun()
-            # ✅ 修复：找回激活码链接 (已补回)
+            # 4. 找回 Key 链接 (位置完美)
             st.markdown('<div style="text-align: center; margin-top: 15px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #666; font-size: 13px; text-decoration: none;">🔒 Lost your key? Retrieve via LemonSqueezy</a></div>', unsafe_allow_html=True)
 
     with col2:
-        # 对比表保持最新
+        # 5. 最新对比表
         st.subheader("🆚 Compare Plans")
         st.markdown(f"""
         <table class="compare-table">
@@ -109,6 +125,7 @@ def show_main_app():
     ui = dm.LANG_MAP.get(st.session_state.language, dm.LANG_MAP["default"])
     with st.sidebar:
         st.caption(f"{'💎' if st.session_state.user_tier == 'Pro' else '👤'} {ui['plan_pro'] if st.session_state.user_tier == 'Pro' else ui['plan_guest']}")
+        # 6. 侧边栏变红进度条
         can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
         bar_color = "#ff4b4b" if (tot - st.session_state.daily_usage) <= 1 else "#00f2fe"
         st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%); }}</style>", unsafe_allow_html=True)
@@ -121,6 +138,7 @@ def show_main_app():
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
     st.header(f"🎭 {role}")
+    # 7. 主页金色动态统计
     dynamic_count = 100 + (datetime.now().hour * 2) + random.randint(1, 15)
     st.markdown(f"""<div style="background: #fff9e6; border-left: 5px solid #ffcc00; padding: 10px; border-radius: 5px; margin-bottom: 15px;"><span style="font-size: 14px; color: #856404;">🔥 <b>{ui.get('live_stat', 'Live Status')}:</b> {dynamic_count} {'Users active today' if st.session_state.language == 'English' else '位用户今日活跃'}</span></div>""", unsafe_allow_html=True)
 
