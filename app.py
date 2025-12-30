@@ -1,6 +1,5 @@
 # app.py
-# Lai's Lab V9.14 - 界面核心 (Final Gold Version)
-# 特性：Context-Aware Tone, Dynamic Lang, Smart Support
+# Lai's Lab V9.20 - 界面核心 (Final Launch Version)
 
 import streamlit as st
 import time
@@ -20,8 +19,8 @@ st.markdown("""
 <style>
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     div[data-testid="stDecoration"] {visibility: hidden; height: 0px;}
-    div[data-testid="stStatusWidget"] {visibility: hidden;}
     .block-container {padding-top: 1rem !important; padding-bottom: 5rem;}
+    
     .promo-box {
         background-color: #fff0f0; border: 1px solid #ffcdd2; color: #d32f2f;
         padding: 10px 15px; border-radius: 8px; font-size: 15px; margin-bottom: 25px;
@@ -29,21 +28,33 @@ st.markdown("""
     }
     .promo-price {font-weight: bold; font-size: 18px; color: #e53935;}
     .promo-old {text-decoration: line-through; color: #9e9e9e; font-size: 13px;}
-    a {text-decoration: none !important; color: #666;} a:hover {text-decoration: underline !important; color: #333;}
+    
+    a {text-decoration: none !important; color: #666;} 
+    a:hover {text-decoration: underline !important; color: #333;}
+    
+    .lost-key-link {text-align: center; margin-top: 15px; font-size: 13px; color: #888;}
+    .lost-key-link a {color: #666; border-bottom: 1px dashed #ccc;}
+    .lost-key-link a:hover {color: #d32f2f; border-bottom: 1px solid #d32f2f;}
+
     section[data-testid="stSidebar"] .block-container {padding-top: 2rem;}
 </style>
 """, unsafe_allow_html=True)
 
-# 🔐 Secrets
+# 🔐 Secrets 注入 (完整版)
 if "general" in st.secrets:
-    secrets = st.secrets["general"]
-    if "email_app_password" in secrets: lc.CONFIG["EMAIL_APP_PASSWORD"] = secrets["email_app_password"]
-    if "email_sender" in secrets: lc.CONFIG["EMAIL_SENDER_ADDRESS"] = secrets["email_sender"]
-    if "email_admin" in secrets: lc.CONFIG["EMAIL_ADMIN_ADDRESS"] = secrets["email_admin"]
-    if "telegram_token" in secrets: lc.CONFIG["TELEGRAM_BOT_TOKEN"] = secrets["telegram_token"]
-    if "telegram_chat_id" in secrets: lc.CONFIG["TELEGRAM_CHAT_ID"] = secrets["telegram_chat_id"]
-    if "airtable_key" in secrets: lc.CONFIG["AIRTABLE_API_KEY"] = secrets["airtable_key"]
-    if "lemonsqueezy_key" in secrets: lc.CONFIG["LEMONSQUEEZY_API_KEY"] = secrets["lemonsqueezy_key"]
+    s = st.secrets["general"]
+    # 邮件
+    if "email_app_password" in s: lc.CONFIG["EMAIL_APP_PASSWORD"] = s["email_app_password"]
+    if "email_sender" in s: lc.CONFIG["EMAIL_SENDER_ADDRESS"] = s["email_sender"]
+    if "email_admin" in s: lc.CONFIG["EMAIL_ADMIN_ADDRESS"] = s["email_admin"]
+    # 支付与验证
+    if "lemonsqueezy_key" in s: lc.CONFIG["LEMONSQUEEZY_API_KEY"] = s["lemonsqueezy_key"]
+    if "master_key" in s: lc.CONFIG["MASTER_KEY"] = s["master_key"]
+    # Airtable
+    if "airtable_key" in s: lc.CONFIG["AIRTABLE_API_KEY"] = s["airtable_key"]
+    if "airtable_base_id" in s: lc.CONFIG["AIRTABLE_BASE_ID"] = s["airtable_base_id"]
+    if "airtable_table_tickets" in s: lc.CONFIG["AIRTABLE_TABLE_TICKETS"] = s["airtable_table_tickets"]
+    if "airtable_table_users" in s: lc.CONFIG["AIRTABLE_TABLE_USERS"] = s["airtable_table_users"]
 
 # Session State
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
@@ -76,7 +87,7 @@ def create_pdf(content, role, mode):
 def render_footer():
     st.markdown("---")
     disclaimer = "Generative AI can make mistakes; please verify important information. Users are solely responsible for how they use the generated content. Lai's Lab assumes no liability for actions taken based on these outputs."
-    footer = f'<div style="text-align: center; font-family: sans-serif; padding-bottom: 30px;"><p style="font-size: 12px; color: #666; margin-bottom: 15px;"><a href="#" style="color:#666;margin:0 10px;">Privacy Policy</a> | <a href="#" style="color:#666;margin:0 10px;">Terms</a> | <a href="mailto:support@laislab.com" style="color:#666;margin:0 10px;">Support</a></p><div style="font-size: 11px; color: #999; line-height: 1.4; max-width: 800px; margin: 0 auto 20px auto;">{disclaimer}</div><p style="font-size: 12px; color: #444;">© 2025 <b>Lai\'s Lab</b> <span style="color: #ccc;">|</span> System V9.14 Enterprise</p></div>'
+    footer = f'<div style="text-align: center; font-family: sans-serif; padding-bottom: 30px;"><p style="font-size: 12px; color: #666; margin-bottom: 15px;"><a href="#" style="color:#666;margin:0 10px;">Privacy Policy</a> | <a href="#" style="color:#666;margin:0 10px;">Terms</a> | <a href="mailto:support@laislab.com" style="color:#666;margin:0 10px;">Support</a></p><div style="font-size: 11px; color: #999; line-height: 1.4; max-width: 800px; margin: 0 auto 20px auto;">{disclaimer}</div><p style="font-size: 12px; color: #444;">© 2025 <b>Lai\'s Lab</b> <span style="color: #ccc;">|</span> System V9.20 Enterprise</p></div>'
     st.markdown(footer, unsafe_allow_html=True)
 
 def logout():
@@ -90,7 +101,7 @@ def show_login_page():
     with col1:
         if os.path.exists("logo.png"): st.image("logo.png", width=120)
         else: st.markdown("## 🧬 Lai's Lab")
-        st.title("PromptLab AI V9.14"); st.caption("The Ultimate Enterprise Prompt Engine"); st.markdown("---")
+        st.title("PromptLab AI V9.20"); st.caption("The Ultimate Enterprise Prompt Engine"); st.markdown("---")
         st.markdown('<div class="promo-box"><span>🔥 <b>Limited Deal:</b> Lifetime Pro Access for</span><span class="promo-price">$12.90</span><span class="promo-old">$39.90</span></div>', unsafe_allow_html=True)
         st.subheader("🔓 Login / Access")
         t1, t2 = st.tabs(["👤 Guest Trial", "💎 Activate Pro"])
@@ -101,15 +112,24 @@ def show_login_page():
                 else: st.warning("Invalid Email")
         with t2:
             p_email = st.text_input("Pro Email", placeholder="Email used for purchase")
-            l_key = st.text_input("License Key", placeholder="LAI-XXXX-XXXX")
+            l_key = st.text_input("License Key", type="password", placeholder="Enter your license key")
             if st.button("💎 Activate License", type="primary", use_container_width=True):
-                status = lc.check_user_tier(p_email, l_key)
-                if status == "Pro": st.session_state.user_email = p_email; st.session_state.user_tier = "Pro"; st.session_state.logged_in = True; st.balloons(); time.sleep(1); st.rerun()
-                else: st.error("Invalid Key")
-            st.markdown('<div style="text-align: right; margin-top: 8px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="font-size: 12px; color: #999;">❓ Lost License Key?</a></div>', unsafe_allow_html=True)
+                with st.spinner("Verifying License..."):
+                    status = lc.check_user_tier(p_email, l_key)
+                    if status == "Pro": st.session_state.user_email = p_email; st.session_state.user_tier = "Pro"; st.session_state.logged_in = True; st.balloons(); time.sleep(1); st.rerun()
+                    else: st.error("❌ Invalid or Expired License Key.")
+            
+            st.markdown("""
+            <div class="lost-key-link">
+                <a href="https://app.lemonsqueezy.com/my-orders" target="_blank">
+                    🔒 Forgot or Lost your License Key?
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+
     with col2:
         st.subheader("🆚 Compare Plans")
-        st.markdown("""<style>.cmp-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}.cmp-table th{text-align:left;padding:12px 8px;border-bottom:2px solid #eee;color:#555}.cmp-table td{padding:10px 8px;border-bottom:1px solid #f5f5f5;color:#666}.pro-h{background-color:#f0f7ff;color:#0277bd;font-weight:600}.check{color:#2e7d32;font-weight:bold}.cross{color:#c62828;font-weight:bold}</style><table class="cmp-table"><thead><tr><th>Feature</th><th>Guest</th><th class="pro-h">💎 PRO Lifetime</th></tr></thead><tbody><tr><td>AI Engine</td><td>Standard</td><td class="pro-h">🚀 Turbo Mode</td></tr><tr><td>Daily Limit</td><td>🔒 5 / Day</td><td class="pro-h">✅ Unlimited</td></tr><tr><td>Modes</td><td>🔒 1 Mode</td><td class="pro-h">✅ All 18 Modes</td></tr><tr><td>Language</td><td>🔒 3 (Basic)</td><td class="pro-h">✅ 15 Global</td></tr><tr><td>Support</td><td>Standard</td><td class="pro-h">⚡ Priority</td></tr></tbody></table>""", unsafe_allow_html=True)
+        st.markdown("""<style>.cmp-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}.cmp-table th{text-align:left;padding:12px 8px;border-bottom:2px solid #eee;color:#555}.cmp-table td{padding:10px 8px;border-bottom:1px solid #f5f5f5;color:#666}.pro-h{background-color:#f0f7ff;color:#0277bd;font-weight:600}.check{color:#2e7d32;font-weight:bold}.cross{color:#c62828;font-weight:bold}</style><table class="cmp-table"><thead><tr><th>Feature</th><th>Guest</th><th class="pro-h">💎 PRO Lifetime</th></tr></thead><tbody><tr><td>AI Engine</td><td>Standard</td><td class="pro-h">🚀 Turbo Mode</td></tr><tr><td>Daily Limit</td><td>🔒 5 / Day</td><td class="pro-h">✅ 1000 / Day</td></tr><tr><td>Modes</td><td>🔒 1 Mode</td><td class="pro-h">✅ All 18 Modes</td></tr><tr><td>Language</td><td>🔒 3 (Basic)</td><td class="pro-h">✅ 15 Global</td></tr><tr><td>Support</td><td>Standard</td><td class="pro-h">⚡ Priority</td></tr></tbody></table>""", unsafe_allow_html=True)
         st.info("💡 Join 10,000+ Educators & Creators today.")
     render_footer()
 
@@ -134,18 +154,15 @@ def show_main_app():
         st.progress(min(pval, 1.0)); st.caption(f"{ui['usage']}: {st.session_state.daily_usage} / {max_limit}")
         st.divider()
 
-        # Language
         available_langs = dm.LANG_OPTIONS_PRO if st.session_state.user_tier == "Pro" else dm.LANG_OPTIONS_GUEST
         idx = available_langs.index(curr_lang) if curr_lang in available_langs else 0
         sel_lang = st.selectbox(ui['lang'], available_langs, index=idx)
         if sel_lang != st.session_state.language: st.session_state.language = sel_lang; st.rerun()
 
-        # Role
         role_list = list(dm.ROLES_CONFIG.keys())
         sel_role = st.selectbox(ui['role'], role_list)
         st.divider()
 
-        # FAQ & Ticket
         with st.expander(ui['faq']):
             for item in dm.FAQ_LIST: st.markdown(f"- {item}")
         with st.expander(ui['support']):
@@ -179,7 +196,6 @@ def show_main_app():
         opt_labels = [o["label"] for o in opts]
         sel_opt_label = st.selectbox(ui['action'], opt_labels)
         
-        # ✨ Tone Selector (Context Aware)
         role_tones = dm.ROLE_TONES.get(sel_role, dm.DEFAULT_TONES)
         selected_tone = st.selectbox(ui.get('tone', "🗣️ Tone / Style"), role_tones)
         
@@ -199,7 +215,8 @@ def show_main_app():
                 else:
                     with st.spinner("⚡ Pro Generating..."): time.sleep(0.5)
                 
-                final_res, _ = lc.generate_ai_response_mock(sel_role, sel_mode, sel_opt_label, user_input, st.session_state.user_tier, st.session_state.language, selected_tone)
+                # ✅ 调用真实 PASEC 生成器
+                final_res = lc.generate_pasec_prompt(sel_role, sel_mode, sel_opt_label, user_input, st.session_state.user_tier, st.session_state.language, selected_tone)
                 
                 out.markdown(f"### {ui['result']}")
                 st.text_area("Result", value=final_res, height=450)
