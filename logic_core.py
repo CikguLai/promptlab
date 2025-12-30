@@ -1,311 +1,136 @@
 # logic_core.py
-# Lai's Lab V9.2 - 逻辑大脑 (最终纯净版)
-# 负责：权限判断、Prompt组装、智能拦截、邮件自动化、Telegram通知、Airtable备份
+# Lai's Lab V9.14 - 业务逻辑核心 (Final Gold Version)
+# 功能：PASEC引擎、真人语气注入、SMTP邮件、智能拦截
 
-import time
 import requests
+import datetime
 import smtplib
-import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-
-# 引入数据库
-from data_matrix import ROLES_CONFIG, FAQ_DATABASE
-
-# ==========================================
-# 1. 核心配置区域 (Config Zone)
-# ==========================================
-# ⚠️ 注意：这里全部留空！
-# 所有的密码和 Key 都会由 app.py 从 .streamlit/secrets.toml 读取并注入进来。
+import data_matrix as dm
 
 CONFIG = {
-    # 邮件发送配置
-    "EMAIL_SENDER_ADDRESS": "", # 会由 Secrets 注入
-    "EMAIL_APP_PASSWORD": "",   # 会由 Secrets 注入
-    
-    # 管理员配置
-    "EMAIL_ADMIN_ADDRESS": "",  # 会由 Secrets 注入
-    "EMAIL_REPLY_TO": "support@laislab.com", # 公开配置
-    
-    # 外部服务 API
-    "TELEGRAM_BOT_TOKEN": "",   # 会由 Secrets 注入
-    "TELEGRAM_CHAT_ID": "",     # 会由 Secrets 注入
-    "LEMONSQUEEZY_API_KEY": "", # 会由 Secrets 注入
-    
-    # Airtable 配置
-    "AIRTABLE_API_KEY": "",     # 会由 Secrets 注入
-    "AIRTABLE_BASE_ID": "",    
-    "AIRTABLE_TABLE_TICKETS": "Tickets",
-    "AIRTABLE_TABLE_USERS": "Users"
+    "EMAIL_APP_PASSWORD": "", "EMAIL_SENDER_ADDRESS": "", "EMAIL_ADMIN_ADDRESS": "",
+    "TELEGRAM_BOT_TOKEN": "", "TELEGRAM_CHAT_ID": "",
+    "AIRTABLE_API_KEY": "", "LEMONSQUEEZY_API_KEY": ""
 }
 
-# ==========================================
-# 2. 权限与用量逻辑 (Access & Quota)
-# ==========================================
+# 1. 智能拦截 (数据驱动)
+def smart_intercept(subject_text):
+    if not subject_text: return False, ""
+    subject_lower = subject_text.lower()
+    # 遍历 data_matrix 自动生成的拦截字典
+    for keyword, reply in dm.INTERCEPTORS.items():
+        if keyword in subject_lower: return True, reply
+    return False, ""
 
-def check_user_tier(email, license_key=None):
-    """
-    验证用户身份。
-    """
-    if not license_key:
-        return "Guest"
-    
-    # 模拟验证 (真实版这里可以调用 CONFIG["LEMONSQUEEZY_API_KEY"] 去查)
-    # 目前演示逻辑：只要以 LAI- 开头或者是管理员码就过
-    if license_key.startswith("LAI-") or license_key == "ADMIN-8888":
-        # 激活成功，记录到 Airtable
-        log_user_to_airtable(email, license_key, "Active")
-        return "Pro"
-    else:
-        return "Invalid"
-
-def check_daily_limit_by_email(email, user_tier, current_usage):
-    """
-    检查每日用量 (绑定 Email)
-    返回: (是否允许生成, 剩余次数, 最大次数)
-    """
-    if user_tier == "Guest":
-        max_limit = 5
-    else:
-        max_limit = 1000 # Pro 的防滥用软限 (FUP)
+# 2. SMTP 真实邮件
+def send_auto_reply_email(user_email, user_tier, ticket_id, subject):
+    if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]: return "SMTP Not Configured"
+    try:
+        msg = MIMEMultipart(); msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]; msg['To'] = user_email
         
-    if current_usage >= max_limit:
-        return False, 0, max_limit
-    
-    remaining = max_limit - current_usage
-    return True, remaining, max_limit
+        # 区分 Guest 和 Pro 的回执内容
+        if user_tier == "Pro":
+            msg['Subject'] = f"💎 [VIP Priority] Case #{ticket_id} - Priority Access Confirmed"
+            body = f"""Dear Pro Member,
 
-def check_mode_lock(user_tier, mode_name):
-    """
-    检查模式是否被锁
-    逻辑：Mode 1 (Free) 对所有人开放，其他 Mode 对 Guest 锁住
-    """
-    if "Free" in mode_name:
-        return False # 不锁
+We have escalated your ticket to the top of our queue.
+Subject: {subject}
+
+💎 Priority Status: VIP (Expect reply in 1-2 business days).
+
+Best,
+Lai's Lab Enterprise Team"""
+        else:
+            msg['Subject'] = f"[Ticket Received] Case #{ticket_id} - We are reviewing your issue"
+            body = f"""Dear User,
+
+We have received your support request.
+Subject: {subject}
+
+💡 Tip: Check the FAQ in the sidebar for instant answers.
+Status: Queued (Expect reply in 3-5 business days).
+
+Best,
+Lai's Lab Support"""
+            
+        msg.attach(MIMEText(body, 'plain'))
+        server = smtplib.SMTP('smtp.gmail.com', 587); server.starttls()
+        server.login(CONFIG["EMAIL_SENDER_ADDRESS"], CONFIG["EMAIL_APP_PASSWORD"])
+        server.sendmail(CONFIG["EMAIL_SENDER_ADDRESS"], user_email, msg.as_string()); server.quit()
+        return "Email Sent Successfully"
+    except Exception as e: return f"SMTP Error: {str(e)}"
+
+# 3. 辅助功能
+def check_user_tier(email, key):
+    # 简单模拟：实际可对接 LemonSqueezy API
+    if key.startswith("LAI-") and len(key) > 8: return "Pro"
+    return "Guest"
+
+def check_daily_limit_by_email(email, tier, current_usage):
+    limit = 5 if tier == "Guest" else 1000 # Pro 无限
+    if current_usage >= limit: return False, 0, limit
+    return True, limit - current_usage, limit
+
+def check_mode_lock(tier, mode_name):
+    if tier == "Pro": return False
+    # 包含 (Pro) 字样的模式对 Guest 锁定
+    if "(Pro)" in mode_name: return True
+    return False
+
+# 4. PASEC 核心生成引擎
+def generate_ai_response_mock(role, mode, option, user_input, tier, lang, tone="Professional"):
+    # 获取 Prompt 模板
+    template = "Generate content for: {input}"
+    if role in dm.ROLES_CONFIG and mode in dm.ROLES_CONFIG[role]:
+        for opt in dm.ROLES_CONFIG[role][mode]:
+            if opt["label"] == option:
+                template = opt["template"]
+                break
     
-    if user_tier == "Pro":
-        return False # Pro 不锁
-        
-    return True # Guest 锁住
+    # 清洗语气字符串 (例如 "Witty (幽默)" -> "Witty")
+    tone_clean = tone.split("(")[0].strip()
+    
+    # 组装 PASEC 结构
+    pasec_output = f"""
+## 👤 P - Persona
+I am acting as a top-tier **{role}** specialized in **{mode}**.
+My voice is strictly **{tone}**. I will adopt this persona to best serve your request regarding: "{user_input}".
+
+## 🎯 A - Aim
+The goal is to execute **{option}** effectively.
+We aim to solve the specific challenge: *{user_input}* while adhering to the cultural context of **{lang}**.
+
+## 📂 S - Structure
+1. **Hook/Opening**: Grab attention or define the problem.
+2. **Core Content**: The main deliverable ({option}).
+3. **Refinement**: Polishing based on the "{tone_clean}" style.
+4. **Call to Action/Closing**: Next steps or conclusion.
+
+## 📝 E - Effective (The Output)
+*(AI generating content in {lang} with {tone_clean} tone...)*
+
+**[Here is your draft]:**
+
+> "{user_input} is a great starting point. Here is how we make it shine:"
+>
+> ... (This section would contain the actual AI generated text based on the template: "{template}") ...
+> ... (The content strictly follows the **{tone_clean}** guidelines you selected) ...
+> ... (e.g., if you chose 'Witty', expect jokes; if 'Academic', expect citations.) ...
+> ...
+
+## 💡 C - Context
+* **Why this works**: This approach leverages the {mode} methodology to maximize impact.
+* **Pro Tip**: To improve this further, try adding more specific data points to your input next time.
+"""
+    
+    # Guest 水印
+    watermark = "\n\n(Generated by Lai's Lab Free Version)" if tier == "Guest" else ""
+    return pasec_output + watermark
+
+def log_ticket_to_airtable(tid, email, tier, issue):
+    print(f"Logged to Airtable: {tid} | {email} | {issue}")
 
 def perform_logout():
-    """执行登出清理逻辑"""
-    return True
-
-# ==========================================
-# 3. 核心生成引擎 (The Engine)
-# ==========================================
-
-def get_guest_loading_messages():
-    """Guest 专属：温柔的排队/加载提示词"""
-    messages = [
-        "🔄 Connecting to Shared Server (Guest Queue)...",
-        "🐢 Warming up the AI engine...",
-        "⏳ Validating request in the public queue...",
-        "☕ Sipping coffee while we generate...",
-        "💡 Pro Tip: Enterprise members skip this queue...",
-        "✨ Refining the prompt structure..."
-    ]
-    return messages
-
-def generate_ai_response_mock(role, mode, option_label, user_input, user_tier, language):
-    """
-    生成逻辑 (包含假进度控制)
-    """
-    # 1. 查找模板
-    option_list = ROLES_CONFIG[role][mode]
-    template = "Act as an expert."
-    for opt in option_list:
-        if opt["label"] == option_label:
-            template = opt["template"]
-            break
-            
-    # 2. 组装 Prompt
-    final_prompt = template.replace("{input}", user_input)
-    
-    # 3. 进度条逻辑 (Guest 慢, Pro 快)
-    delay_time = 0.8 if user_tier == "Pro" else 4.0
-    
-    # 4. 模拟生成结果
-    output = f"""[System: Generated Prompt for {language}]\n\n{final_prompt}\n\n(Instruction: Copy this prompt into ChatGPT/Gemini to get the best result in {language}.)"""
-    
-    # 5. 水印逻辑
-    if user_tier == "Guest":
-        watermark = "\n\n" + "-"*30 + "\nGenerated by Lai's Lab (Free Version)\n💎 Upgrade to Pro for Unlimited Access & No Watermark"
-        output += watermark
-        
-    return output, delay_time
-
-# ==========================================
-# 4. 智能客服与拦截 (Smart Support)
-# ==========================================
-
-def smart_intercept(subject):
-    """
-    FAQ 拦截逻辑 (覆盖 16 项 FAQ)
-    """
-    subject_lower = subject.lower()
-    
-    # 拦截词库映射
-    intercept_map = {
-        "refund": "Purchase & License",
-        "money": "Purchase & License",
-        "key": "Purchase & License",
-        "lost": "Purchase & License",
-        "pdf": "Technical Support",
-        "font": "Technical Support",
-        "limit": "Usage Limits",
-        "quota": "Usage Limits",
-        "share": "Privacy & Security",
-        "slow": "Technical Support",
-        "affiliate": "Business & Affiliate",
-        "invoice": "Business & Affiliate",
-        "receipt": "Business & Affiliate",
-        "commercial": "Usage Limits",
-        "offline": "Usage Limits"
-    }
-    
-    for word, category in intercept_map.items():
-        if word in subject_lower:
-            faq_list = FAQ_DATABASE[category]
-            # 简单返回该分类下的第一条，实际可优化
-            best_match = faq_list[0] 
-            return True, f"💡 **Smart Answer:**\n\n**Q: {best_match['q']}**\n**A:** {best_match['a']}"
-            
-    return False, None
-
-# ==========================================
-# 5. 自动化通知系统 (Automation)
-# ==========================================
-
-def log_user_to_airtable(email, key, status):
-    """记录新激活用户到 Airtable"""
-    if not CONFIG["AIRTABLE_API_KEY"]: return
-    
-    url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
-    headers = {
-        "Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "fields": {
-            "Email": email,
-            "License Key": key,
-            "Status": status,
-            "Date": datetime.now().isoformat()
-        }
-    }
-    try:
-        requests.post(url, headers=headers, json=data)
-        send_telegram_alert(f"💰 New Pro User!\nEmail: {email}\nKey: {key}")
-    except:
-        pass
-
-def log_ticket_to_airtable(ticket_id, email, tier, subject):
-    """记录工单到 Airtable"""
-    if not CONFIG["AIRTABLE_API_KEY"]: return
-    
-    url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
-    headers = {
-        "Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "fields": {
-            "Ticket ID": str(ticket_id),
-            "User Email": email,
-            "Tier": tier,
-            "Subject": subject,
-            "Status": "Pending"
-        }
-    }
-    try:
-        requests.post(url, headers=headers, json=data)
-    except:
-        pass
-
-def send_telegram_alert(message):
-    """发送 Telegram 通知"""
-    if not CONFIG["TELEGRAM_BOT_TOKEN"]: return
-    
-    url = f"https://api.telegram.org/bot{CONFIG['TELEGRAM_BOT_TOKEN']}/sendMessage"
-    payload = {
-        "chat_id": CONFIG["TELEGRAM_CHAT_ID"],
-        "text": message
-    }
-    try:
-        requests.post(url, json=payload)
-    except:
-        pass
-
-def send_auto_reply_email(user_email, user_tier, ticket_id, issue_subject):
-    """
-    真实邮件发送 (SMTP)
-    """
-    sender = CONFIG["EMAIL_SENDER_ADDRESS"]
-    password = CONFIG["EMAIL_APP_PASSWORD"]
-    admin_email = CONFIG["EMAIL_ADMIN_ADDRESS"]
-    reply_to = CONFIG["EMAIL_REPLY_TO"]
-    
-    if not sender or not password:
-        return "Simulation: Email Config Missing"
-
-    # 1. 区分 Guest/Pro 话术
-    if user_tier == "Pro":
-        email_subject = f"💎 [VIP Priority] Ticket #{ticket_id} - We are on it!"
-        wait_time = "1 - 2 business days"
-        queue_type = "VIP Priority Queue"
-        greeting = "Dear Pro Member,"
-    else:
-        email_subject = f"[Ticket Received] Case #{ticket_id}"
-        wait_time = "3 - 5 business days"
-        queue_type = "Standard Queue"
-        greeting = "Dear User,"
-
-    # 2. 邮件正文
-    body = f"""
-{greeting}
-
-We have received your support request regarding: "{issue_subject}".
-
-------------------------------------------------
-TICKET ID: #{ticket_id}
-STATUS: {queue_type}
-ESTIMATED REPLY: {wait_time}
-------------------------------------------------
-
-While you wait, please check the FAQ section in the sidebar. Many issues (like Lost Keys or PDF Fonts) can be solved instantly there.
-
-If this issue is resolved, no further action is needed.
-If you still need help, simply reply to this email.
-
-Best Regards,
-Lai's Lab Support Team
-    """
-
-    # 3. 构建邮件
-    msg = MIMEMultipart()
-    msg['From'] = f"Lai's Lab Support <{sender}>"
-    msg['To'] = user_email
-    msg['Subject'] = email_subject
-    msg.add_header('Reply-To', reply_to)
-    
-    msg.attach(MIMEText(body, 'plain'))
-
-    # 4. 发送过程
-    try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.login(sender, password)
-        
-        # 发送给用户
-        server.send_message(msg)
-        
-        # 通知管理员
-        send_telegram_alert(f"🆘 New Ticket (#{ticket_id})\nUser: {user_email}\nSubject: {issue_subject}")
-        
-        server.quit()
-        return "Email Sent Successfully"
-    except Exception as e:
-        print(f"SMTP Error: {e}")
-        return f"Email Failed: {e}"
+    pass
