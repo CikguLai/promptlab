@@ -1,3 +1,73 @@
+import streamlit as st
+import logic_core as lc
+import data_matrix as dm
+import time, os
+import random
+from datetime import datetime
+
+# 1. 网页标签图标设为 DNA
+st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
+
+# 全量 CSS：优化表格、链接、Slogan 样式
+st.markdown("""
+<style>
+    .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; }
+    .compare-table th { background: #f8f9fa; padding: 10px; border-bottom: 2px solid #ddd; text-align: left; }
+    .compare-table td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
+    .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
+    a:hover { text-decoration: underline !important; }
+    
+    /* Slogan 终极样式：大厂灰，紧贴标题 */
+    .app-slogan { 
+        font-size: 18px; 
+        color: #555; 
+        margin-top: -15px; 
+        margin-bottom: 25px; 
+        font-weight: 500; 
+        letter-spacing: 0.5px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Session 初始化
+for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
+    if key not in st.session_state: st.session_state[key] = val
+
+# --- Footer 渲染函数 (三段式大厂风) ---
+def render_footer():
+    current_hour = datetime.now().hour
+    online_count = 150 + (current_hour * 8) + random.randint(1, 15)
+    is_pro = st.session_state.user_tier == "Pro"
+    tier_label = "💎 VERIFIED PRO ACCESS" if is_pro else "👤 STANDARD GUEST TRIAL"
+    tier_color = "#0277bd" if is_pro else "#666"
+
+    st.markdown(f"""
+        <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid #f1f1f1; padding: 25px 40px; z-index: 1000;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #111; margin-bottom: 10px;">
+                <div style="flex: 1; text-align: left;">© 2025–2026 LAI'S LAB</div>
+                <div style="flex: 1; text-align: center; color: #999;">SYSTEM V9.28 PRO AUDIT VERSION</div>
+                <div style="flex: 1; text-align: right; color: {tier_color};">{tier_label}</div>
+            </div>
+            <div style="margin-bottom: 10px; text-align: center;">
+                <p style="font-size: 10.5px; color: #888; margin: 0; font-style: italic;">
+                    <b>Disclaimer:</b> Generative AI can make mistakes; please verify important information. 
+                    Users are solely responsible for how they use the generated content. 
+                    Lai's Lab assumes no liability for actions taken based on these outputs.
+                </p>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #aaa; border-top: 1px solid #fafafa; padding-top: 10px;">
+                <div>👤 {st.session_state.user_email} | 🟢 All Systems Operational | <b>Live:</b> {online_count}</div>
+                <div>
+                    <a href="#" style="color: #aaa; text-decoration: none;">Privacy</a> | 
+                    <a href="#" style="color: #aaa; text-decoration: none;">Terms</a> | 
+                    <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #0277bd; text-decoration: none; font-weight: 700;">LemonSqueezy Verify</a>
+                </div>
+            </div>
+        </div>
+        <div style="height: 140px;"></div> 
+    """, unsafe_allow_html=True)
+
 def show_login_page():
     st.write("🌍 Select Your Language / 选择您的语言")
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_PRO, label_visibility="collapsed")
@@ -8,11 +78,12 @@ def show_login_page():
     with col1:
         if os.path.exists("logo.png"): st.image("logo.png", width=110)
         
-        # ✅ 修复：先定义变量，避开 f-string 内部反斜杠限制
+        # ✅ 【已修复】: 将标题变量提取出来，解决 f-string 中不能有反斜杠的报错
+        # 使用双引号包裹 Lai's Lab，避免转义字符问题
         app_title = ui.get('sidebar_title', "Lai's Lab")
         st.title(f"🧬 {app_title}")
         
-        # 3. 终极 Slogan
+        # 3. 终极 Slogan：简单、有力、一眼秒懂
         st.markdown('<div class="app-slogan">🚀 Your Automated Prompt Engineer</div>', unsafe_allow_html=True)
 
         st.markdown(f'<p style="color:#e53935; background:#fff5f5; padding:10px; border-radius:5px;">🔥 <b>Lifetime Pro:</b> $12.90</p>', unsafe_allow_html=True)
@@ -29,7 +100,7 @@ def show_login_page():
                 if lc.check_user_tier(pe, lk) == "Pro":
                     st.session_state.user_email, st.session_state.user_tier, st.session_state.logged_in = pe, "Pro", True
                     st.balloons(); st.rerun()
-            # 4. 找回 Key 链接
+            # 4. 找回 Key 链接 (位置完美)
             st.markdown('<div style="text-align: center; margin-top: 15px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #666; font-size: 13px; text-decoration: none;">🔒 Lost your key? Retrieve via LemonSqueezy</a></div>', unsafe_allow_html=True)
 
     with col2:
@@ -50,3 +121,42 @@ def show_login_page():
         """, unsafe_allow_html=True)
         st.caption("* Fair Use Policy applies." if lang_sel == "English" else "* 遵循公平使用原则。")
     render_footer()
+
+def show_main_app():
+    ui = dm.LANG_MAP.get(st.session_state.language, dm.LANG_MAP["default"])
+    with st.sidebar:
+        st.caption(f"{'💎' if st.session_state.user_tier == 'Pro' else '👤'} {ui['plan_pro'] if st.session_state.user_tier == 'Pro' else ui['plan_guest']}")
+        # 6. 侧边栏变红进度条
+        can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
+        bar_color = "#ff4b4b" if (tot - st.session_state.daily_usage) <= 1 else "#00f2fe"
+        st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%); }}</style>", unsafe_allow_html=True)
+        st.progress(st.session_state.daily_usage / tot)
+        st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}" if st.session_state.user_tier != "Pro" else f"✨ {ui.get('plan_pro', 'Pro Plan')}: Unlimited")
+        st.divider()
+        langs = dm.LANG_OPTIONS_PRO if st.session_state.user_tier == "Pro" else dm.LANG_OPTIONS_GUEST
+        st.session_state.language = st.selectbox("Language", langs, index=langs.index(st.session_state.language) if st.session_state.language in langs else 0)
+        role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
+        if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
+
+    st.header(f"🎭 {role}")
+    # 7. 主页金色动态统计
+    dynamic_count = 100 + (datetime.now().hour * 2) + random.randint(1, 15)
+    st.markdown(f"""<div style="background: #fff9e6; border-left: 5px solid #ffcc00; padding: 10px; border-radius: 5px; margin-bottom: 15px;"><span style="font-size: 14px; color: #856404;">🔥 <b>{ui.get('live_stat', 'Live Status')}:</b> {dynamic_count} {'Users active today' if st.session_state.language == 'English' else '位用户今日活跃'}</span></div>""", unsafe_allow_html=True)
+
+    mode = st.selectbox(ui['mode'], list(dm.ROLES_CONFIG[role].keys()))
+    if lc.check_mode_lock(st.session_state.user_tier, mode):
+        st.error(ui['lock_msg']); st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy")
+    else:
+        opt = st.selectbox(ui['action'], [o["label"] for o in dm.ROLES_CONFIG[role][mode]])
+        tone = st.selectbox(ui['tone'], dm.ROLE_TONES.get(role, dm.DEFAULT_TONES))
+        inp = st.text_area(ui['input_label'], height=150)
+        if st.button(ui['generate'], type="primary", use_container_width=True):
+            if inp and can_gen:
+                st.session_state.daily_usage += 1
+                res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
+                st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
+    render_footer()
+
+if __name__ == "__main__":
+    if st.session_state.logged_in: show_main_app()
+    else: show_login_page()
