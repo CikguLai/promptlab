@@ -1,5 +1,5 @@
 # logic_core.py
-# Lai's Lab V9.20 - 业务逻辑核心 (1000 Limit Edition)
+# Lai's Lab V9.21 - 业务逻辑核心 (Reply-To Fix)
 
 import requests
 import datetime
@@ -10,7 +10,8 @@ import data_matrix as dm
 
 # 全局配置
 CONFIG = {
-    "EMAIL_APP_PASSWORD": "", "EMAIL_SENDER_ADDRESS": "", "EMAIL_ADMIN_ADDRESS": "",
+    "EMAIL_APP_PASSWORD": "", "EMAIL_SENDER_ADDRESS": "", 
+    "EMAIL_ADMIN_ADDRESS": "", "EMAIL_REPLY_TO": "", # ✅ 新增字段
     "TELEGRAM_BOT_TOKEN": "", "TELEGRAM_CHAT_ID": "",
     "LEMONSQUEEZY_API_KEY": "", "MASTER_KEY": "LAI-ADMIN-8888",
     "AIRTABLE_API_KEY": "", "AIRTABLE_BASE_ID": "",
@@ -22,12 +23,12 @@ CONFIG = {
 # 1. 真实鉴权 (LemonSqueezy API)
 # ==========================================
 def check_user_tier(email, key):
-    # 🕵️‍♂️ 1. 管理员后门 (Master Key)
+    # 🕵️‍♂️ 1. 管理员后门
     if key == CONFIG["MASTER_KEY"]:
         log_activation(email, "Master-Key", "Admin-Backdoor")
         return "Pro"
 
-    # 🌍 2. LemonSqueezy 真实联网验证
+    # 🌍 2. LemonSqueezy 真实验证
     try:
         response = requests.post(
             "https://api.lemonsqueezy.com/v1/licenses/activate",
@@ -50,11 +51,6 @@ def check_user_tier(email, key):
 # 2. 真实产品引擎 (PASEC Prompt Generator)
 # ==========================================
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone="Professional"):
-    """
-    生成真实的 PASEC 结构化提示词。
-    """
-    
-    # 1. 获取模板
     template_structure = "Create content based on: {input}"
     if role in dm.ROLES_CONFIG and mode in dm.ROLES_CONFIG[role]:
         for opt in dm.ROLES_CONFIG[role][mode]:
@@ -62,10 +58,8 @@ def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone="Prof
                 template_structure = opt["template"]
                 break
     
-    # 2. 清洗语气
     tone_clean = tone.split("(")[0].strip()
     
-    # 3. 组装 Prompt
     pasec_output = f"""
 # 🧬 Lai's Lab Optimized Prompt (PASEC Protocol)
 
@@ -96,19 +90,15 @@ Based on the template: "{template_structure.format(input=user_input)}", please g
 * Ensure cultural relevance to **{lang}**.
 * Focus on value and clarity.
 """
-    
-    # Guest 水印
     if tier == "Guest":
         pasec_output += "\n\n(🔒 Trial Version - Upgrade to Pro to remove this watermark and unlock 15 languages)"
-        
     return pasec_output
 
 # ==========================================
 # 3. 真实数据写入 (Airtable)
 # ==========================================
 def send_to_airtable(table_name, fields):
-    if not CONFIG["AIRTABLE_API_KEY"] or not CONFIG["AIRTABLE_BASE_ID"]:
-        return
+    if not CONFIG["AIRTABLE_API_KEY"] or not CONFIG["AIRTABLE_BASE_ID"]: return
     url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{table_name}"
     headers = {"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"}
     try: requests.post(url, headers=headers, json={"records": [{"fields": fields}]}, timeout=5)
@@ -123,7 +113,7 @@ def log_activation(email, key, method):
     send_to_airtable(CONFIG["AIRTABLE_TABLE_USERS"], fields)
 
 # ==========================================
-# 4. 其他功能 (含限额逻辑)
+# 4. 其他功能 (Reply-To 修正版)
 # ==========================================
 def smart_intercept(subject_text):
     if not subject_text: return False, ""
@@ -136,6 +126,11 @@ def send_auto_reply_email(user_email, user_tier, ticket_id, subject):
     if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]: return "SMTP Not Configured"
     try:
         msg = MIMEMultipart(); msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]; msg['To'] = user_email
+        
+        # ✅ 新增：设置 Reply-To 头部
+        if CONFIG["EMAIL_REPLY_TO"]:
+            msg.add_header('Reply-To', CONFIG["EMAIL_REPLY_TO"])
+
         if user_tier == "Pro":
             msg['Subject'] = f"💎 [VIP Priority] Case #{ticket_id} Received"
             body = f"Dear Pro Member,\n\nReceived: {subject}\nStatus: VIP Priority.\n\nLai's Lab Team"
@@ -149,14 +144,9 @@ def send_auto_reply_email(user_email, user_tier, ticket_id, subject):
         return "Email Sent"
     except Exception: return "SMTP Error"
 
-# ✅ 核心修正：明确限制 Pro 为 1000
 def check_daily_limit_by_email(email, tier, current_usage):
-    # Guest = 5, Pro = 1000
     limit = 5 if tier == "Guest" else 1000
-    
-    if current_usage >= limit:
-        return False, 0, limit # 超过限额
-    
+    if current_usage >= limit: return False, 0, limit
     return True, limit - current_usage, limit
 
 def check_mode_lock(tier, mode_name):
