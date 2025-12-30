@@ -1,15 +1,11 @@
 # data_matrix.py
-# Lai's Lab V9.14 - 核心数据库 (Final Gold Version)
-# 包含：15国语言、角色专属语气、PASEC模板、智能FAQ
+# Lai's Lab V9.20 - 核心数据库 (1000 Limit Edition)
 
 # ==========================================
 # 1. 基础配置
 # ==========================================
-
-# 免费用户 (Guest) - ✅ 已确认为: 英、中、西
 LANG_OPTIONS_GUEST = ["English", "简体中文", "Español"]
 
-# Pro 用户 (15国语言)
 LANG_OPTIONS_PRO = [
     "English", "简体中文", "Español", "Bahasa Melayu", 
     "日本語", "한국어", "Français", "Deutsch", 
@@ -17,86 +13,56 @@ LANG_OPTIONS_PRO = [
     "Hindi", "Thai", "Vietnamese"
 ]
 
-# ✨ 角色专属语气库 (Context-Aware Tones)
 ROLE_TONES = {
-    "Global Educator": [
-        "🌟 Encouraging (鼓励/温暖)", "📚 Academic/Formal (学术/正式)", "🤔 Socratic (苏格拉底式)", 
-        "👶 Simple/Kid-Friendly (通俗)", "📢 Instructional (指令清晰)", "🤝 Constructive (建设性)"
-    ],
-    "Global Creator": [
-        "🔥 Viral/Hype (爆款/煽动)", "👻 Witty/Humorous (幽默)", "📖 Storytelling (故事感)", 
-        "⚡ Punchy/Fast (短促有力)", "🧐 Controversial (引发争议)", "🎨 Artistic/Poetic (文艺)"
-    ],
-    "Global Parent": [
-        "🥰 Warm/Loving (温暖)", "😴 Calming/Bedtime (助眠)", "🎉 Playful/Fun (有趣)", 
-        "🛡️ Firm but Fair (坚定公平)", "🧙‍♂️ Magical (魔法)", "👩‍🏫 Patient (耐心)"
-    ],
-    "Global Seller": [
-        "💰 Persuasive (强销)", "⏳ Urgent/FOMO (制造焦虑)", "💎 Luxury (奢华)", 
-        "🤝 Trustworthy (诚恳)", "🎁 Benefit-Driven (利益导向)", "📣 Loud/Excited (热情)"
-    ],
-    "Global Student": [
-        "🎓 Academic (学术)", "📝 Concise (简洁列点)", "🤔 Critical (批判性)", 
-        "🗣️ Casual (同学口吻)", "🤓 Detailed (详尽)"
-    ],
-    "Global Corporate": [
-        "👔 Executive (高管风)", "🤝 Diplomatic (外交得体)", "📊 Data-Driven (数据驱动)", 
-        "🚀 Motivational (激励)", "⚡ Direct (无废话)", "⚖️ Compliance (合规)"
-    ]
+    "Global Educator": ["🌟 Encouraging", "📚 Academic", "🤔 Socratic", "👶 Simple", "📢 Instructional", "🤝 Constructive"],
+    "Global Creator": ["🔥 Viral", "👻 Witty", "📖 Storytelling", "⚡ Punchy", "🧐 Controversial", "🎨 Artistic"],
+    "Global Parent": ["🥰 Warm", "😴 Calming", "🎉 Playful", "🛡️ Firm", "🧙‍♂️ Magical", "👩‍🏫 Patient"],
+    "Global Seller": ["💰 Persuasive", "⏳ Urgent", "💎 Luxury", "🤝 Trustworthy", "🎁 Benefit-Driven", "📣 Loud"],
+    "Global Student": ["🎓 Academic", "📝 Concise", "🤔 Critical", "🗣️ Casual", "🤓 Detailed"],
+    "Global Corporate": ["👔 Executive", "🤝 Diplomatic", "📊 Data-Driven", "🚀 Motivational", "⚡ Direct", "⚖️ Compliance"]
 }
 DEFAULT_TONES = ["Professional", "Casual", "Enthusiastic", "Direct"]
 
-# UI 文本映射
 LANG_MAP = {
     "default": {
         "sidebar_title": "🧬 Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise",
         "usage": "Daily Usage", "lang": "🌐 Language", "role": "🎭 Role", "tone": "🗣️ Tone / Style",
-        "faq": "❓ FAQ / Help", "support": "🎫 Support Ticket",
-        "logout": "🚪 Logout", "mode": "⚙️ Select Mode", "action": "⚡ Select Action",
-        "input_label": "📝 Context / Details", "input_ph": "Enter details here...",
-        "generate": "✨ Generate with PASEC",
-        "lock_msg": "🔒 Locked", "lock_desc": "Upgrade to Pro.", "buy_btn": "👉 Get Pro Access",
-        "result": "✨ PASEC Result",
+        "faq": "❓ FAQ / Help", "support": "🎫 Support Ticket", "logout": "🚪 Logout",
+        "mode": "⚙️ Select Mode", "action": "⚡ Select Action", "input_label": "📝 Context / Details",
+        "generate": "✨ Generate with PASEC", "lock_msg": "🔒 Locked", "lock_desc": "Upgrade to Pro.",
+        "buy_btn": "👉 Get Pro Access", "result": "✨ PASEC Result",
         "ticket_types": ["🔴 Bug/ error report", "🟠 Billing issues", "🟡 Feature Request", "🟢 Partnership/ Sponsorship", "🔵 Other Inquiry"]
     },
     "简体中文": {
         "sidebar_title": "🧬 Lai's Lab", "plan_guest": "访客计划", "plan_pro": "企业版 Pro",
         "usage": "今日用量", "lang": "🌐 语言设置", "role": "🎭 角色选择", "tone": "🗣️ 语气 / 风格",
-        "faq": "❓ 常见问题 (FAQ)", "support": "🎫 客服工单",
-        "logout": "🚪 退出登录", "mode": "⚙️ 模式选择", "action": "⚡ 执行操作",
-        "input_label": "📝 详细要求", "input_ph": "请在此输入详细的背景信息...",
-        "generate": "✨ PASEC 生成",
-        "lock_msg": "🔒 已锁定", "lock_desc": "请升级 Pro 解锁。", "buy_btn": "👉 获取 Pro 权限",
-        "result": "✨ PASEC 结构化输出",
+        "faq": "❓ 常见问题 (FAQ)", "support": "🎫 客服工单", "logout": "🚪 退出登录",
+        "mode": "⚙️ 模式选择", "action": "⚡ 执行操作", "input_label": "📝 详细要求",
+        "generate": "✨ PASEC 生成", "lock_msg": "🔒 已锁定", "lock_desc": "请升级 Pro 解锁。",
+        "buy_btn": "👉 获取 Pro 权限", "result": "✨ PASEC 结构化输出",
         "ticket_types": ["🔴 Bug/ 错误报告", "🟠 账单 / 支付问题", "🟡 功能建议", "🟢 商务合作 / 赞助", "🔵 其他咨询"]
     },
     "Español": {
         "sidebar_title": "🧬 Lai's Lab", "plan_guest": "Plan Invitado", "plan_pro": "Pro Empresa",
         "usage": "Uso Diario", "lang": "🌐 Idioma", "role": "🎭 Rol", "tone": "🗣️ Tono / Estilo",
-        "faq": "❓ Preguntas Frecuentes", "support": "🎫 Soporte",
-        "logout": "🚪 Cerrar Sesión", "mode": "⚙️ Modo", "action": "⚡ Acción",
-        "input_label": "📝 Contexto", "input_ph": "Describa lo que necesita...",
-        "generate": "✨ Generar PASEC",
-        "lock_msg": "🔒 Bloqueado", "lock_desc": "Actualice a Pro.", "buy_btn": "👉 Obtener Pro",
-        "result": "✨ Resultado PASEC",
+        "faq": "❓ Preguntas Frecuentes", "support": "🎫 Soporte", "logout": "🚪 Cerrar Sesión",
+        "mode": "⚙️ Modo", "action": "⚡ Acción", "input_label": "📝 Contexto",
+        "generate": "✨ Generar PASEC", "lock_msg": "🔒 Bloqueado", "lock_desc": "Actualice a Pro.",
+        "buy_btn": "👉 Obtener Pro", "result": "✨ Resultado PASEC",
         "ticket_types": ["🔴 Reporte de Bug/Error", "🟠 Problemas de Facturación", "🟡 Solicitud de Función", "🟢 Asociación/Patrocinio", "🔵 Otra Consulta"]
     },
     "Bahasa Melayu": {
         "sidebar_title": "🧬 Lai's Lab", "plan_guest": "Pelan Tetamu", "plan_pro": "Pro Enterprise",
         "usage": "Penggunaan", "lang": "🌐 Bahasa", "role": "🎭 Peranan", "tone": "🗣️ Nada / Gaya",
-        "faq": "❓ Soalan Lazim", "support": "🎫 Tiket Bantuan",
-        "logout": "🚪 Log Keluar", "mode": "⚙️ Pilih Mod", "action": "⚡ Pilih Tindakan",
-        "input_label": "📝 Konteks / Butiran", "input_ph": "Masukkan butiran di sini...",
-        "generate": "✨ Jana PASEC",
-        "lock_msg": "🔒 Dikunci", "lock_desc": "Naik taraf ke Pro.", "buy_btn": "👉 Dapatkan Pro",
-        "result": "✨ Keputusan PASEC",
+        "faq": "❓ Soalan Lazim", "support": "🎫 Tiket Bantuan", "logout": "🚪 Log Keluar",
+        "mode": "⚙️ Pilih Mod", "action": "⚡ Pilih Tindakan", "input_label": "📝 Konteks / Butiran",
+        "generate": "✨ Jana PASEC", "lock_msg": "🔒 Dikunci", "lock_desc": "Naik taraf ke Pro.",
+        "buy_btn": "👉 Dapatkan Pro", "result": "✨ Keputusan PASEC",
         "ticket_types": ["🔴 Lapor Bug", "🟠 Isu Bil", "🟡 Cadangan Fitur", "🟢 Perkongsian", "🔵 Lain-lain"]
     }
 }
 
-# ==========================================
-# 2. 智能数据源 (用于生成 FAQ 和 拦截器)
-# ==========================================
+# 智能拦截源 (FAQ 更新)
 RAW_FAQ_DATA = [
     {"q": "Is it free?", "a": "Yes, Guest plan is free forever (5/day).", "kw": ["free", "charge", "trial", "cost"]},
     {"q": "Pro Cost?", "a": "$12.90 Lifetime (Limited Time Offer).", "kw": ["price", "subscription", "monthly", "12.90"]},
@@ -111,23 +77,21 @@ RAW_FAQ_DATA = [
     {"q": "Languages?", "a": "15+ Global Languages in Pro.", "kw": ["language", "chinese", "spanish"]},
     {"q": "PDF/Font?", "a": "📄 Font Issue: Missing system font. Wait for update.", "kw": ["pdf", "font", "box", "square"]},
     {"q": "Watermark?", "a": "Pro has NO watermark.", "kw": ["watermark", "logo", "remove"]},
-    {"q": "Daily Limit?", "a": "Guest: 5/day. Pro: Unlimited.", "kw": ["limit", "quota", "stuck"]},
+    # ✅ 修改：明确写出 Pro 限制 1000 次
+    {"q": "Daily Limit?", "a": "Guest: 5/day. Pro: 1000/day (Fair Use).", "kw": ["limit", "quota", "stuck", "stop"]},
     {"q": "Payment?", "a": "Cards, PayPal, Apple Pay.", "kw": ["pay", "card", "paypal"]},
     {"q": "Mobile?", "a": "Works on all mobile browsers.", "kw": ["mobile", "phone", "android", "ios"]},
     {"q": "Support?", "a": "Pro: 1-2 Days. Guest: 3-5 Days.", "kw": ["support", "help", "time"]},
     {"q": "WeChat?", "a": "💬 WeChat: Copy link manually.", "kw": ["wechat", "weixin"]}
 ]
 
-# 自动生成器
 FAQ_LIST = [f"{i+1}. {item['q']} {item['a']}" for i, item in enumerate(RAW_FAQ_DATA)]
 INTERCEPTORS = {}
 for item in RAW_FAQ_DATA:
     for keyword in item['kw']:
         INTERCEPTORS[keyword] = item['a']
 
-# ==========================================
-# 3. 角色与模式矩阵 (完整保留)
-# ==========================================
+# Prompt 矩阵 (保持不变)
 ROLES_CONFIG = {
     "Global Educator": {
         "Pedagogy (Free)": [
