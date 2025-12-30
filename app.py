@@ -1,179 +1,135 @@
-# app.py
-# Lai's Lab V9.21 - 界面核心 (Reply-To Config)
-
+# app.py (V9.24 Professional)
 import streamlit as st
-import time
-import base64
-import os
-from fpdf import FPDF 
-
-import logic_core as lc 
+import time, base64, os
+import logic_core as lc
 import data_matrix as dm
 
-st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
+# 全量商业 CSS
 st.markdown("""
 <style>
-    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-    div[data-testid="stDecoration"] {visibility: hidden; height: 0px;}
-    .block-container {padding-top: 1rem !important; padding-bottom: 5rem;}
-    .promo-box {background-color: #fff0f0; border: 1px solid #ffcdd2; color: #d32f2f; padding: 10px; border-radius: 8px; margin-bottom: 20px;}
-    .promo-price {font-weight: bold; font-size: 18px; color: #e53935;}
-    .promo-old {text-decoration: line-through; color: #9e9e9e; font-size: 13px;}
-    a {text-decoration: none !important; color: #666;} a:hover {text-decoration: underline !important; color: #333;}
-    .lost-key-link {text-align: center; margin-top: 10px; font-size: 12px; color: #888;}
+    .promo-box { background: #fff5f5; border-radius: 8px; padding: 15px; border-left: 5px solid #e53935; margin-bottom: 20px; }
+    .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 14px; }
+    .compare-table th { background: #fafafa; padding: 12px; text-align: left; border-bottom: 2px solid #eee; }
+    .compare-table td { padding: 10px; border-bottom: 1px solid #f9f9f9; }
+    .pro-highlight { background: #f0f7ff; color: #0277bd; font-weight: bold; }
+    .footer-box { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; background: white; border-top: 1px solid #eee; color: #888; font-size: 12px; z-index: 100; }
+    .sidebar-footer { font-size: 11px; color: #bbb; text-align: center; margin-top: 50px; }
 </style>
 """, unsafe_allow_html=True)
 
-# 🔐 Secrets 注入 (含 Reply-To)
+# 动态加载 Secrets
 if "general" in st.secrets:
-    s = st.secrets["general"]
-    # 邮件
-    if "email_app_password" in s: lc.CONFIG["EMAIL_APP_PASSWORD"] = s["email_app_password"]
-    if "email_sender" in s: lc.CONFIG["EMAIL_SENDER_ADDRESS"] = s["email_sender"]
-    if "email_admin" in s: lc.CONFIG["EMAIL_ADMIN_ADDRESS"] = s["email_admin"]
-    # ✅ 新增：读取 Reply-To
-    if "email_reply_to" in s: lc.CONFIG["EMAIL_REPLY_TO"] = s["email_reply_to"]
-    
-    # 支付与验证
-    if "lemonsqueezy_key" in s: lc.CONFIG["LEMONSQUEEZY_API_KEY"] = s["lemonsqueezy_key"]
-    if "master_key" in s: lc.CONFIG["MASTER_KEY"] = s["master_key"]
-    # Airtable
-    if "airtable_key" in s: lc.CONFIG["AIRTABLE_API_KEY"] = s["airtable_key"]
-    if "airtable_base_id" in s: lc.CONFIG["AIRTABLE_BASE_ID"] = s["airtable_base_id"]
-    if "airtable_table_tickets" in s: lc.CONFIG["AIRTABLE_TABLE_TICKETS"] = s["airtable_table_tickets"]
-    if "airtable_table_users" in s: lc.CONFIG["AIRTABLE_TABLE_USERS"] = s["airtable_table_users"]
+    for k, v in st.secrets["general"].items():
+        if k.upper() in lc.CONFIG: lc.CONFIG[k.upper()] = v
 
-# Session
-if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'user_tier' not in st.session_state: st.session_state.user_tier = "Guest"
-if 'user_email' not in st.session_state: st.session_state.user_email = ""
-if 'language' not in st.session_state: st.session_state.language = "English"
-if 'daily_usage' not in st.session_state: st.session_state.daily_usage = 0
-
-# 辅助函数
-def render_download_button(text):
-    b64 = base64.b64encode(text.encode()).decode()
-    href = f'<a href="data:file/txt;base64,{b64}" download="prompt.txt" style="background:#f0f2f6; padding:8px; border-radius:5px; color:#333; font-size:14px;">📄 Download Prompt</a>'
-    st.markdown(href, unsafe_allow_html=True)
-
-def create_pdf(content, role, mode):
-    pdf = FPDF(); pdf.add_page(); pdf.set_auto_page_break(auto=True, margin=15)
-    font_path = "font.ttf"
-    if os.path.exists(font_path): pdf.add_font('CustomFont', '', font_path, uni=True); pdf.set_font("CustomFont", size=12)
-    else: pdf.set_font("Arial", size=12); content = content.encode('latin-1', 'replace').decode('latin-1')
-    pdf.set_font_size(16); pdf.cell(0, 10, txt=f"Lai's Lab - {role}/{mode}", ln=True, align='C'); pdf.ln(10)
-    pdf.set_font_size(12); pdf.multi_cell(0, 10, txt=content)
-    return pdf.output(dest="S").encode("latin-1")
+# Session 初始化
+for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
+    if key not in st.session_state: st.session_state[key] = val
 
 def render_footer():
-    st.markdown("---")
-    st.markdown('<div style="text-align: center; font-size: 12px; color: #666;">© 2025 <b>Lai\'s Lab</b> | System V9.21 Enterprise</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="footer-box">© 2025 Lai\'s Lab | System V9.24 Enterprise | User: {st.session_state.user_email if st.session_state.user_email else "Visitor"}</div>', unsafe_allow_html=True)
 
-def logout(): st.session_state.clear(); st.rerun()
-
-# 登录页
 def show_login_page():
-    c1, c2 = st.columns([1, 1.3])
+    c1, c2 = st.columns([1, 1.4], gap="large")
     with c1:
         if os.path.exists("logo.png"): st.image("logo.png", width=120)
-        else: st.markdown("## 🧬 Lai's Lab")
-        st.title("PromptLab AI V9.21"); st.caption("Enterprise Prompt Engine"); st.markdown("---")
-        st.markdown('<div class="promo-box"><span>🔥 Lifetime Pro:</span> <span class="promo-price">$12.90</span> <span class="promo-old">$39.90</span></div>', unsafe_allow_html=True)
+        st.title("PromptLab AI V9.24")
+        st.markdown('<div class="promo-box">🔥 <b>Flash Sale:</b> Lifetime Pro <b style="color:#e53935">$12.90</b> <strike>$39.90</strike></div>', unsafe_allow_html=True)
         
         t1, t2 = st.tabs(["👤 Guest Trial", "💎 Activate Pro"])
         with t1:
-            email = st.text_input("Email", placeholder="you@example.com")
-            if st.button("🚀 Start Free Trial", use_container_width=True):
-                if "@" in email: st.session_state.user_email = email; st.session_state.user_tier = "Guest"; st.session_state.logged_in = True; st.rerun()
-                else: st.warning("Invalid Email")
+            e = st.text_input("Enter Email to Start", key="login_e")
+            if st.button("🚀 Start 5-Day Trial", use_container_width=True):
+                if "@" in e: st.session_state.user_email, st.session_state.user_tier, st.session_state.logged_in = e, "Guest", True; st.rerun()
+                else: st.error("Invalid Email Address")
         with t2:
-            p_email = st.text_input("Pro Email")
-            l_key = st.text_input("License Key", type="password")
-            if st.button("💎 Activate", type="primary", use_container_width=True):
-                with st.spinner("Verifying License..."):
-                    status = lc.check_user_tier(p_email, l_key)
-                    if status == "Pro": st.session_state.user_email = p_email; st.session_state.user_tier = "Pro"; st.session_state.logged_in = True; st.balloons(); time.sleep(1); st.rerun()
-                    else: st.error("❌ Invalid License Key")
-            st.markdown('<div class="lost-key-link"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank">🔒 Lost License Key?</a></div>', unsafe_allow_html=True)
-    with c2:
-        st.info("💡 Join 10,000+ Educators & Creators today.")
-    render_footer()
+            pe = st.text_input("Billing Email")
+            lk = st.text_input("License Key", type="password")
+            if st.button("💎 Activate Now", type="primary", use_container_width=True):
+                if lc.check_user_tier(pe, lk) == "Pro":
+                    st.session_state.user_email, st.session_state.user_tier, st.session_state.logged_in = pe, "Pro", True
+                    st.balloons(); time.sleep(1); st.rerun()
+                else: st.error("Verification Failed")
+            # ✅ 补全：找回链接
+            st.markdown('<p style="text-align:center; font-size:12px; margin-top:10px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank">🔒 Forgot License Key?</a></p>', unsafe_allow_html=True)
 
-# 主程序
+    with c2:
+        # ✅ 补全：方案对比表
+        st.subheader("🆚 Compare Plans")
+        st.markdown("""
+        <table class="compare-table">
+            <tr><th>Capability</th><th>Guest Trial</th><th class="pro-highlight">💎 PRO Lifetime</th></tr>
+            <tr><td>Daily AI Generation</td><td>5 Times</td><td class="pro-highlight">1,000 Times</td></tr>
+            <tr><td>Global Languages</td><td>3 (Basic)</td><td class="pro-highlight">15 (Global)</td></tr>
+            <tr><td>Expert Modes</td><td>Free Modes Only</td><td class="pro-highlight">All 18 Modes</td></tr>
+            <tr><td>AI Watermark</td><td>Included</td><td class="pro-highlight">Removed</td></tr>
+            <tr><td>PDF Export</td><td>No</td><td class="pro-highlight">Yes</td></tr>
+            <tr><td>Support priority</td><td>Normal</td><td class="pro-highlight">VIP Priority</td></tr>
+        </table>
+        """, unsafe_allow_html=True)
+        st.info("💡 Pro Users enjoy the ultra-fast Turbo generation engine.")
+
 def show_main_app():
-    curr = st.session_state.language
-    ui = dm.LANG_MAP.get(curr, dm.LANG_MAP["default"])
-    
+    ui = dm.LANG_MAP.get(st.session_state.language, dm.LANG_MAP["default"])
     with st.sidebar:
         if os.path.exists("logo.png"): st.image("logo.png", width=80)
-        st.caption(f"💎 {ui['plan_pro']}" if st.session_state.user_tier == "Pro" else f"👤 {ui['plan_guest']}")
-        
-        _, _, max_limit = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
-        st.progress(min(st.session_state.daily_usage / max_limit if max_limit > 0 else 0, 1.0))
-        st.caption(f"{ui['usage']}: {st.session_state.daily_usage}/{max_limit}")
+        st.caption(f"Status: {st.session_state.user_tier}")
+        can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
+        st.progress(st.session_state.daily_usage / tot); st.caption(f"Usage: {st.session_state.daily_usage} / {tot}")
         st.divider()
-        
         langs = dm.LANG_OPTIONS_PRO if st.session_state.user_tier == "Pro" else dm.LANG_OPTIONS_GUEST
-        sel_l = st.selectbox(ui['lang'], langs, index=langs.index(curr) if curr in langs else 0)
-        if sel_l != curr: st.session_state.language = sel_l; st.rerun()
+        st.session_state.language = st.selectbox("Global Language", langs, index=langs.index(st.session_state.language) if st.session_state.language in langs else 0)
+        role = st.selectbox("Role Expert", list(dm.ROLES_CONFIG.keys()))
         
-        role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
-        
-        with st.expander(ui['support']):
-            tt = st.selectbox("Type", ui['ticket_types'])
+        with st.expander("❓ FAQ & Help"):
+            for q in dm.FAQ_LIST: st.write(f"• {q}") # ✅ 补全：完整 16 项 FAQ
+            
+        with st.expander("✉️ Support Tickets"):
+            tt = st.selectbox("Type", ["Question", "Bug", "Billing", "Feature", "VIP Support"])
             ts = st.text_input("Subject")
-            tm = st.text_area("Msg")
-            if st.button("Submit"):
-                intercept, msg = lc.smart_intercept(ts)
-                if intercept: st.warning(msg)
+            tm = st.text_area("Message")
+            if st.button("Submit Ticket"):
+                intercept, ans = lc.smart_intercept(ts) # ✅ 黑科技：拦截器
+                if intercept: st.warning(ans)
                 else:
-                    tid = int(time.time())
-                    lc.log_ticket_to_airtable(tid, st.session_state.user_email, st.session_state.user_tier, f"[{tt}] {ts}")
+                    tid = int(time.time()); lc.log_ticket_to_airtable(tid, st.session_state.user_email, st.session_state.user_tier, tt, ts, tm)
                     lc.send_auto_reply_email(st.session_state.user_email, st.session_state.user_tier, tid, ts)
-                    st.success("✅ Ticket Sent!")
-        st.divider(); 
-        if st.button(ui['logout']): logout()
+                    st.success(f"Ticket #{tid} Sent!")
+        
+        st.divider()
+        if st.button("Logout", use_container_width=True): st.session_state.clear(); st.rerun()
 
-    st.header(f"{role} Workspace")
+    st.header(f"🎭 {role} Dashboard")
     modes = list(dm.ROLES_CONFIG[role].keys())
-    mode = st.selectbox(ui['mode'], modes)
+    mode = st.selectbox("Mode", modes)
     
+    # ✅ 黑科技：模式锁检测
     if lc.check_mode_lock(st.session_state.user_tier, mode):
-        st.error(ui['lock_msg']); st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy", type="primary")
+        st.error("🔒 This is a Pro Mode"); st.link_button("💎 Upgrade to Unlock All 18 Modes", "https://laislab.lemonsqueezy.com/buy", type="primary")
     else:
-        opts = [o["label"] for o in dm.ROLES_CONFIG[role][mode]]
-        opt = st.selectbox(ui['action'], opts)
+        opt = st.selectbox("Action", [o["label"] for o in dm.ROLES_CONFIG[role][mode]])
+        tone = st.selectbox("Tone / Style", dm.ROLE_TONES.get(role, dm.DEFAULT_TONES))
+        inp = st.text_area("Input Context", height=150, placeholder="Type your requirements here...")
         
-        tones = dm.ROLE_TONES.get(role, dm.DEFAULT_TONES)
-        tone = st.selectbox(ui.get('tone', "Tone"), tones)
-        
-        inp = st.text_area(ui['input_label'], height=150)
-        
-        if st.button(ui['generate'], type="primary", use_container_width=True):
-            if not inp: st.warning("Empty input")
-            elif st.session_state.daily_usage >= max_limit: st.error("Limit Reached")
+        if st.button("Generate System Payload", type="primary", use_container_width=True):
+            if not inp: st.warning("Please provide input content.")
+            elif not can_gen: st.error("Daily usage limit reached.")
             else:
                 st.session_state.daily_usage += 1
-                if st.session_state.user_tier == "Guest": time.sleep(1.5)
+                if st.session_state.user_tier == "Guest": 
+                    with st.status("AI Analyzing..."): time.sleep(1.5) # ✅ 黑科技：假拖延
                 
-                final_res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
-                
-                st.markdown(f"### {ui['result']}")
-                st.text_area("Copy this prompt:", value=final_res, height=450)
-                
-                c1, c2, c3 = st.columns(3)
-                with c1: render_download_button(final_res)
-                with c2: st.link_button("🎨 Midjourney", "https://www.midjourney.com")
-                with c3: st.link_button("💬 ChatGPT", "https://chat.openai.com")
+                res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
+                st.markdown("### 🧬 Optimized Output")
+                st.text_area("Payload Result:", value=res, height=350)
                 
                 if st.session_state.user_tier == "Pro":
-                    st.divider()
-                    pdf = create_pdf(final_res, role, mode)
-                    st.download_button("📕 Download PDF", pdf, "prompt.pdf", "application/pdf")
-
-    render_footer()
+                    pdf = lc.create_pdf(res, role, mode) # ✅ 黑科技：PDF 导出
+                    if pdf: st.download_button("📕 Download PDF Report", pdf, "report.pdf", "application/pdf", use_container_width=True)
 
 if __name__ == "__main__":
     if st.session_state.logged_in: show_main_app()
     else: show_login_page()
+    render_footer()
