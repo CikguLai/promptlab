@@ -353,13 +353,30 @@ for role, modes in ROLES_CONFIG.items():
 # 6. 智能拦截 (FAQ)
 # ==========================================
 INTERCEPTORS = {
-    "price": "$12.90 Lifetime Access (One-time payment)",
-    "refund": "Digital keys are non-refundable once activated.",
-    "free": "Guest Plan: 5 generations per day with watermark.",
-    "support": "VIP Support: 1-2 days response time.",
-    "invoice": "Invoices are automatically sent by LemonSqueezy.",
-    "key": "Lost Key? Go to app.lemonsqueezy.com/my-orders",
-    "limit": "Pro users get unlimited generations.",
-    "pdf": "PDF export supports 16 languages.",
-    "language": "Switch languages in the sidebar."
+    # Category 1: Purchase & License
+    "subscription": "No. It is a One-Time Payment of $12.90. No monthly fees.",
+    "refund": "Strictly No Refunds. This is a digital product (License Key) with instant access.",
+    "key": "Lost Key? Please visit the LemonSqueezy Order Locator to recover it.",
+    "devices": "Yes. Your license is tied to your email, accessible on mobile/desktop.",
+    
+    # Category 2: Business & Affiliate
+    "affiliate": "Yes! You earn 40% commission on every sale. Sign up via our LemonSqueezy Affiliate Hub.",
+    "invoice": "LemonSqueezy automatically emails you a tax invoice immediately after purchase.",
+    "school": "Yes. For schools buying 10+ licenses, please contact support for a tailored quote.",
+    
+    # Category 3: Technical Support
+    "pdf": "PDF Text missing? This happens if system font is missing. Please contact support.",
+    "wechat": "WeChat button not working? Click the green icon -> Select 'WeChat' from share menu.",
+    "invalid": "Invalid Key? Ensure no spaces are copied. Check your email spelling.",
+    "slow": "Guest users are in a shared queue. PRO users enjoy dedicated high-speed servers.",
+    
+    # Category 4: Usage Limits
+    "limit": "Is PRO Unlimited? Yes for text. For images, fair usage policy of ~200/day.",
+    "commercial": "Can I use content commercially? Yes, PRO users have 100% commercial rights.",
+    "offline": "Does it work offline? No. PromptLab is a cloud-based AI engine and requires internet.",
+    
+    # Category 5: Privacy & Security
+    "privacy": "Do you store prompts? We prioritize privacy. Inputs are processed for generation only.",
+    "share": "Can I share my account? No. Sharing accounts triggers our anti-abuse system."
 }
+
