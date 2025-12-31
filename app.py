@@ -1,4 +1,4 @@
-# app.py (V9.28 - Dynamic Table & Perfect Footer)
+# app.py (V9.28 - 2026 Ready - Final Audit)
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
@@ -20,11 +20,11 @@ st.markdown("""
     a:hover { text-decoration: underline !important; }
     .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
     
-    /* ✅ Footer 绝对居中修正 */
+    /* Footer 绝对居中修正 */
     .footer-container {
         position: fixed; bottom: 0; left: 0; width: 100%; 
         background-color: white; border-top: 1px solid #f1f1f1; 
-        padding: 20px; z-index: 1000; text-align: center; /* 确保所有文本居中 */
+        padding: 20px; z-index: 1000; text-align: center;
         font-family: 'Inter', sans-serif;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
@@ -33,6 +33,9 @@ st.markdown("""
     .footer-row-3 { font-size: 11px; color: #aaa; }
     .footer-link { color: #aaa; text-decoration: none; margin: 0 5px; }
     .footer-verify { color: #0277bd; font-weight: 700; text-decoration: none; margin-left: 10px; }
+    
+    /* 侧边栏进度条强力修复 */
+    .stProgress > div > div > div > div { background-color: #0277bd !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -40,7 +43,7 @@ st.markdown("""
 for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
     if key not in st.session_state: st.session_state[key] = val
 
-# --- Footer 渲染函数 (完美居中) ---
+# Footer 渲染函数 (完美居中)
 def render_footer():
     current_hour = datetime.now().hour
     online_count = 150 + (current_hour * 8) + random.randint(1, 15)
@@ -57,7 +60,7 @@ def render_footer():
             </div>
             <div class="footer-row-2">
                 Disclaimer: Generative AI can make mistakes. Users are solely responsible for content usage. 
-                Lai's Lab assumes no liability for actions taken based on these outputs.
+                Lai's Lab assumes no liability.
             </div>
             <div class="footer-row-3">
                 👤 {st.session_state.user_email} &nbsp;|&nbsp; 
@@ -83,7 +86,6 @@ def show_login_page():
 
     col1, col2 = st.columns([1, 1.4], gap="large")
     with col1:
-        # DNA 标题与 Slogan (修复反斜杠语法错误)
         app_title = ui.get('sidebar_title', "Lai's Lab")
         st.title(f"🧬 {app_title}")
         st.markdown('<div class="app-slogan">🚀 Your Automated Prompt Engineer</div>', unsafe_allow_html=True)
@@ -104,27 +106,21 @@ def show_login_page():
             st.markdown('<div style="text-align: center; margin-top: 15px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #666; font-size: 13px; text-decoration: none;">🔒 Lost your key? Retrieve via LemonSqueezy</a></div>', unsafe_allow_html=True)
 
     with col2:
-        # ✅ 动态生成表格：根据 ui 中的数据自动构建 HTML
         st.subheader("🆚 Compare Plans")
         
-        # 获取表头和数据
+        # 动态获取表头和数据
         headers = ui.get('tbl_headers', ["Capability", "Guest Trial", "💎 PRO Lifetime"])
-        rows = ui.get('tbl_data', [])
+        rows = ui.get('tbl_data', dm.TABLE_EN)
         
-        # 构建表格 HTML
         table_html = '<table class="compare-table">'
         table_html += f'<tr><th>{headers[0]}</th><th>{headers[1]}</th><th class="pro-column">{headers[2]}</th></tr>'
-        
         for r in rows:
-            # 特殊处理价格行的颜色
-            v2_display = f'<span class="price-tag">{r["v2"]}</span>' if "Price" in r['k'] or "价格" in r['k'] else r['v2']
+            v2_display = f'<span class="price-tag">{r["v2"]}</span>' if ("Price" in r['k'] or "价格" in r['k'] or "價格" in r['k'] or "Harga" in r['k']) else r['v2']
             table_html += f'<tr><td><b>{r["k"]}</b></td><td>{r["v1"]}</td><td class="pro-column">{v2_display}</td></tr>'
-            
         table_html += '</table>'
-        
         st.markdown(table_html, unsafe_allow_html=True)
         
-        note = "* 遵循公平使用原则。" if lang_sel == "简体中文" else "* Fair Use Policy applies."
+        note = "* Fair Use Policy applies."
         st.caption(note)
         
     render_footer()
@@ -136,12 +132,12 @@ def show_main_app():
         # 进度条
         can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
         bar_color = "#ff4b4b" if (tot - st.session_state.daily_usage) <= 1 else "#00f2fe"
-        st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%); }}</style>", unsafe_allow_html=True)
+        st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%) !important; }}</style>", unsafe_allow_html=True)
         st.progress(st.session_state.daily_usage / tot)
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}" if st.session_state.user_tier != "Pro" else f"✨ {ui.get('plan_pro', 'Pro Plan')}: Unlimited")
         st.divider()
         
-        # 语言切换
+        # 侧边栏语言切换
         lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_PRO, index=dm.LANG_OPTIONS_PRO.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_PRO else 0, key="lang_select_main")
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
