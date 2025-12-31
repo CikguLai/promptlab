@@ -8,6 +8,34 @@ import random
 # 1. 设置
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
+# 全量 CSS：侧边栏红条、居中页脚、表格美化
+st.markdown("""
+<style>
+    .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
+    .compare-table th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; text-align: left; color: #333; }
+    .compare-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; color: #555; }
+    .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
+    .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
+    a:hover { text-decoration: underline !important; }
+    .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
+    
+    /* 侧边栏进度条颜色 */
+    .stProgress > div > div > div > div { background-color: #0277bd !important; }
+    
+    /* 🔥 V9.28 专用 Footer 样式 (居中，固定底部) */
+    .footer-container { 
+        position: fixed; bottom: 0; left: 0; width: 100%; 
+        background: white; border-top: 1px solid #eee; 
+        padding: 15px; z-index: 999; text-align: center; 
+        font-family: sans-serif;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Session 初始化
+for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
+    if key not in st.session_state: st.session_state[key] = val
+
 # 读取 Secrets
 if "general" in st.secrets:
     sec = st.secrets["general"]
@@ -21,42 +49,30 @@ if "general" in st.secrets:
     lc.CONFIG["AIRTABLE_BASE_ID"] = sec.get("airtable_base_id", "")
     if "master_key" in sec: lc.CONFIG["MASTER_KEY"] = sec["master_key"]
 
-# CSS 样式
-st.markdown("""
-<style>
-    .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
-    .compare-table th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; text-align: left; color: #333; }
-    .compare-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; color: #555; }
-    .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
-    .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
-    a:hover { text-decoration: underline !important; }
-    .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
-    .stProgress > div > div > div > div { background-color: #0277bd !important; }
-    .footer-container { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; padding: 20px; z-index: 999; text-align: center; }
-</style>
-""", unsafe_allow_html=True)
-
-# Session 初始化
-for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
-    if key not in st.session_state: st.session_state[key] = val
-
+# 🔥 V9.28 原版 Footer
 def render_footer():
     is_pro = st.session_state.user_tier == "Pro"
     tier_label = "💎 VERIFIED PRO ACCESS" if is_pro else "👤 STANDARD GUEST TRIAL"
     tier_color = "#0277bd" if is_pro else "#666"
+    
     st.markdown(f"""
         <div class="footer-container">
-            <div style="font-weight:bold; color:#333; margin-bottom:5px;">© 2025–2026 LAI'S LAB • V9.28 FINAL • <span style="color:{tier_color}">{tier_label}</span></div>
-            <div style="font-size:10px; color:#999;">Disclaimer: AI outputs may vary. Users are responsible for content.</div>
-            <div style="font-size:11px; color:#aaa; margin-top:5px;">
-                👤 {st.session_state.user_email} | 🟢 System Operational | 
-                <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color:#0277bd;font-weight:bold;">Lost Key?</a>
+            <div style="font-weight:bold; color:#333; margin-bottom:5px;">
+                © 2025–2026 LAI'S LAB • V9.28 FINAL • <span style="color:{tier_color}">{tier_label}</span>
             </div>
-        </div><div style="height:120px;"></div>
-    """, unsafe_allow_html=True)
+            <div style="font-size:10px; color:#999; margin-bottom:5px;">
+                Disclaimer: AI outputs may vary. Users are responsible for content.
+            </div>
+            <div style="font-size:11px; color:#aaa;">
+                👤 {st.session_state.user_email if st.session_state.user_email else 'Guest'} | 🟢 System Operational | 
+                <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color:#0277bd;font-weight:bold;text-decoration:none;">Lost Key?</a>
+            </div>
+        </div>
+        <div style="height:100px;"></div> """, unsafe_allow_html=True)
 
 def show_login_page():
     st.write("🌍 Select Language")
+    # 登录页全语言选择
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=0, key="lang_login", label_visibility="collapsed")
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
@@ -88,11 +104,13 @@ def show_login_page():
         st.subheader("🆚 Compare Plans")
         headers = ui.get('tbl_headers', ["Capability", "Guest", "Pro"])
         rows = ui.get('tbl_data', dm.TABLE_EN)
+        
         html = f'<table class="compare-table"><tr><th>{headers[0]}</th><th>{headers[1]}</th><th class="pro-column">{headers[2]}</th></tr>'
         for r in rows:
             v2 = f'<span class="price-tag">{r["v2"]}</span>' if "$" in r['v2'] else r['v2']
             html += f'<tr><td><b>{r["k"]}</b></td><td>{r["v1"]}</td><td class="pro-column">{v2}</td></tr>'
         st.markdown(html + "</table>", unsafe_allow_html=True)
+    
     render_footer()
 
 def show_main_app():
@@ -108,15 +126,15 @@ def show_main_app():
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}")
         st.divider()
         
-        # 语言切换
+        # 语言切换 (16种全开)
         lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_GUEST, index=dm.LANG_OPTIONS_GUEST.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_GUEST else 0, key="lang_main")
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
-            st.rerun()
+            st.rerun() # 立即刷新
             
         role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
         
-        # FAQ 与 工单系统 (带下拉菜单)
+        # FAQ
         with st.expander("❓ FAQ / Support", expanded=False):
             st.markdown("**💡 Quick Answers (16 Topics)**")
             faq_topic = st.selectbox("Select topic:", list(dm.INTERCEPTORS.keys()), format_func=lambda x: x.upper())
@@ -134,7 +152,6 @@ def show_main_app():
         
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
-    # 主界面
     st.header(f"🎭 {role}")
     st.markdown(f"""<div style="background: #fff9e6; border-left: 5px solid #ffcc00; padding: 10px; margin-bottom: 15px;"><span style="color: #856404;">🔥 <b>{ui.get('live_stat', 'Live')}:</b> {random.randint(100, 200)} Users active</span></div>""", unsafe_allow_html=True)
 
@@ -158,38 +175,35 @@ def show_main_app():
                     st.session_state.daily_usage += 1
                     res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
                     
-                    # --- 结果操作塔 (Action Deck) ---
                     st.markdown(f"### {ui['result']}")
-                    st.text_area("Payload:", value=res, height=300) # Layer 1: Copy (Streamlit自带)
+                    st.text_area("Payload:", value=res, height=300)
                     
-                    # Layer 2: AI Connect
-                    st.caption("🧠 AI Connect (Click to Run)")
+                    # 🔥 Action Deck (AI Connect + Share + Download)
+                    st.caption("🧠 AI Connect")
                     a1, a2, a3, a4 = st.columns(4)
-                    with a1: st.link_button("Open ChatGPT", "https://chat.openai.com", use_container_width=True)
-                    with a2: st.link_button("Open Gemini", "https://gemini.google.com", use_container_width=True)
-                    with a3: st.link_button("Open Claude", "https://claude.ai", use_container_width=True)
-                    with a4: st.link_button("🎨 Midjourney", "https://www.midjourney.com", use_container_width=True)
+                    with a1: st.link_button("ChatGPT", "https://chat.openai.com", use_container_width=True)
+                    with a2: st.link_button("Gemini", "https://gemini.google.com", use_container_width=True)
+                    with a3: st.link_button("Claude", "https://claude.ai", use_container_width=True)
+                    with a4: st.link_button("Midjourney", "https://www.midjourney.com", use_container_width=True)
                     
-                    # Layer 3: Social Share
                     st.caption("💬 Social Share")
                     s_links = lc.get_social_links(res)
                     s1, s2, s3, s4 = st.columns(4)
                     with s1: st.link_button("WhatsApp", s_links['WhatsApp'], use_container_width=True)
                     with s2: st.link_button("Telegram", s_links['Telegram'], use_container_width=True)
                     with s3: st.link_button("Email", s_links['Email'], use_container_width=True)
-                    with s4: st.link_button("X (Twitter)", s_links['X'], use_container_width=True)
+                    with s4: st.link_button("X", s_links['X'], use_container_width=True)
                     
-                    # Layer 5: Download
                     st.caption("💾 Download")
                     d1, d2, d3 = st.columns(3)
-                    with d1: st.download_button("📄 Download TXT", res, "prompt.txt")
+                    with d1: st.download_button("📄 TXT", res, "prompt.txt")
                     with d2:
                         if st.session_state.user_tier == "Pro":
                             pdf = lc.create_pdf(res, role, mode)
-                            if pdf: st.download_button("📕 Download PDF", pdf, "report.pdf", "application/pdf")
+                            if pdf: st.download_button("📕 PDF", pdf, "report.pdf", "application/pdf")
                     with d3:
                         if st.session_state.user_tier == "Pro":
-                            st.download_button("📊 Download CSV", lc.create_csv(res), "data.csv", "text/csv")
+                            st.download_button("📊 CSV", lc.create_csv(res), "data.csv", "text/csv")
 
     render_footer()
 
