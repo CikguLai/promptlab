@@ -1,5 +1,5 @@
 # logic_core.py
-# Lai's Lab V9.28 - 2026 READY
+# Lai's Lab V9.28 - 2026 FINAL
 # Backend Logic: Integrations, PDF, CSV, Security, PASEC Engine
 
 import requests
@@ -76,7 +76,10 @@ def send_email_smtp(to_email, subject, body):
         return False
 
 def log_ticket_to_airtable(email, ticket_type, issue, tier):
+    # 1. Telegram 通知
     send_telegram_alert(f"🆘 New Ticket: {ticket_type}\nUser: {email} ({tier})\nIssue: {issue}")
+    
+    # 2. Airtable 存档
     if CONFIG["AIRTABLE_API_KEY"]:
         url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
         now = datetime.datetime.now().isoformat()
@@ -86,12 +89,14 @@ def log_ticket_to_airtable(email, ticket_type, issue, tier):
                           headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
         except Exception: pass
     
+    # 3. 邮件回执
     if tier == "Pro":
         subject = f"💎 [VIP] Ticket Received: {ticket_type}"
         body = f"Dear Pro Member,\n\nWe received your {ticket_type}.\nIssue: {issue}\n\n💎 Status: VIP Queue (1-2 Days).\n\nBest,\nCikgu Lai"
     else:
         subject = f"[Ticket] Received: {ticket_type}"
         body = f"Dear User,\n\nWe received your {ticket_type}.\nIssue: {issue}\n\nStatus: Standard Queue (3-5 Days).\n\nBest,\nLai's Lab Support"
+    
     send_email_smtp(email, subject, body)
 
 # ==========================================
@@ -115,23 +120,27 @@ def check_user_tier(email, key):
 # ==========================================
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
+    # 查找模板
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     
+    # 生成内容
     res = f"### [PASEC PROTOCOL V2.8]\n"
     res += f"**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n"
     res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
     
+    # 水印逻辑 (Guest 强制加水印)
     if tier == "Pro":
         res += "\n[SYSTEM RULE]: Provide a CLEAN output WITHOUT markdown symbols like '##'. Human-like tone."
     else:
         res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean Output)"
     return res
 
-# 🔥 新增：生成 CSV (带 BOM 头防止乱码)
+# 🔥 核心修复 1：新增 CSV 生成功能 (App.py 必须用到)
 def create_csv(text):
+    # 添加 BOM 头，防止 Excel 打开中文乱码
     return ("\ufeff" + text).encode("utf-8")
 
-# 🔥 新增：生成社交分享链接
+# 🔥 核心修复 2：新增 社交分享链接生成 (App.py 必须用到)
 def get_social_links(text):
     encoded = urllib.parse.quote(text)
     return {
@@ -140,6 +149,10 @@ def get_social_links(text):
         "Email": f"mailto:?subject=Generated%20Content&body={encoded}",
         "X": f"https://twitter.com/intent/tweet?text={encoded}"
     }
+
+# 辅助：WhatsApp 单独链接 (保留旧接口兼容)
+def get_whatsapp_link(text):
+    return f"https://wa.me/?text={urllib.parse.quote(text)}"
 
 def create_pdf(text, role, mode):
     try:
