@@ -1,6 +1,6 @@
 # logic_core.py
-# Lai's Lab V9.28 - 2026 Ready (Full Commercial Logic)
-# Features: PDF(CJK), WhatsApp, Telegram, Airtable, Fair Use
+# Lai's Lab V9.28 - 2026 READY
+# Backend Logic: Integrations, PDF, Security, PASEC Engine
 
 import requests
 import datetime
@@ -14,7 +14,7 @@ from fpdf import FPDF
 import data_matrix as dm
 
 # ==========================================
-# 1. 全局配置核心 (黑科技配置区)
+# 1. 全局配置 (黑科技接口预留)
 # ==========================================
 CONFIG = {
     "EMAIL_APP_PASSWORD": "", 
@@ -32,7 +32,7 @@ CONFIG = {
 }
 
 # ==========================================
-# 2. 黑科技：Telegram 实时报警系统
+# 2. 黑科技：Telegram & Airtable
 # ==========================================
 def send_telegram_alert(msg):
     if not CONFIG["TELEGRAM_BOT_TOKEN"]: return
@@ -44,40 +44,11 @@ def send_telegram_alert(msg):
         }, timeout=5)
     except Exception: pass
 
-# ==========================================
-# 3. 鉴权与激活逻辑
-# ==========================================
-def check_user_tier(email, key):
-    # 管理员后门
-    if key == CONFIG["MASTER_KEY"]:
-        log_activation(email, key, "Master-Admin")
-        return "Pro"
-    
-    # LemonSqueezy 真实 API 校验
-    try:
-        url = "https://api.lemonsqueezy.com/v1/licenses/activate"
-        response = requests.post(url, data={
-            "license_key": key, 
-            "instance_name": "LaisLab_User_App"
-        }, timeout=10)
-        if response.status_code == 200 and response.json().get("activated"):
-            log_activation(email, key, "LemonSqueezy")
-            return "Pro"
-    except Exception: pass
-    return "Guest"
-
 def log_activation(email, key, method):
     if not CONFIG["AIRTABLE_API_KEY"]: return
     url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
     now = datetime.datetime.now().isoformat()
-    data = {
-        "fields": {
-            "Email": email, 
-            "LicenseKey": key, 
-            "ActivationMethod": method, 
-            "ActivatedAt": now
-        }
-    }
+    data = {"fields": {"Email": email, "LicenseKey": key, "ActivationMethod": method, "ActivatedAt": now}}
     try: 
         requests.post(url, json={"records": [{"fields": data['fields']}]}, 
                       headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
@@ -85,119 +56,79 @@ def log_activation(email, key, method):
     except Exception: pass
 
 # ==========================================
-# 4. PASEC 核心引擎 (16国语言适配版)
+# 3. 鉴权逻辑
+# ==========================================
+def check_user_tier(email, key):
+    if key == CONFIG["MASTER_KEY"]:
+        log_activation(email, key, "Master-Admin")
+        return "Pro"
+    try:
+        url = "https://api.lemonsqueezy.com/v1/licenses/activate"
+        response = requests.post(url, data={"license_key": key, "instance_name": "LaisLab_User_App"}, timeout=10)
+        if response.status_code == 200 and response.json().get("activated"):
+            log_activation(email, key, "LemonSqueezy")
+            return "Pro"
+    except Exception: pass
+    return "Guest"
+
+# ==========================================
+# 4. PASEC 核心引擎 (含输出语言控制)
 # ==========================================
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
-    # 容错：如果找不到选项，默认使用输入原文
+    # 查找模板，如果找不到（比如是 Custom），直接用 input
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     
-    # 构建多语言 Payload
-    res = f"### [PASEC PROTOCOL V2.8 - 2026 READY]\n"
-    res += f"**ROLE**: {role}\n**TONE**: {tone}\n**LANGUAGE**: {lang}\n"
+    # 强制输出语言逻辑：
+    res = f"### [PASEC PROTOCOL V2.8]\n"
+    res += f"**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n"
     res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
     
-    # Pro 用户去 AI 痕迹
     if tier == "Pro":
-        res += "\n[SYSTEM RULE]: Provide a CLEAN output WITHOUT markdown symbols like '##' or '**'. "
-        res += "The output must look like a natural human-written text. Avoid 'AI-style' transitions."
+        res += "\n[SYSTEM RULE]: Provide a CLEAN output WITHOUT markdown symbols like '##'. Human-like tone."
     else:
-        # 免费版强制水印
-        res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean & Unlimited output)"
-    
+        res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean Output)"
     return res
 
-# ✅ WhatsApp 分享 (URL 编码修复)
 def get_whatsapp_link(text):
-    encoded_text = urllib.parse.quote(text)
-    return f"https://wa.me/?text={encoded_text}"
+    return f"https://wa.me/?text={urllib.parse.quote(text)}"
 
-# ✅ PDF 导出 (16国语言字体支持)
 def create_pdf(text, role, mode):
     try:
         pdf = FPDF()
         pdf.add_page()
-        
-        # 核心：加载 font.ttf (支持繁简中日韩)
-        font_path = "font.ttf"  
+        font_path = "font.ttf"
         font_loaded = False
-
         if os.path.exists(font_path):
             try:
-                # 启用 Unicode
                 pdf.add_font('CustomFont', '', font_path, uni=True)
                 pdf.set_font("CustomFont", size=12)
                 font_loaded = True
-            except Exception as e:
-                print(f"Font loading error: {e}")
-        
-        # 回退逻辑
+            except: pass
         if not font_loaded:
             pdf.set_font("Arial", size=12)
-            pdf.cell(0, 10, txt="[System Warning: 'font.ttf' not found. CJK text may fail.]", ln=True)
-
-        # 标题 (英文安全)
+            pdf.cell(0, 10, txt="[Font Error: CJK characters may fail]", ln=True)
+        
         pdf.cell(200, 10, txt=f"Lai's Lab Report - {role}", ln=True, align='C')
         pdf.ln(10)
         
-        # 写入正文
         if font_loaded:
             pdf.multi_cell(0, 10, txt=text)
         else:
-            # 降级处理
-            clean_text = text.encode('latin-1', 'replace').decode('latin-1')
-            pdf.multi_cell(0, 10, txt=clean_text)
-            
+            pdf.multi_cell(0, 10, txt=text.encode('latin-1', 'replace').decode('latin-1'))
         return pdf.output(dest='S').encode('latin-1')
-    except Exception as e:
-        print(f"PDF Gen Error: {e}")
-        return None
+    except: return None
 
 # ==========================================
-# 5. 工单系统与智能拦截
+# 5. 客服拦截
 # ==========================================
 def smart_intercept(text):
     for k, v in dm.INTERCEPTORS.items():
         if k.lower() in text.lower(): return True, v
     return False, ""
 
-def log_ticket_to_airtable(tid, email, tier, type, subject, msg):
-    if not CONFIG["AIRTABLE_API_KEY"]: return
-    url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
-    fields = {
-        "TicketID": str(tid), 
-        "Email": email, 
-        "Tier": tier, 
-        "Issue": f"[{type}] {subject}: {msg}", 
-        "Status": "Open"
-    }
-    try: 
-        requests.post(url, json={"records": [{"fields": fields}]}, 
-                      headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
-        send_telegram_alert(f"📩 New Ticket #{tid} from {email}\nSubject: {subject}")
-    except Exception: pass
-
-def send_auto_reply_email(user_email, user_tier, ticket_id, subject):
-    if not CONFIG["EMAIL_APP_PASSWORD"]: return
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]
-        msg['To'] = user_email
-        msg['Subject'] = f"[{'VIP' if user_tier=='Pro' else 'Ticket'}] Case #{ticket_id} Received"
-        if CONFIG["EMAIL_REPLY_TO"]: msg.add_header('Reply-To', CONFIG["EMAIL_REPLY_TO"])
-        
-        body = f"Hello,\n\nWe have received your request: {subject}.\n\nLai's Lab Support Team"
-        msg.attach(MIMEText(body, 'plain'))
-        
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(CONFIG["EMAIL_SENDER_ADDRESS"], CONFIG["EMAIL_APP_PASSWORD"])
-        server.sendmail(CONFIG["EMAIL_SENDER_ADDRESS"], user_email, msg.as_string())
-        server.quit()
-    except Exception: pass
-
 # ==========================================
-# 6. 额度控制
+# 6. 权限控制
 # ==========================================
 def check_daily_limit_by_email(email, tier, current_usage):
     limit = 1000 if tier == "Pro" else 5
@@ -205,5 +136,5 @@ def check_daily_limit_by_email(email, tier, current_usage):
 
 def check_mode_lock(tier, mode_name):
     if tier == "Pro": return False
-    pro_keywords = ["(Pro)", "Visuals", "Marketing", "Strategy", "Premium", "Admin", "Pro"]
-    return any(k in mode_name for k in pro_keywords)
+    # 锁定带有 (Pro) 的模式
+    return "(Pro)" in mode_name
