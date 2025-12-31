@@ -1,11 +1,12 @@
 # logic_core.py
-# Lai's Lab V9.28 - Professional Audit Edition (Full Features)
+# Lai's Lab V9.28 - Professional Audit Edition (font.ttf Fixed)
 
 import requests
 import datetime
 import smtplib
 import io
 import urllib.parse
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from fpdf import FPDF
@@ -67,7 +68,6 @@ def check_user_tier(email, key):
 def log_activation(email, key, method):
     if not CONFIG["AIRTABLE_API_KEY"]: return
     url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
-    # 强制 ISO 时间格式解决 Airtable 报错
     now = datetime.datetime.now().isoformat()
     data = {
         "fields": {
@@ -84,52 +84,76 @@ def log_activation(email, key, method):
     except Exception: pass
 
 # ==========================================
-# 4. PASEC 核心引擎 (含去 AI 符号黑科技)
+# 4. PASEC 核心引擎 (15国语言适配版)
 # ==========================================
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
-    # 从矩阵索引模板
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     
-    # 基础 Payload 构建
-    res = f"### [PASEC PROTOCOL V2.8]\n"
-    res += f"**ROLE**: {role}\n**TONE**: {tone}\n**LANG**: {lang}\n"
+    # 构建多语言 Payload
+    res = f"### [PASEC PROTOCOL V2.8 - GLOBAL]\n"
+    res += f"**ROLE**: {role}\n**TONE**: {tone}\n**LANGUAGE**: {lang}\n"
     res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
     
-    # ✅ 黑科技：Pro 用户去 AI 痕迹处理 (移除 # 和 **)
+    # Pro 用户去 AI 痕迹
     if tier == "Pro":
         res += "\n[SYSTEM RULE]: Provide a CLEAN output WITHOUT markdown symbols like '##' or '**'. "
-        res += "The output must look like a natural human-written text. Avoid 'AI-style' transitions like 'In conclusion'."
+        res += "The output must look like a natural human-written text. Avoid 'AI-style' transitions."
     else:
-        # 免费版保留符号并强制加水印
         res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean & Unlimited output)"
     
     return res
 
-# ✅ 黑科技：WhatsApp 分享链接生成 (含带水印/不带水印自动判断)
+# ✅ WhatsApp 分享 (支持多语言编码)
 def get_whatsapp_link(text):
     encoded_text = urllib.parse.quote(text)
     return f"https://wa.me/?text={encoded_text}"
 
-# ✅ 黑科技：专业 PDF 导出
+# ✅ 黑科技：PDF 导出 (适配您的 GitHub font.ttf)
 def create_pdf(text, role, mode):
     try:
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt=f"Lai's Lab Analysis - {role} / {mode}", ln=True, align='C')
+        
+        # ✅ 核心修改：路径直接指向您 GitHub 里的 "font.ttf"
+        font_path = "font.ttf"  
+        font_loaded = False
+
+        if os.path.exists(font_path):
+            try:
+                # 注册字体 (Name='CustomFont')
+                pdf.add_font('CustomFont', '', font_path, uni=True)
+                pdf.set_font("CustomFont", size=12)
+                font_loaded = True
+            except Exception as e:
+                print(f"Font loading error: {e}")
+        
+        # 回退逻辑
+        if not font_loaded:
+            pdf.set_font("Arial", size=12)
+            pdf.cell(0, 10, txt="[System Warning: 'font.ttf' not found. CJK characters may fail.]", ln=True)
+
+        # 标题 (英文安全)
+        pdf.cell(200, 10, txt=f"Lai's Lab Report - {role}", ln=True, align='C')
         pdf.ln(10)
-        # 编码处理防止特殊字符崩溃
-        clean_text = text.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 10, txt=clean_text)
+        
+        # 写入正文
+        if font_loaded:
+            pdf.multi_cell(0, 10, txt=text)
+        else:
+            # 降级处理
+            clean_text = text.encode('latin-1', 'replace').decode('latin-1')
+            pdf.multi_cell(0, 10, txt=clean_text)
+            
         return pdf.output(dest='S').encode('latin-1')
-    except Exception: return None
+    except Exception as e:
+        print(f"PDF Gen Error: {e}")
+        return None
 
 # ==========================================
 # 5. 工单系统与智能拦截
 # ==========================================
 def smart_intercept(text):
-    # 扫描主题词自动从 FAQ 调取答案
     for k, v in dm.INTERCEPTORS.items():
         if k.lower() in text.lower(): return True, v
     return False, ""
@@ -173,12 +197,10 @@ def send_auto_reply_email(user_email, user_tier, ticket_id, subject):
 # 6. 额度控制
 # ==========================================
 def check_daily_limit_by_email(email, tier, current_usage):
-    # Pro 用户宣称为 Unlimited，但后台设置 1000 作为 Fair Use 防御
     limit = 1000 if tier == "Pro" else 5
     return (current_usage < limit), limit - current_usage, limit
 
 def check_mode_lock(tier, mode_name):
     if tier == "Pro": return False
-    # 强制锁定带有 Pro 标识或关键付费模块的模式
     pro_keywords = ["(Pro)", "Visuals", "Marketing", "Strategy", "Premium", "Admin", "Pro"]
     return any(k in mode_name for k in pro_keywords)
