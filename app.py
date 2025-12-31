@@ -1,4 +1,4 @@
-# app.py (V9.28 - 2026 FINAL - BUG FREE & FULL FAQ)
+# app.py (V9.28 - 2026 FINAL - BUG FREE)
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
@@ -9,7 +9,7 @@ from datetime import datetime
 # 1. 设置
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# 全量 CSS
+# CSS
 st.markdown("""
 <style>
     .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
@@ -18,12 +18,11 @@ st.markdown("""
     .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
     .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
     a:hover { text-decoration: underline !important; }
-    .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# Session
+# Session 初始化
 for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
     if key not in st.session_state: st.session_state[key] = val
 
@@ -40,7 +39,7 @@ if "general" in st.secrets:
     lc.CONFIG["AIRTABLE_BASE_ID"] = sec.get("airtable_base_id", "")
     if "master_key" in sec: lc.CONFIG["MASTER_KEY"] = sec["master_key"]
 
-# 🔥 Pro Audit Footer (高级版)
+# 🔥 Pro Audit Footer
 def render_footer():
     current_hour = datetime.now().hour
     online_count = 110 + (current_hour * 4) + random.randint(1, 10)
@@ -75,13 +74,21 @@ def render_footer():
 
 def show_login_page():
     st.write("🌍 Select Language")
-    # 强制 Key，确保刷新
-    lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=0, key="lang_login", label_visibility="collapsed")
+    
+    # 强制 Index 获取，防止语言列表变动导致崩溃
+    try:
+        idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.language)
+    except:
+        idx = 0 # 默认英文
+        
+    lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=idx, key="lang_login", label_visibility="collapsed")
+    
+    # 🔥 核心：语言切换触发重载
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
-        st.rerun()
+        st.rerun() 
 
-    # 🔥 安全获取 UI (防崩关键)
+    # 安全获取 UI
     ui = dm.LANG_MAP.get(lang_sel, dm.LANG_MAP["default"])
 
     col1, col2 = st.columns([1, 1.4], gap="large")
@@ -106,9 +113,9 @@ def show_login_page():
 
     with col2:
         st.subheader("🆚 Compare Plans")
-        # 🔥 安全获取表格数据
+        # 🔥 核心：这里使用了 dm.TABLE_ROWS_DEFAULT 作为保底
         headers = ui.get('tbl_headers', ["Capability", "Guest", "Pro"])
-        rows = ui.get('tbl_data', dm.TABLE_EN)
+        rows = ui.get('tbl_data', dm.TABLE_ROWS_DEFAULT)
         
         html = f'<table class="compare-table"><tr><th>{headers[0]}</th><th>{headers[1]}</th><th class="pro-column">{headers[2]}</th></tr>'
         for r in rows:
@@ -131,23 +138,23 @@ def show_main_app():
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}")
         st.divider()
         
-        # 语言切换
-        lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_GUEST, index=dm.LANG_OPTIONS_GUEST.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_GUEST else 0, key="lang_main")
+        # 语言切换 (16种)
+        try:
+            idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.language)
+        except:
+            idx = 0
+        lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_GUEST, index=idx, key="lang_main")
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
-            st.rerun()
+            st.rerun() # 立即刷新
             
         role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
         
-        # 🔥 核心升级：完整 16 Q&A 下拉菜单
+        # 🔥 完整 16 Q&A 下拉菜单
         with st.expander("❓ FAQ / Support", expanded=False):
             st.markdown("**💡 Quick Answers (16 Topics)**")
-            
-            # 使用 data_matrix 里的 FAQ_LIST，显示所有 Question
             faq_options = [item["q"] for item in dm.FAQ_LIST]
             selected_q = st.selectbox("Select Question:", faq_options)
-            
-            # 查找并显示答案
             answer = next((item["a"] for item in dm.FAQ_LIST if item["q"] == selected_q), "")
             st.info(answer)
             
@@ -193,6 +200,13 @@ def show_main_app():
                         if st.session_state.user_tier == "Pro":
                             pdf = lc.create_pdf(res, role, mode)
                             if pdf: st.download_button("📕 PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
+                    
+                    # 🔥 Action Deck 下载区
+                    if st.session_state.user_tier == "Pro":
+                        st.caption("💾 Download & Connect")
+                        d1, d2 = st.columns(2)
+                        with d1: st.download_button("📊 CSV", lc.create_csv(res), "data.csv", "text/csv")
+                        with d2: st.link_button("🧠 ChatGPT", "https://chat.openai.com", use_container_width=True)
 
     render_footer()
 
