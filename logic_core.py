@@ -1,5 +1,6 @@
 # logic_core.py
-# Lai's Lab V9.28 - Professional Audit Edition (font.ttf Fixed)
+# Lai's Lab V9.28 - 2026 Ready (Full Commercial Logic)
+# Features: PDF(CJK), WhatsApp, Telegram, Airtable, Fair Use
 
 import requests
 import datetime
@@ -13,7 +14,7 @@ from fpdf import FPDF
 import data_matrix as dm
 
 # ==========================================
-# 1. 全局配置核心
+# 1. 全局配置核心 (黑科技配置区)
 # ==========================================
 CONFIG = {
     "EMAIL_APP_PASSWORD": "", 
@@ -84,14 +85,15 @@ def log_activation(email, key, method):
     except Exception: pass
 
 # ==========================================
-# 4. PASEC 核心引擎 (15国语言适配版)
+# 4. PASEC 核心引擎 (16国语言适配版)
 # ==========================================
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
+    # 容错：如果找不到选项，默认使用输入原文
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     
     # 构建多语言 Payload
-    res = f"### [PASEC PROTOCOL V2.8 - GLOBAL]\n"
+    res = f"### [PASEC PROTOCOL V2.8 - 2026 READY]\n"
     res += f"**ROLE**: {role}\n**TONE**: {tone}\n**LANGUAGE**: {lang}\n"
     res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
     
@@ -100,28 +102,29 @@ def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
         res += "\n[SYSTEM RULE]: Provide a CLEAN output WITHOUT markdown symbols like '##' or '**'. "
         res += "The output must look like a natural human-written text. Avoid 'AI-style' transitions."
     else:
+        # 免费版强制水印
         res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean & Unlimited output)"
     
     return res
 
-# ✅ WhatsApp 分享 (支持多语言编码)
+# ✅ WhatsApp 分享 (URL 编码修复)
 def get_whatsapp_link(text):
     encoded_text = urllib.parse.quote(text)
     return f"https://wa.me/?text={encoded_text}"
 
-# ✅ 黑科技：PDF 导出 (适配您的 GitHub font.ttf)
+# ✅ PDF 导出 (16国语言字体支持)
 def create_pdf(text, role, mode):
     try:
         pdf = FPDF()
         pdf.add_page()
         
-        # ✅ 核心修改：路径直接指向您 GitHub 里的 "font.ttf"
+        # 核心：加载 font.ttf (支持繁简中日韩)
         font_path = "font.ttf"  
         font_loaded = False
 
         if os.path.exists(font_path):
             try:
-                # 注册字体 (Name='CustomFont')
+                # 启用 Unicode
                 pdf.add_font('CustomFont', '', font_path, uni=True)
                 pdf.set_font("CustomFont", size=12)
                 font_loaded = True
@@ -131,7 +134,7 @@ def create_pdf(text, role, mode):
         # 回退逻辑
         if not font_loaded:
             pdf.set_font("Arial", size=12)
-            pdf.cell(0, 10, txt="[System Warning: 'font.ttf' not found. CJK characters may fail.]", ln=True)
+            pdf.cell(0, 10, txt="[System Warning: 'font.ttf' not found. CJK text may fail.]", ln=True)
 
         # 标题 (英文安全)
         pdf.cell(200, 10, txt=f"Lai's Lab Report - {role}", ln=True, align='C')
