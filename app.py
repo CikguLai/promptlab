@@ -1,14 +1,15 @@
-# app.py (V9.28 - 2026 FINAL - FULL FEATURES)
+# app.py (V9.28 - 2026 FINAL - WITH PRO AUDIT FOOTER)
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
 import time, os
 import random
+from datetime import datetime # 确保引入 datetime
 
 # 1. 设置
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# 全量 CSS：侧边栏红条、居中页脚、表格美化
+# 全量 CSS：侧边栏红条、表格美化
 st.markdown("""
 <style>
     .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
@@ -21,14 +22,6 @@ st.markdown("""
     
     /* 侧边栏进度条颜色 */
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
-    
-    /* 🔥 V9.28 专用 Footer 样式 (居中，固定底部) */
-    .footer-container { 
-        position: fixed; bottom: 0; left: 0; width: 100%; 
-        background: white; border-top: 1px solid #eee; 
-        padding: 15px; z-index: 999; text-align: center; 
-        font-family: sans-serif;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -49,30 +42,50 @@ if "general" in st.secrets:
     lc.CONFIG["AIRTABLE_BASE_ID"] = sec.get("airtable_base_id", "")
     if "master_key" in sec: lc.CONFIG["MASTER_KEY"] = sec["master_key"]
 
-# 🔥 V9.28 原版 Footer
+# 🔥 核心更新：使用您提供的高配版 Footer
 def render_footer():
+    # 动态在线人数逻辑
+    current_hour = datetime.now().hour
+    online_count = 110 + (current_hour * 4) + random.randint(1, 10)
+    
     is_pro = st.session_state.user_tier == "Pro"
     tier_label = "💎 VERIFIED PRO ACCESS" if is_pro else "👤 STANDARD GUEST TRIAL"
     tier_color = "#0277bd" if is_pro else "#666"
-    
+
     st.markdown(f"""
-        <div class="footer-container">
-            <div style="font-weight:bold; color:#333; margin-bottom:5px;">
-                © 2025–2026 LAI'S LAB • V9.28 FINAL • <span style="color:{tier_color}">{tier_label}</span>
+        <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid #f1f1f1; padding: 20px 40px; z-index: 1000;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 12px;">
+                <div style="flex: 1; text-align: left;">© 2025-2026 <b>LAI'S LAB</b></div>
+                <div style="flex: 1; text-align: center; color: #999; font-weight: 400;">SYSTEM V9.28 PRO AUDIT</div>
+                <div style="flex: 1; text-align: right; color: {tier_color};">{tier_label}</div>
             </div>
-            <div style="font-size:10px; color:#999; margin-bottom:5px;">
-                Disclaimer: AI outputs may vary. Users are responsible for content.
+
+            <div style="margin-bottom: 12px; text-align: center;">
+                <p style="font-size: 10.5px; color: #888; margin: 0; line-height: 1.5; font-style: italic;">
+                    Generative AI can make mistakes; please verify important information. 
+                    Users are solely responsible for how they use the generated content. 
+                    Lai's Lab assumes no liability for actions taken based on these outputs.
+                </p>
             </div>
-            <div style="font-size:11px; color:#aaa;">
-                👤 {st.session_state.user_email if st.session_state.user_email else 'Guest'} | 🟢 System Operational | 
-                <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color:#0277bd;font-weight:bold;text-decoration:none;">Lost Key?</a>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #aaa; border-top: 1px solid #fafafa; padding-top: 8px;">
+                <div style="flex: 1; text-align: left;">
+                    <b>Status:</b> <span style="color: #28a745;">🟢 Operational</span> | <b>Live:</b> {online_count}
+                </div>
+                <div style="flex: 1; text-align: right;">
+                    <a href="#" style="color: #aaa; text-decoration: none;">Privacy</a> &nbsp; | &nbsp; 
+                    <a href="#" style="color: #aaa; text-decoration: none;">Terms</a> &nbsp; | &nbsp; 
+                    <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #0277bd; text-decoration: none; font-weight: bold;">Retrieve License (Verify)</a>
+                </div>
             </div>
+
         </div>
-        <div style="height:100px;"></div> """, unsafe_allow_html=True)
+        <div style="height: 150px;"></div> 
+    """, unsafe_allow_html=True)
 
 def show_login_page():
     st.write("🌍 Select Language")
-    # 登录页全语言选择
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=0, key="lang_login", label_visibility="collapsed")
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
@@ -126,11 +139,11 @@ def show_main_app():
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}")
         st.divider()
         
-        # 语言切换 (16种全开)
+        # 语言切换
         lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_GUEST, index=dm.LANG_OPTIONS_GUEST.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_GUEST else 0, key="lang_main")
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
-            st.rerun() # 立即刷新
+            st.rerun()
             
         role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
         
@@ -178,7 +191,7 @@ def show_main_app():
                     st.markdown(f"### {ui['result']}")
                     st.text_area("Payload:", value=res, height=300)
                     
-                    # 🔥 Action Deck (AI Connect + Share + Download)
+                    # Action Deck
                     st.caption("🧠 AI Connect")
                     a1, a2, a3, a4 = st.columns(4)
                     with a1: st.link_button("ChatGPT", "https://chat.openai.com", use_container_width=True)
