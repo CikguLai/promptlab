@@ -8,7 +8,7 @@ import random
 # 1. 设置
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# 2. 读取 Secrets
+# 读取 Secrets
 if "general" in st.secrets:
     sec = st.secrets["general"]
     lc.CONFIG["EMAIL_SENDER_ADDRESS"] = sec.get("email_sender", "")
@@ -32,7 +32,6 @@ st.markdown("""
     a:hover { text-decoration: underline !important; }
     .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
-    /* Footer 样式 */
     .footer-container { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; padding: 20px; z-index: 999; text-align: center; }
 </style>
 """, unsafe_allow_html=True)
@@ -41,7 +40,6 @@ st.markdown("""
 for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
     if key not in st.session_state: st.session_state[key] = val
 
-# 🔥 核心：V9.28 原版 Footer
 def render_footer():
     is_pro = st.session_state.user_tier == "Pro"
     tier_label = "💎 VERIFIED PRO ACCESS" if is_pro else "👤 STANDARD GUEST TRIAL"
@@ -59,7 +57,6 @@ def render_footer():
 
 def show_login_page():
     st.write("🌍 Select Language")
-    # 登录页语言选择
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=0, key="lang_login", label_visibility="collapsed")
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
@@ -104,7 +101,6 @@ def show_main_app():
     with st.sidebar:
         st.caption(f"{'💎' if st.session_state.user_tier == 'Pro' else '👤'} {ui['plan_pro'] if st.session_state.user_tier == 'Pro' else ui['plan_guest']}")
         
-        # 进度条
         can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
         bar_color = "#ff4b4b" if (tot - st.session_state.daily_usage) <= 1 else "#00f2fe"
         st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%) !important; }}</style>", unsafe_allow_html=True)
@@ -112,23 +108,28 @@ def show_main_app():
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}")
         st.divider()
         
-        # 🔥 语言切换 (全员开放)
-        # 这里的 dm.LANG_OPTIONS_GUEST 已经是包含16种语言的完整列表了
+        # 语言切换
         lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_GUEST, index=dm.LANG_OPTIONS_GUEST.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_GUEST else 0, key="lang_main")
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
-            st.rerun() # 立即刷新界面
+            st.rerun()
             
         role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
         
-        # FAQ 与 工单系统
-        with st.expander("❓ FAQ / Support"):
-            st.info("Ask keywords like 'refund' or 'key' in the main chat.")
+        # FAQ 与 工单系统 (带下拉菜单)
+        with st.expander("❓ FAQ / Support", expanded=False):
+            st.markdown("**💡 Quick Answers (16 Topics)**")
+            faq_topic = st.selectbox("Select topic:", list(dm.INTERCEPTORS.keys()), format_func=lambda x: x.upper())
+            if faq_topic: st.info(dm.INTERCEPTORS[faq_topic])
+            
             st.divider()
-            ticket_msg = st.text_input("Submit Ticket:", placeholder="Issue description...")
-            if st.button("📩 Send Ticket"):
+            st.markdown("**📩 Submit Ticket**")
+            ticket_type = st.selectbox("Type", dm.TICKET_TYPES, key="t_type")
+            ticket_msg = st.text_area("Issue", placeholder="Describe your issue...", height=80, key="t_msg")
+            
+            if st.button("Send Ticket", use_container_width=True):
                 if ticket_msg:
-                    lc.log_ticket_to_airtable(st.session_state.user_email, ticket_msg, st.session_state.user_tier)
+                    lc.log_ticket_to_airtable(st.session_state.user_email, ticket_type, ticket_msg, st.session_state.user_tier)
                     st.success("Ticket Sent! Check email.")
         
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
@@ -155,16 +156,40 @@ def show_main_app():
                     st.success("🤖 AI Support:"); st.info(reply)
                 elif can_gen:
                     st.session_state.daily_usage += 1
-                    # 传入当前选中的 language，AI 就会用该语言输出
                     res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
-                    st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
                     
-                    c1, c2 = st.columns(2)
-                    with c1: st.link_button("🟢 WhatsApp", lc.get_whatsapp_link(res), use_container_width=True)
-                    with c2: 
+                    # --- 结果操作塔 (Action Deck) ---
+                    st.markdown(f"### {ui['result']}")
+                    st.text_area("Payload:", value=res, height=300) # Layer 1: Copy (Streamlit自带)
+                    
+                    # Layer 2: AI Connect
+                    st.caption("🧠 AI Connect (Click to Run)")
+                    a1, a2, a3, a4 = st.columns(4)
+                    with a1: st.link_button("Open ChatGPT", "https://chat.openai.com", use_container_width=True)
+                    with a2: st.link_button("Open Gemini", "https://gemini.google.com", use_container_width=True)
+                    with a3: st.link_button("Open Claude", "https://claude.ai", use_container_width=True)
+                    with a4: st.link_button("🎨 Midjourney", "https://www.midjourney.com", use_container_width=True)
+                    
+                    # Layer 3: Social Share
+                    st.caption("💬 Social Share")
+                    s_links = lc.get_social_links(res)
+                    s1, s2, s3, s4 = st.columns(4)
+                    with s1: st.link_button("WhatsApp", s_links['WhatsApp'], use_container_width=True)
+                    with s2: st.link_button("Telegram", s_links['Telegram'], use_container_width=True)
+                    with s3: st.link_button("Email", s_links['Email'], use_container_width=True)
+                    with s4: st.link_button("X (Twitter)", s_links['X'], use_container_width=True)
+                    
+                    # Layer 5: Download
+                    st.caption("💾 Download")
+                    d1, d2, d3 = st.columns(3)
+                    with d1: st.download_button("📄 Download TXT", res, "prompt.txt")
+                    with d2:
                         if st.session_state.user_tier == "Pro":
                             pdf = lc.create_pdf(res, role, mode)
-                            if pdf: st.download_button("📕 Download PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
+                            if pdf: st.download_button("📕 Download PDF", pdf, "report.pdf", "application/pdf")
+                    with d3:
+                        if st.session_state.user_tier == "Pro":
+                            st.download_button("📊 Download CSV", lc.create_csv(res), "data.csv", "text/csv")
 
     render_footer()
 
