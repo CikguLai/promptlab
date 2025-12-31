@@ -1,163 +1,185 @@
-# app.py (V9.28 - 2026 FINAL - FULL FEATURES)
-import streamlit as st
-import logic_core as lc
+# logic_core.py
+# Lai's Lab V9.28 - 2026 READY
+# Backend Logic: Integrations, PDF, Security, PASEC Engine
+
+import requests
+import datetime
+import smtplib
+import io
+import urllib.parse
+import os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from fpdf import FPDF
 import data_matrix as dm
-import time, os
-import random
-from datetime import datetime
 
-# 1. 设置
-st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
+# ==========================================
+# 1. 全局配置 (黑科技接口预留)
+# ==========================================
+CONFIG = {
+    "EMAIL_APP_PASSWORD": "", 
+    "EMAIL_SENDER_ADDRESS": "", 
+    "EMAIL_ADMIN_ADDRESS": "", 
+    "EMAIL_REPLY_TO": "support@cikgulai.com",
+    "TELEGRAM_BOT_TOKEN": "", 
+    "TELEGRAM_CHAT_ID": "",
+    "LEMONSQUEEZY_API_KEY": "", 
+    "MASTER_KEY": "LAI-ADMIN-8888",
+    "AIRTABLE_API_KEY": "", 
+    "AIRTABLE_BASE_ID": "",
+    "AIRTABLE_TABLE_TICKETS": "SupportTickets",
+    "AIRTABLE_TABLE_USERS": "ActiveUsers"
+}
 
-# 全量 CSS：侧边栏红条、居中页脚、表格
-st.markdown("""
-<style>
-    .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
-    .compare-table th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; text-align: left; color: #333; }
-    .compare-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; color: #555; }
-    .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
-    .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
-    a:hover { text-decoration: underline !important; }
-    .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
-    
-    /* 修复侧边栏进度条颜色 */
-    .stProgress > div > div > div > div { background-color: #0277bd !important; }
-    
-    /* Footer 居中 */
-    .footer-container { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; padding: 20px; z-index: 999; text-align: center; }
-</style>
-""", unsafe_allow_html=True)
+# ==========================================
+# 2. 黑科技：Telegram & Airtable & SMTP
+# ==========================================
+def send_telegram_alert(msg):
+    if not CONFIG["TELEGRAM_BOT_TOKEN"]: return
+    url = f"https://api.telegram.org/bot{CONFIG['TELEGRAM_BOT_TOKEN']}/sendMessage"
+    try:
+        requests.post(url, data={
+            "chat_id": CONFIG["TELEGRAM_CHAT_ID"], 
+            "text": f"🧬 [Lai's Lab Alert]\n{msg}"
+        }, timeout=5)
+    except Exception: pass
 
-# Session
-for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
-    if key not in st.session_state: st.session_state[key] = val
+def log_activation(email, key, method):
+    if not CONFIG["AIRTABLE_API_KEY"]: return
+    url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
+    now = datetime.datetime.now().isoformat()
+    data = {"fields": {"Email": email, "LicenseKey": key, "ActivationMethod": method, "ActivatedAt": now}}
+    try: 
+        requests.post(url, json={"records": [{"fields": data['fields']}]}, 
+                      headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
+        send_telegram_alert(f"💎 New Activation: {email} via {method}")
+    except Exception: pass
 
-def render_footer():
-    is_pro = st.session_state.user_tier == "Pro"
-    tier_label = "💎 VERIFIED PRO ACCESS" if is_pro else "👤 STANDARD GUEST TRIAL"
-    tier_color = "#0277bd" if is_pro else "#666"
-    st.markdown(f"""
-        <div class="footer-container">
-            <div style="font-weight:bold; color:#333; margin-bottom:5px;">© 2025–2026 LAI'S LAB • V9.28 FINAL • <span style="color:{tier_color}">{tier_label}</span></div>
-            <div style="font-size:10px; color:#999;">Disclaimer: AI outputs may vary. Users are responsible for content.</div>
-            <div style="font-size:11px; color:#aaa; margin-top:5px;">
-                👤 {st.session_state.user_email} | 🟢 System Operational | 
-                <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color:#0277bd;font-weight:bold;">Lost Key?</a>
-            </div>
-        </div><div style="height:120px;"></div>
-    """, unsafe_allow_html=True)
-
-def show_login_page():
-    st.write("🌍 Select Language")
-    # 强制 key 确保刷新
-    lang_sel = st.selectbox("", dm.LANG_OPTIONS_PRO, index=0, key="lang_login", label_visibility="collapsed")
-    if st.session_state.language != lang_sel:
-        st.session_state.language = lang_sel
-        st.rerun()
-
-    ui = dm.LANG_MAP.get(lang_sel, dm.LANG_MAP["default"])
-
-    col1, col2 = st.columns([1, 1.4], gap="large")
-    with col1:
-        st.title(f"🧬 {ui.get('sidebar_title', 'Lais Lab')}") # 安全获取
-        st.markdown('<div class="app-slogan">🚀 Your Automated Prompt Engineer</div>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color:#e53935; background:#fff5f5; padding:10px; border-radius:5px;">🔥 <b>Lifetime Pro:</b> $12.90</p>', unsafe_allow_html=True)
+# 🔥 SMTP 真实邮件发送
+def send_email_smtp(to_email, subject, body):
+    if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]:
+        return False
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.add_header('Reply-To', CONFIG["EMAIL_REPLY_TO"])
+        msg.attach(MIMEText(body, 'plain'))
         
-        t1, t2 = st.tabs([ui['plan_guest'], ui['plan_pro']])
-        with t1:
-            e = st.text_input(ui['input_label'], key="l_e", placeholder="you@example.com")
-            if st.button(ui['generate'], key="l_bt", use_container_width=True):
-                if "@" in e: st.session_state.user_email, st.session_state.user_tier, st.session_state.logged_in = e, "Guest", True; st.rerun()
-        with t2:
-            pe = st.text_input("Billing Email", key="l_pe")
-            lk = st.text_input("License Key", type="password")
-            if st.button("💎 Activate Pro", key="l_pb", type="primary", use_container_width=True):
-                if lc.check_user_tier(pe, lk) == "Pro":
-                    st.session_state.user_email, st.session_state.user_tier, st.session_state.logged_in = pe, "Pro", True
-                    st.balloons(); st.rerun()
-            st.markdown('<div style="text-align: center; margin-top: 10px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #666; font-size: 13px;">🔒 Lost Key?</a></div>', unsafe_allow_html=True)
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(CONFIG["EMAIL_SENDER_ADDRESS"], CONFIG["EMAIL_APP_PASSWORD"])
+        server.sendmail(CONFIG["EMAIL_SENDER_ADDRESS"], to_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"SMTP Error: {e}")
+        return False
 
-    with col2:
-        st.subheader("🆚 Compare Plans")
-        headers = ui.get('tbl_headers', ["Capability", "Guest", "Pro"])
-        rows = ui.get('tbl_data', dm.TABLE_EN)
-        
-        html = f'<table class="compare-table"><tr><th>{headers[0]}</th><th>{headers[1]}</th><th class="pro-column">{headers[2]}</th></tr>'
-        for r in rows:
-            v2 = f'<span class="price-tag">{r["v2"]}</span>' if "$" in r['v2'] else r['v2']
-            html += f'<tr><td><b>{r["k"]}</b></td><td>{r["v1"]}</td><td class="pro-column">{v2}</td></tr>'
-        st.markdown(html + "</table>", unsafe_allow_html=True)
+# 🔥 工单记录与自动回复
+def log_ticket_to_airtable(email, issue, tier):
+    # 1. 发 Telegram 通知
+    send_telegram_alert(f"🆘 New Ticket ({tier}): {email}\nIssue: {issue}")
     
-    render_footer()
-
-def show_main_app():
-    ui = dm.LANG_MAP.get(st.session_state.language, dm.LANG_MAP["default"])
+    # 2. 存 Airtable
+    if CONFIG["AIRTABLE_API_KEY"]:
+        url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
+        now = datetime.datetime.now().isoformat()
+        data = {"fields": {"Email": email, "Issue": issue, "Tier": tier, "Status": "Pending", "CreatedAt": now}}
+        try:
+            requests.post(url, json={"records": [{"fields": data['fields']}]}, 
+                          headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
+        except Exception: pass
     
-    # --- 侧边栏 (黑科技回归) ---
-    with st.sidebar:
-        st.caption(f"{'💎' if st.session_state.user_tier == 'Pro' else '👤'} {ui['plan_pro'] if st.session_state.user_tier == 'Pro' else ui['plan_guest']}")
-        
-        # 1. 进度条 (红条逻辑)
-        can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
-        bar_color = "#ff4b4b" if (tot - st.session_state.daily_usage) <= 1 else "#00f2fe"
-        st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%) !important; }}</style>", unsafe_allow_html=True)
-        st.progress(st.session_state.daily_usage / tot)
-        st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}")
-        st.divider()
-        
-        # 2. 语言切换 (16种)
-        lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_PRO, index=dm.LANG_OPTIONS_PRO.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_PRO else 0, key="lang_main")
-        if st.session_state.language != lang_sel_main:
-            st.session_state.language = lang_sel_main
-            st.rerun()
-
-        # 3. 角色选择
-        role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
-        
-        # 4. FAQ 折叠菜单 (黑科技)
-        with st.expander("❓ FAQ / Help"):
-            st.info("Ask 'refund', 'key', 'invoice' in the chat box for instant help!")
-            
-        if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
-
-    # --- 主界面 ---
-    st.header(f"🎭 {role}")
-    st.markdown(f"""<div style="background: #fff9e6; border-left: 5px solid #ffcc00; padding: 10px; margin-bottom: 15px;"><span style="color: #856404;">🔥 <b>{ui.get('live_stat', 'Live')}:</b> {random.randint(100, 200)} Users active</span></div>""", unsafe_allow_html=True)
-
-    mode = st.selectbox(ui['mode'], list(dm.ROLES_CONFIG[role].keys()))
-    
-    if lc.check_mode_lock(st.session_state.user_tier, mode):
-        st.error(ui['lock_msg']); st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy")
+    # 3. 发回执邮件
+    if tier == "Pro":
+        subject = "💎 [VIP Priority] Support Request Received"
+        body = f"Dear Pro Member,\n\nWe have received your priority ticket: '{issue}'.\n\n💎 Status: VIP Queue (1-2 Days response).\n\nBest,\nLai's Lab Support"
     else:
-        # 自动获取 6+1 选项
-        opt = st.selectbox(ui['action'], [o["label"] for o in dm.ROLES_CONFIG[role][mode]])
-        tone = st.selectbox(ui['tone'], dm.ROLE_TONES.get(role, dm.DEFAULT_TONES))
-        
-        # 如果是 Custom，改变提示词
-        input_help = "Enter your specific request..." if "Custom" in opt else ui['input_label']
-        inp = st.text_area(input_help, height=150)
-        
-        if st.button(ui['generate'], type="primary", use_container_width=True):
-            if inp:
-                # 1. 智能拦截 (FAQ)
-                is_intercept, reply = lc.smart_intercept(inp)
-                if is_intercept:
-                    st.success("🤖 AI Support:"); st.info(reply)
-                elif can_gen:
-                    # 2. 生成 (传入当前语言)
-                    st.session_state.daily_usage += 1
-                    res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
-                    st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
-                    
-                    c1, c2 = st.columns(2)
-                    with c1: st.link_button("🟢 WhatsApp", lc.get_whatsapp_link(res), use_container_width=True)
-                    with c2: 
-                        if st.session_state.user_tier == "Pro":
-                            pdf = lc.create_pdf(res, role, mode)
-                            if pdf: st.download_button("📕 Download PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
+        subject = "[Ticket] Support Request Received"
+        body = f"Dear User,\n\nWe have received your ticket: '{issue}'.\n\nStatus: Standard Queue (3-5 Days).\n\nBest,\nLai's Lab Support"
+    
+    send_email_smtp(email, subject, body)
 
-    render_footer()
+# ==========================================
+# 3. 鉴权逻辑
+# ==========================================
+def check_user_tier(email, key):
+    if key == CONFIG["MASTER_KEY"]:
+        log_activation(email, key, "Master-Admin")
+        return "Pro"
+    try:
+        url = "https://api.lemonsqueezy.com/v1/licenses/activate"
+        response = requests.post(url, data={"license_key": key, "instance_name": "LaisLab_User_App"}, timeout=10)
+        if response.status_code == 200 and response.json().get("activated"):
+            log_activation(email, key, "LemonSqueezy")
+            return "Pro"
+    except Exception: pass
+    return "Guest"
 
-if __name__ == "__main__":
-    if st.session_state.logged_in: show_main_app()
-    else: show_login_page()
+# ==========================================
+# 4. PASEC 核心引擎
+# ==========================================
+def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
+    templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
+    template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
+    
+    # 🔥 核心：在这里把语言传给 AI
+    res = f"### [PASEC PROTOCOL V2.8]\n"
+    res += f"**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n"
+    res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
+    
+    if tier == "Pro":
+        res += "\n[SYSTEM RULE]: Provide a CLEAN output WITHOUT markdown symbols like '##'. Human-like tone."
+    else:
+        res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean Output)"
+    return res
+
+def get_whatsapp_link(text):
+    return f"https://wa.me/?text={urllib.parse.quote(text)}"
+
+def create_pdf(text, role, mode):
+    try:
+        pdf = FPDF()
+        pdf.add_page()
+        font_path = "font.ttf"
+        font_loaded = False
+        if os.path.exists(font_path):
+            try:
+                pdf.add_font('CustomFont', '', font_path, uni=True)
+                pdf.set_font("CustomFont", size=12)
+                font_loaded = True
+            except: pass
+        if not font_loaded:
+            pdf.set_font("Arial", size=12)
+            pdf.cell(0, 10, txt="[Font Error: CJK characters may fail - Upload font.ttf]", ln=True)
+        
+        pdf.cell(200, 10, txt=f"Lai's Lab Report - {role}", ln=True, align='C')
+        pdf.ln(10)
+        
+        if font_loaded:
+            pdf.multi_cell(0, 10, txt=text)
+        else:
+            pdf.multi_cell(0, 10, txt=text.encode('latin-1', 'replace').decode('latin-1'))
+        return pdf.output(dest='S').encode('latin-1')
+    except: return None
+
+# ==========================================
+# 5. 客服拦截
+# ==========================================
+def smart_intercept(text):
+    for k, v in dm.INTERCEPTORS.items():
+        if k.lower() in text.lower(): return True, v
+    return False, ""
+
+# ==========================================
+# 6. 权限控制
+# ==========================================
+def check_daily_limit_by_email(email, tier, current_usage):
+    limit = 1000 if tier == "Pro" else 5
+    return (current_usage < limit), limit - current_usage, limit
+
+def check_mode_lock(tier, mode_name):
+    if tier == "Pro": return False
+    return "(Pro)" in mode_name
