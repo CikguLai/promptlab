@@ -1,4 +1,7 @@
-# app.py (V9.28 - 2026 Ready - Final Audit)
+# app.py (V9.28 - 2026 Ready - Full Features, Clean Code)
+# 这个文件是"指挥官"，它负责调用 data_matrix (数据库) 和 logic_core (大脑)
+# 代码短是因为数据都移到了 data_matrix.py，功能一个都没少！
+
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
@@ -6,12 +9,13 @@ import time, os
 import random
 from datetime import datetime
 
-# 1. 网页标签图标设为 DNA
+# 1. 网页标签图标 (DNA)
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# 全量 CSS：居中页脚、表格、Slogan
+# 全量 CSS：包含居中页脚、动态表格、红条进度条样式
 st.markdown("""
 <style>
+    /* 表格样式 */
     .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
     .compare-table th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; text-align: left; color: #333; }
     .compare-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; color: #555; }
@@ -20,7 +24,7 @@ st.markdown("""
     a:hover { text-decoration: underline !important; }
     .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
     
-    /* Footer 绝对居中修正 */
+    /* Footer 绝对居中样式 */
     .footer-container {
         position: fixed; bottom: 0; left: 0; width: 100%; 
         background-color: white; border-top: 1px solid #f1f1f1; 
@@ -34,7 +38,7 @@ st.markdown("""
     .footer-link { color: #aaa; text-decoration: none; margin: 0 5px; }
     .footer-verify { color: #0277bd; font-weight: 700; text-decoration: none; margin-left: 10px; }
     
-    /* 侧边栏进度条强力修复 */
+    /* 侧边栏进度条强力修复 (Pro 无限/Guest 红色) */
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -43,7 +47,7 @@ st.markdown("""
 for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
     if key not in st.session_state: st.session_state[key] = val
 
-# Footer 渲染函数 (完美居中)
+# Footer 渲染函数
 def render_footer():
     current_hour = datetime.now().hour
     online_count = 150 + (current_hour * 8) + random.randint(1, 15)
@@ -76,7 +80,7 @@ def render_footer():
 
 def show_login_page():
     st.write("🌍 Select Your Language / 选择您的语言")
-    # 强制 key 以同步刷新
+    # 语言选择器 (16种语言)
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_PRO, index=0, key="lang_select", label_visibility="collapsed")
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
@@ -86,11 +90,15 @@ def show_login_page():
 
     col1, col2 = st.columns([1, 1.4], gap="large")
     with col1:
+        # 1. 标题 (修复了 f-string 反斜杠报错)
         app_title = ui.get('sidebar_title', "Lai's Lab")
         st.title(f"🧬 {app_title}")
+        
+        # 2. Slogan
         st.markdown('<div class="app-slogan">🚀 Your Automated Prompt Engineer</div>', unsafe_allow_html=True)
         st.markdown(f'<p style="color:#e53935; background:#fff5f5; padding:10px; border-radius:5px;">🔥 <b>Lifetime Pro:</b> $12.90</p>', unsafe_allow_html=True)
         
+        # 3. 登录 Tab
         t1, t2 = st.tabs([ui['plan_guest'], ui['plan_pro']])
         with t1:
             e = st.text_input(ui['input_label'], key="l_e", placeholder="you@example.com")
@@ -106,22 +114,22 @@ def show_login_page():
             st.markdown('<div style="text-align: center; margin-top: 15px;"><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #666; font-size: 13px; text-decoration: none;">🔒 Lost your key? Retrieve via LemonSqueezy</a></div>', unsafe_allow_html=True)
 
     with col2:
+        # 4. 智能动态表格 (关键点：这里用了循环，所以代码短，但功能支持16国语言)
         st.subheader("🆚 Compare Plans")
         
-        # 动态获取表头和数据
-        headers = ui.get('tbl_headers', ["Capability", "Guest Trial", "💎 PRO Lifetime"])
+        headers = ui.get('tbl_headers', ["Capability", "Guest", "💎 PRO Lifetime"])
         rows = ui.get('tbl_data', dm.TABLE_EN)
         
         table_html = '<table class="compare-table">'
         table_html += f'<tr><th>{headers[0]}</th><th>{headers[1]}</th><th class="pro-column">{headers[2]}</th></tr>'
         for r in rows:
+            # 价格行特殊标红
             v2_display = f'<span class="price-tag">{r["v2"]}</span>' if ("Price" in r['k'] or "价格" in r['k'] or "價格" in r['k'] or "Harga" in r['k']) else r['v2']
             table_html += f'<tr><td><b>{r["k"]}</b></td><td>{r["v1"]}</td><td class="pro-column">{v2_display}</td></tr>'
         table_html += '</table>'
         st.markdown(table_html, unsafe_allow_html=True)
         
-        note = "* Fair Use Policy applies."
-        st.caption(note)
+        st.caption("* Fair Use Policy applies.")
         
     render_footer()
 
@@ -129,15 +137,17 @@ def show_main_app():
     ui = dm.LANG_MAP.get(st.session_state.language, dm.LANG_MAP["default"])
     with st.sidebar:
         st.caption(f"{'💎' if st.session_state.user_tier == 'Pro' else '👤'} {ui['plan_pro'] if st.session_state.user_tier == 'Pro' else ui['plan_guest']}")
-        # 进度条
+        
+        # 5. 侧边栏红条逻辑
         can_gen, rem, tot = lc.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
         bar_color = "#ff4b4b" if (tot - st.session_state.daily_usage) <= 1 else "#00f2fe"
-        st.markdown(f"<style>.stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%) !important; }}</style>", unsafe_allow_html=True)
+        st.markdown(f"""<style>
+            .stProgress > div > div > div > div {{ background-image: linear-gradient(to right, {bar_color} 0%, {bar_color} 100%) !important; }}
+        </style>""", unsafe_allow_html=True)
         st.progress(st.session_state.daily_usage / tot)
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}" if st.session_state.user_tier != "Pro" else f"✨ {ui.get('plan_pro', 'Pro Plan')}: Unlimited")
         st.divider()
         
-        # 侧边栏语言切换
         lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_PRO, index=dm.LANG_OPTIONS_PRO.index(st.session_state.language) if st.session_state.language in dm.LANG_OPTIONS_PRO else 0, key="lang_select_main")
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
@@ -147,32 +157,43 @@ def show_main_app():
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
     st.header(f"🎭 {role}")
+    # 6. 金色动态统计
     dynamic_count = 100 + (datetime.now().hour * 2) + random.randint(1, 15)
     live_label = ui.get('live_stat', 'Live Status')
     st.markdown(f"""<div style="background: #fff9e6; border-left: 5px solid #ffcc00; padding: 10px; border-radius: 5px; margin-bottom: 15px;"><span style="font-size: 14px; color: #856404;">🔥 <b>{live_label}:</b> {dynamic_count} Users active today</span></div>""", unsafe_allow_html=True)
 
     mode = st.selectbox(ui['mode'], list(dm.ROLES_CONFIG[role].keys()))
+    
     if lc.check_mode_lock(st.session_state.user_tier, mode):
         st.error(ui['lock_msg']); st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy")
     else:
         opt = st.selectbox(ui['action'], [o["label"] for o in dm.ROLES_CONFIG[role][mode]])
         tone = st.selectbox(ui['tone'], dm.ROLE_TONES.get(role, dm.DEFAULT_TONES))
         inp = st.text_area(ui['input_label'], height=150)
+        
         if st.button(ui['generate'], type="primary", use_container_width=True):
-            if inp and can_gen:
-                st.session_state.daily_usage += 1
-                res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
-                st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
+            if inp:
+                # ✅ 7. 智能拦截 (FAQ 16项) - 优先检查拦截词
+                is_intercepted, intercept_reply = lc.smart_intercept(inp)
                 
-                # 分享功能
-                c1, c2 = st.columns(2)
-                with c1:
-                    wa_url = lc.get_whatsapp_link(res)
-                    st.link_button("🟢 WhatsApp Share", wa_url, use_container_width=True)
-                with c2:
-                    if st.session_state.user_tier == "Pro":
-                        pdf = lc.create_pdf(res, role, mode)
-                        if pdf: st.download_button("📕 Download PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
+                if is_intercepted:
+                    # 触发 FAQ 拦截
+                    st.success("🤖 AI Support Assistant:")
+                    st.info(intercept_reply)
+                elif can_gen:
+                    # 正常生成
+                    st.session_state.daily_usage += 1
+                    res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
+                    st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
+                    
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        wa_url = lc.get_whatsapp_link(res)
+                        st.link_button("🟢 WhatsApp Share", wa_url, use_container_width=True)
+                    with c2:
+                        if st.session_state.user_tier == "Pro":
+                            pdf = lc.create_pdf(res, role, mode)
+                            if pdf: st.download_button("📕 Download PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
 
     render_footer()
 
