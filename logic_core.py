@@ -116,14 +116,14 @@ def check_user_tier(email, key):
     return "Guest"
 
 # ==========================================
-# 4. PASEC 核心引擎
+# 4. PASEC 核心引擎 (AI 生成逻辑)
 # ==========================================
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
     # 查找模板
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     
-    # 生成内容
+    # 🔥 核心：真正把语言 (LANG) 传给 AI
     res = f"### [PASEC PROTOCOL V2.8]\n"
     res += f"**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n"
     res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
