@@ -1,6 +1,5 @@
 # data_matrix.py
-# Lai's Lab V9.28 - 2026 Ready (16 Languages incl. TC)
-# Full Commercial Edition: 126 Modes | 60 Tones | 16 Lang UI
+# Lai's Lab V9.28 - 2026 Ready (16 FAQ + 16 Languages + Full Modes)
 
 # ==========================================
 # 1. 语言选项 (16 种)
@@ -15,7 +14,7 @@ LANG_OPTIONS_PRO = [
 ]
 
 # ==========================================
-# 2. 对比表数据 (关键语言本地化)
+# 2. 对比表数据
 # ==========================================
 TABLE_EN = [
     {"k": "Daily Limit", "v1": "5 / Day", "v2": "*Unlimited"},
@@ -37,7 +36,6 @@ TABLE_CN = [
     {"k": "客服响应", "v1": "标准速度", "v2": "VIP 极速通道"},
     {"k": "价格", "v1": "免费", "v2": "特惠 $12.90"}
 ]
-# ✅ 新增：繁体中文表格
 TABLE_TC = [
     {"k": "每日生成限額", "v1": "5 次 / 天", "v2": "*Unlimited (無限)"},
     {"k": "內容純淨度", "v1": "含 AI 符號", "v2": "100% 純淨擬人"},
@@ -50,59 +48,15 @@ TABLE_TC = [
 ]
 
 # ==========================================
-# 3. 16 国语言 UI 完整映射 (全覆盖)
+# 3. 16 国语言 UI 完整映射
 # ==========================================
 LANG_MAP = {
-    "default": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise",
-        "usage": "Daily Usage", "lang": "🌐 Language", "role": "🎭 Role", "tone": "🗣️ Tone Style",
-        "logout": "🚪 Logout", "mode": "⚙️ Select Mode", "action": "⚡ Select Action", 
-        "input_label": "📝 Context", "generate": "✨ Generate", "lock_msg": "🔒 Locked (Pro Only)", 
-        "buy_btn": "👉 Upgrade to Pro", "result": "✨ Result", "live_stat": "Live Status",
-        "tbl_headers": ["Capability", "Guest", "💎 PRO Lifetime"], "tbl_data": TABLE_EN
-    },
-    "English": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise",
-        "usage": "Daily Usage", "lang": "🌐 Language", "role": "🎭 Role", "tone": "🗣️ Tone Style",
-        "logout": "🚪 Logout", "mode": "⚙️ Select Mode", "action": "⚡ Select Action", 
-        "input_label": "📝 Context", "generate": "✨ Generate", "lock_msg": "🔒 Locked (Pro Only)", 
-        "buy_btn": "👉 Upgrade to Pro", "result": "✨ Result", "live_stat": "Live Status",
-        "tbl_headers": ["Capability", "Guest", "💎 PRO Lifetime"], "tbl_data": TABLE_EN
-    },
-    "简体中文": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "访客计划", "plan_pro": "企业版 Pro",
-        "usage": "今日用量", "lang": "🌐 语言设置", "role": "🎭 角色选择", "tone": "🗣️ 语气风格",
-        "logout": "🚪 退出登录", "mode": "⚙️ 模式选择", "action": "⚡ 执行操作", 
-        "input_label": "📝 详细要求", "generate": "✨ 开始生成", "lock_msg": "🔒 该模式仅限 Pro", 
-        "buy_btn": "👉 升级 Pro 版", "result": "✨ 生成结果", "live_stat": "实时状态",
-        "tbl_headers": ["功能特性", "访客", "💎 PRO 永久版"], "tbl_data": TABLE_CN
-    },
-    # ✅ 繁体中文 UI
-    "繁體中文": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "訪客計劃", "plan_pro": "企業版 Pro",
-        "usage": "今日用量", "lang": "🌐 語言設定", "role": "🎭 角色選擇", "tone": "🗣️ 語氣風格",
-        "logout": "🚪 登出", "mode": "⚙️ 模式選擇", "action": "⚡ 執行操作", 
-        "input_label": "📝 詳細要求", "generate": "✨ 開始生成", "lock_msg": "🔒 該模式僅限 Pro", 
-        "buy_btn": "👉 升級 Pro 版", "result": "✨ 生成結果", "live_stat": "實時狀態",
-        "tbl_headers": ["功能特性", "訪客", "💎 PRO 永久版"], "tbl_data": TABLE_TC
-    },
-    "Bahasa Melayu": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "Pelan Tetamu", "plan_pro": "Pro Enterprise",
-        "usage": "Penggunaan", "lang": "🌐 Bahasa", "role": "🎭 Peranan", "tone": "🗣️ Gaya Nada",
-        "logout": "🚪 Log Keluar", "mode": "⚙️ Pilih Mod", "action": "⚡ Pilih Tindakan", 
-        "input_label": "📝 Konteks", "generate": "✨ Jana", "lock_msg": "🔒 Dikunci (Pro Sahaja)", 
-        "buy_btn": "👉 Naik Taraf Pro", "result": "✨ Hasil", "live_stat": "Status Langsung",
-        "tbl_headers": ["Keupayaan", "Tetamu", "💎 PRO Seumur Hidup"], "tbl_data": TABLE_EN
-    },
-    "Español": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "Plan Invitado", "plan_pro": "Pro Empresa",
-        "usage": "Uso", "lang": "🌐 Idioma", "role": "🎭 Rol", "tone": "🗣️ Tono",
-        "logout": "🚪 Salir", "mode": "⚙️ Modo", "action": "⚡ Acción", 
-        "input_label": "📝 Contexto", "generate": "✨ Generar", "lock_msg": "🔒 Bloqueado (Solo Pro)", 
-        "buy_btn": "👉 Mejorar a Pro", "result": "✨ Resultado", "live_stat": "En Vivo",
-        "tbl_headers": ["Capacidad", "Invitado", "💎 PRO Vitalicio"], "tbl_data": TABLE_EN
-    },
-    # 补全其他 10 种语言 (UI 映射)
+    "default": { "sidebar_title": "Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise", "usage": "Daily Usage", "lang": "🌐 Language", "role": "🎭 Role", "tone": "🗣️ Tone Style", "logout": "🚪 Logout", "mode": "⚙️ Select Mode", "action": "⚡ Select Action", "input_label": "📝 Context", "generate": "✨ Generate", "lock_msg": "🔒 Locked (Pro Only)", "buy_btn": "👉 Upgrade to Pro", "result": "✨ Result", "live_stat": "Live Status", "tbl_headers": ["Capability", "Guest", "💎 PRO Lifetime"], "tbl_data": TABLE_EN },
+    "English": { "sidebar_title": "Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise", "usage": "Daily Usage", "lang": "🌐 Language", "role": "🎭 Role", "tone": "🗣️ Tone Style", "logout": "🚪 Logout", "mode": "⚙️ Select Mode", "action": "⚡ Select Action", "input_label": "📝 Context", "generate": "✨ Generate", "lock_msg": "🔒 Locked (Pro Only)", "buy_btn": "👉 Upgrade to Pro", "result": "✨ Result", "live_stat": "Live Status", "tbl_headers": ["Capability", "Guest", "💎 PRO Lifetime"], "tbl_data": TABLE_EN },
+    "简体中文": { "sidebar_title": "Lai's Lab", "plan_guest": "访客计划", "plan_pro": "企业版 Pro", "usage": "今日用量", "lang": "🌐 语言设置", "role": "🎭 角色选择", "tone": "🗣️ 语气风格", "logout": "🚪 退出登录", "mode": "⚙️ 模式选择", "action": "⚡ 执行操作", "input_label": "📝 详细要求", "generate": "✨ 开始生成", "lock_msg": "🔒 该模式仅限 Pro", "buy_btn": "👉 升级 Pro 版", "result": "✨ 生成结果", "live_stat": "实时状态", "tbl_headers": ["功能特性", "访客", "💎 PRO 永久版"], "tbl_data": TABLE_CN },
+    "繁體中文": { "sidebar_title": "Lai's Lab", "plan_guest": "訪客計劃", "plan_pro": "企業版 Pro", "usage": "今日用量", "lang": "🌐 語言設定", "role": "🎭 角色選擇", "tone": "🗣️ 語氣風格", "logout": "🚪 登出", "mode": "⚙️ 模式選擇", "action": "⚡ 執行操作", "input_label": "📝 詳細要求", "generate": "✨ 開始生成", "lock_msg": "🔒 該模式僅限 Pro", "buy_btn": "👉 升級 Pro 版", "result": "✨ 生成結果", "live_stat": "實時狀態", "tbl_headers": ["功能特性", "訪客", "💎 PRO 永久版"], "tbl_data": TABLE_TC },
+    "Bahasa Melayu": { "sidebar_title": "Lai's Lab", "plan_guest": "Pelan Tetamu", "plan_pro": "Pro Enterprise", "usage": "Penggunaan", "lang": "🌐 Bahasa", "role": "🎭 Peranan", "tone": "🗣️ Gaya Nada", "logout": "🚪 Log Keluar", "mode": "⚙️ Pilih Mod", "action": "⚡ Pilih Tindakan", "input_label": "📝 Konteks", "generate": "✨ Jana", "lock_msg": "🔒 Dikunci (Pro Sahaja)", "buy_btn": "👉 Naik Taraf Pro", "result": "✨ Hasil", "live_stat": "Status Langsung", "tbl_headers": ["Keupayaan", "Tetamu", "💎 PRO Seumur Hidup"], "tbl_data": TABLE_EN },
+    "Español": { "sidebar_title": "Lai's Lab", "plan_guest": "Plan Invitado", "plan_pro": "Pro Empresa", "usage": "Uso", "lang": "🌐 Idioma", "role": "🎭 Rol", "tone": "🗣️ Tono", "logout": "🚪 Salir", "mode": "⚙️ Modo", "action": "⚡ Acción", "input_label": "📝 Contexto", "generate": "✨ Generar", "lock_msg": "🔒 Bloqueado (Solo Pro)", "buy_btn": "👉 Mejorar a Pro", "result": "✨ Resultado", "live_stat": "En Vivo", "tbl_headers": ["Capacidad", "Invitado", "💎 PRO Vitalicio"], "tbl_data": TABLE_EN },
     "日本語": { "sidebar_title": "Lai's Lab", "plan_guest": "ゲスト", "plan_pro": "Pro 企業版", "usage": "使用量", "lang": "🌐 言語", "role": "🎭 役割", "tone": "🗣️ 口調", "logout": "🚪 ログアウト", "mode": "⚙️ モード", "action": "⚡ アクション", "input_label": "📝 コンテキスト", "generate": "✨ 生成", "lock_msg": "🔒 ロック (Proのみ)", "buy_btn": "👉 Proへアップグレード", "result": "✨ 結果", "live_stat": "ライブ", "tbl_headers": ["機能", "ゲスト", "💎 PRO 永久版"], "tbl_data": TABLE_EN },
     "한국어": { "sidebar_title": "Lai's Lab", "plan_guest": "게스트", "plan_pro": "Pro 엔터프라이즈", "usage": "사용량", "lang": "🌐 언어", "role": "🎭 역할", "tone": "🗣️ 톤", "logout": "🚪 로그아웃", "mode": "⚙️ 모드", "action": "⚡ 작업", "input_label": "📝 문맥", "generate": "✨ 생성", "lock_msg": "🔒 잠김 (Pro 전용)", "buy_btn": "👉 Pro 업그레이드", "result": "✨ 결과", "live_stat": "실시간", "tbl_headers": ["기능", "게스트", "💎 PRO 평생권"], "tbl_data": TABLE_EN },
     "Français": { "sidebar_title": "Lai's Lab", "plan_guest": "Invité", "plan_pro": "Pro Entreprise", "usage": "Usage", "lang": "🌐 Langue", "role": "🎭 Rôle", "tone": "🗣️ Ton", "logout": "🚪 Déconnexion", "mode": "⚙️ Mode", "action": "⚡ Action", "input_label": "📝 Contexte", "generate": "✨ Générer", "lock_msg": "🔒 Verrouillé (Pro)", "buy_btn": "👉 Obtenir Pro", "result": "✨ Résultat", "live_stat": "En Direct", "tbl_headers": ["Capacité", "Invité", "💎 PRO à Vie"], "tbl_data": TABLE_EN },
@@ -115,43 +69,24 @@ LANG_MAP = {
     "Thai": { "sidebar_title": "Lai's Lab", "plan_guest": "ผู้เยี่ยมชม", "plan_pro": "Pro องค์กร", "usage": "การใช้งาน", "lang": "🌐 ภาษา", "role": "🎭 บทบาท", "tone": "🗣️ น้ำเสียง", "logout": "🚪 ออกจากระบบ", "mode": "⚙️ โหมด", "action": "⚡ การกระทำ", "input_label": "📝 บริบท", "generate": "✨ สร้าง", "lock_msg": "🔒 ล็อก", "buy_btn": "👉 อัปเกรด", "result": "✨ ผลลัพธ์", "live_stat": "สด", "tbl_headers": ["ความสามารถ", "ผู้เยี่ยมชม", "💎 PRO ตลอดชีพ"], "tbl_data": TABLE_EN },
     "Vietnamese": { "sidebar_title": "Lai's Lab", "plan_guest": "Khách", "plan_pro": "Pro Doanh Nghiệp", "usage": "Sử dụng", "lang": "🌐 Ngôn ngữ", "role": "🎭 Vai trò", "tone": "🗣️ Giọng điệu", "logout": "🚪 Đăng xuất", "mode": "⚙️ Chế độ", "action": "⚡ Hành động", "input_label": "📝 Ngữ cảnh", "generate": "✨ Tạo", "lock_msg": "🔒 Bị khóa", "buy_btn": "👉 Nâng cấp", "result": "✨ Kết quả", "live_stat": "Trực tiếp", "tbl_headers": ["Tính năng", "Khách", "💎 PRO Trọn đời"], "tbl_data": TABLE_EN }
 }
-# 防止键值缺失
 for lang in LANG_OPTIONS_PRO:
     if lang not in LANG_MAP: LANG_MAP[lang] = LANG_MAP["English"]
 
 # ==========================================
-# 4. 完整 60 个语调 (每个角色 10 个)
+# 4. 角色与语调 (60个)
 # ==========================================
 ROLE_TONES = {
-    "Global Educator": [
-        "📚 Academic", "🌟 Encouraging", "🤝 Patient", "💡 Socratic", "📢 Instructional",
-        "🧠 Cognitive", "✨ Storytelling", "🎯 Objective", "🌈 Inclusive", "🔥 Passionate"
-    ],
-    "Global Creator": [
-        "🔥 Viral", "😜 Witty", "📖 Narrative", "⚡ Punchy", "🧐 Controversial",
-        "🎨 Artistic", "📱 Trendy", "🎥 Cinematic", "🎭 Dramatic", "🤖 Minimalist"
-    ],
-    "Global Parent": [
-        "🥰 Warm", "🎉 Playful", "🛡️ Firm", "👩‍🏫 Patient", "🤝 Supportive",
-        "🧘 Calm", "🎈 Creative", "📖 Storyteller", "🩺 Caregiver", "🎓 Mentor"
-    ],
-    "Global Seller": [
-        "💰 Persuasive", "⏳ Urgent", "💎 Luxury", "🤝 Trustworthy", "📢 Hype",
-        "📊 Data-Driven", "🎯 Targeted", "🗣️ Conversational", "🔥 Aggressive", "✨ Solution-Focused"
-    ],
-    "Global Student": [
-        "🎓 Formal", "📝 Concise", "🤓 Geeky", "🎯 Goal-Oriented", "📚 Detailed",
-        "🤔 Critical", "⚡ Quick", "🧠 Deep", "🗣️ Argumentative", "📝 Note-taking"
-    ],
-    "Global Corporate": [
-        "👔 Executive", "⚡ Direct", "🚀 Strategic", "⚖️ Compliance", "🤝 Diplomatic",
-        "📊 Analytical", "📢 PR-Safe", "💼 Professional", "🗣️ Leadership", "🌍 Global"
-    ]
+    "Global Educator": ["📚 Academic", "🌟 Encouraging", "🤝 Patient", "💡 Socratic", "📢 Instructional", "🧠 Cognitive", "✨ Storytelling", "🎯 Objective", "🌈 Inclusive", "🔥 Passionate"],
+    "Global Creator": ["🔥 Viral", "😜 Witty", "📖 Narrative", "⚡ Punchy", "🧐 Controversial", "🎨 Artistic", "📱 Trendy", "🎥 Cinematic", "🎭 Dramatic", "🤖 Minimalist"],
+    "Global Parent": ["🥰 Warm", "🎉 Playful", "🛡️ Firm", "👩‍🏫 Patient", "🤝 Supportive", "🧘 Calm", "🎈 Creative", "📖 Storyteller", "🩺 Caregiver", "🎓 Mentor"],
+    "Global Seller": ["💰 Persuasive", "⏳ Urgent", "💎 Luxury", "🤝 Trustworthy", "📢 Hype", "📊 Data-Driven", "🎯 Targeted", "🗣️ Conversational", "🔥 Aggressive", "✨ Solution-Focused"],
+    "Global Student": ["🎓 Formal", "📝 Concise", "🤓 Geeky", "🎯 Goal-Oriented", "📚 Detailed", "🤔 Critical", "⚡ Quick", "🧠 Deep", "🗣️ Argumentative", "📝 Note-taking"],
+    "Global Corporate": ["👔 Executive", "⚡ Direct", "🚀 Strategic", "⚖️ Compliance", "🤝 Diplomatic", "📊 Analytical", "📢 PR-Safe", "💼 Professional", "🗣️ Leadership", "🌍 Global"]
 }
 DEFAULT_TONES = ["Professional", "Friendly", "Informative", "Assertive", "Empathetic"]
 
 # ==========================================
-# 5. 完整 126 个模式 (6角色 x 3子模式 x 7选项)
+# 5. 完整的 126 个模式 (6角色 x 3子模式 x 7选项)
 # ==========================================
 ROLES_CONFIG = {
     "Global Educator": {
@@ -331,11 +266,93 @@ ROLES_CONFIG = {
 }
 
 # ==========================================
-# 6. 智能拦截字典 (FAQ Logic)
+# 6. 智能拦截字典 (16项 FAQ 全集)
 # ==========================================
+# 每个关键词都映射到对应的标准回答，确保 100% 覆盖文档内容
 INTERCEPTORS = {
-    "price": "$12.90 Lifetime",
-    "refund": "No refunds on digital keys",
-    "free": "Guest plan is free (5/day)",
-    "support": "VIP support in 1-2 days"
+    # 1. Subscription
+    "subscription": "No. It is a One-Time Payment of $12.90. No monthly fees.",
+    "monthly": "No. It is a One-Time Payment of $12.90. No monthly fees.",
+    "recurring": "No. It is a One-Time Payment of $12.90. No monthly fees.",
+    
+    # 2. Refund Policy
+    "refund": "Strictly No Refunds. This is a digital product (License Key) with instant access.",
+    "money": "Strictly No Refunds. This is a digital product (License Key) with instant access.",
+    "back": "Strictly No Refunds. This is a digital product (License Key) with instant access.",
+    
+    # 3. Lost Key
+    "key": "Please visit the LemonSqueezy Order Locator to recover it.",
+    "lost": "Please visit the LemonSqueezy Order Locator to recover it.",
+    "code": "Please visit the LemonSqueezy Order Locator to recover it.",
+    
+    # 4. Multiple Devices
+    "device": "Yes. Your license is tied to your email, accessible on mobile/desktop.",
+    "mobile": "Yes. Your license is tied to your email, accessible on mobile/desktop.",
+    "desktop": "Yes. Your license is tied to your email, accessible on mobile/desktop.",
+    
+    # 5. Affiliate Program
+    "affiliate": "Yes! You earn 40% commission on every sale. Sign up via our LemonSqueezy Affiliate Hub.",
+    "partner": "Yes! You earn 40% commission on every sale. Sign up via our LemonSqueezy Affiliate Hub.",
+    "commission": "Yes! You earn 40% commission on every sale. Sign up via our LemonSqueezy Affiliate Hub.",
+    "earn": "Yes! You earn 40% commission on every sale. Sign up via our LemonSqueezy Affiliate Hub.",
+    
+    # 6. Invoice/Receipt
+    "invoice": "LemonSqueezy automatically emails you a tax invoice immediately after purchase. Check your inbox.",
+    "receipt": "LemonSqueezy automatically emails you a tax invoice immediately after purchase. Check your inbox.",
+    "tax": "LemonSqueezy automatically emails you a tax invoice immediately after purchase. Check your inbox.",
+    "bill": "LemonSqueezy automatically emails you a tax invoice immediately after purchase. Check your inbox.",
+    
+    # 7. Education/Bulk Discount
+    "school": "Yes. For schools buying 10+ licenses, please contact support for a tailored quote.",
+    "bulk": "Yes. For schools buying 10+ licenses, please contact support for a tailored quote.",
+    "discount": "Yes. For schools buying 10+ licenses, please contact support for a tailored quote.",
+    "student": "Yes. For schools buying 10+ licenses, please contact support for a tailored quote.",
+    
+    # 8. PDF Text Missing/Box
+    "pdf": "This happens if the system font is missing. Please contact support.",
+    "font": "This happens if the system font is missing. Please contact support.",
+    "box": "This happens if the system font is missing. Please contact support.",
+    "乱码": "This happens if the system font is missing. Please contact support.",
+    "garbled": "This happens if the system font is missing. Please contact support.",
+    
+    # 9. WeChat Button
+    "wechat": "Click the green icon -> Select 'WeChat' from your phone's share menu.",
+    "share": "Click the green icon -> Select 'WeChat' from your phone's share menu.",
+    
+    # 10. Invalid Key
+    "invalid": "Ensure no spaces are copied. Check your email spelling.",
+    "error": "Ensure no spaces are copied. Check your email spelling.",
+    "activate": "Ensure no spaces are copied. Check your email spelling.",
+    
+    # 11. Slow Generation
+    "slow": "Guest users are in a shared queue. PRO users enjoy dedicated high-speed servers.",
+    "speed": "Guest users are in a shared queue. PRO users enjoy dedicated high-speed servers.",
+    "lag": "Guest users are in a shared queue. PRO users enjoy dedicated high-speed servers.",
+    "waiting": "Guest users are in a shared queue. PRO users enjoy dedicated high-speed servers.",
+    
+    # 12. Unlimited?
+    "limit": "Yes for text. For images, we have a fair usage policy of ~200/day.",
+    "unlimited": "Yes for text. For images, we have a fair usage policy of ~200/day.",
+    "quota": "Yes for text. For images, we have a fair usage policy of ~200/day.",
+    
+    # 13. Commercial Use
+    "commercial": "Yes, PRO users have 100% commercial rights.",
+    "copyright": "Yes, PRO users have 100% commercial rights.",
+    "rights": "Yes, PRO users have 100% commercial rights.",
+    
+    # 14. Offline
+    "offline": "No. PromptLab is a cloud-based AI engine and requires an internet connection.",
+    "internet": "No. PromptLab is a cloud-based AI engine and requires an internet connection.",
+    "wifi": "No. PromptLab is a cloud-based AI engine and requires an internet connection.",
+    
+    # 15. Privacy
+    "privacy": "We prioritize privacy. Your inputs are processed for generation and not used to train public models.",
+    "data": "We prioritize privacy. Your inputs are processed for generation and not used to train public models.",
+    "store": "We prioritize privacy. Your inputs are processed for generation and not used to train public models.",
+    "train": "We prioritize privacy. Your inputs are processed for generation and not used to train public models.",
+    
+    # 16. Share Account
+    "share account": "No. Sharing accounts triggers our anti-abuse system and may lock your key.",
+    "login": "No. Sharing accounts triggers our anti-abuse system and may lock your key.",
+    "lock": "No. Sharing accounts triggers our anti-abuse system and may lock your key."
 }
