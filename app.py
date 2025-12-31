@@ -1,15 +1,15 @@
-# app.py (V9.28 - 2026 FINAL - WITH PRO AUDIT FOOTER)
+# app.py (V9.28 - 2026 FINAL - BUG FREE & FULL FAQ)
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
 import time, os
 import random
-from datetime import datetime # 确保引入 datetime
+from datetime import datetime
 
 # 1. 设置
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# 全量 CSS：侧边栏红条、表格美化
+# 全量 CSS
 st.markdown("""
 <style>
     .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
@@ -19,17 +19,15 @@ st.markdown("""
     .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
     a:hover { text-decoration: underline !important; }
     .app-slogan { font-size: 18px; color: #555; margin-top: -15px; margin-bottom: 25px; font-weight: 500; letter-spacing: 0.5px; }
-    
-    /* 侧边栏进度条颜色 */
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# Session 初始化
+# Session
 for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
     if key not in st.session_state: st.session_state[key] = val
 
-# 读取 Secrets
+# Secrets
 if "general" in st.secrets:
     sec = st.secrets["general"]
     lc.CONFIG["EMAIL_SENDER_ADDRESS"] = sec.get("email_sender", "")
@@ -42,55 +40,48 @@ if "general" in st.secrets:
     lc.CONFIG["AIRTABLE_BASE_ID"] = sec.get("airtable_base_id", "")
     if "master_key" in sec: lc.CONFIG["MASTER_KEY"] = sec["master_key"]
 
-# 🔥 核心更新：使用您提供的高配版 Footer
+# 🔥 Pro Audit Footer (高级版)
 def render_footer():
-    # 动态在线人数逻辑
     current_hour = datetime.now().hour
     online_count = 110 + (current_hour * 4) + random.randint(1, 10)
-    
     is_pro = st.session_state.user_tier == "Pro"
     tier_label = "💎 VERIFIED PRO ACCESS" if is_pro else "👤 STANDARD GUEST TRIAL"
     tier_color = "#0277bd" if is_pro else "#666"
 
     st.markdown(f"""
         <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid #f1f1f1; padding: 20px 40px; z-index: 1000;">
-            
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 12px;">
                 <div style="flex: 1; text-align: left;">© 2025-2026 <b>LAI'S LAB</b></div>
                 <div style="flex: 1; text-align: center; color: #999; font-weight: 400;">SYSTEM V9.28 PRO AUDIT</div>
                 <div style="flex: 1; text-align: right; color: {tier_color};">{tier_label}</div>
             </div>
-
             <div style="margin-bottom: 12px; text-align: center;">
                 <p style="font-size: 10.5px; color: #888; margin: 0; line-height: 1.5; font-style: italic;">
                     Generative AI can make mistakes; please verify important information. 
-                    Users are solely responsible for how they use the generated content. 
-                    Lai's Lab assumes no liability for actions taken based on these outputs.
+                    Users are solely responsible for how they use the generated content.
                 </p>
             </div>
-
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #aaa; border-top: 1px solid #fafafa; padding-top: 8px;">
                 <div style="flex: 1; text-align: left;">
                     <b>Status:</b> <span style="color: #28a745;">🟢 Operational</span> | <b>Live:</b> {online_count}
                 </div>
                 <div style="flex: 1; text-align: right;">
-                    <a href="#" style="color: #aaa; text-decoration: none;">Privacy</a> &nbsp; | &nbsp; 
-                    <a href="#" style="color: #aaa; text-decoration: none;">Terms</a> &nbsp; | &nbsp; 
                     <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #0277bd; text-decoration: none; font-weight: bold;">Retrieve License (Verify)</a>
                 </div>
             </div>
-
         </div>
         <div style="height: 150px;"></div> 
     """, unsafe_allow_html=True)
 
 def show_login_page():
     st.write("🌍 Select Language")
+    # 强制 Key，确保刷新
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=0, key="lang_login", label_visibility="collapsed")
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
         st.rerun()
 
+    # 🔥 安全获取 UI (防崩关键)
     ui = dm.LANG_MAP.get(lang_sel, dm.LANG_MAP["default"])
 
     col1, col2 = st.columns([1, 1.4], gap="large")
@@ -115,6 +106,7 @@ def show_login_page():
 
     with col2:
         st.subheader("🆚 Compare Plans")
+        # 🔥 安全获取表格数据
         headers = ui.get('tbl_headers', ["Capability", "Guest", "Pro"])
         rows = ui.get('tbl_data', dm.TABLE_EN)
         
@@ -147,11 +139,17 @@ def show_main_app():
             
         role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
         
-        # FAQ
+        # 🔥 核心升级：完整 16 Q&A 下拉菜单
         with st.expander("❓ FAQ / Support", expanded=False):
             st.markdown("**💡 Quick Answers (16 Topics)**")
-            faq_topic = st.selectbox("Select topic:", list(dm.INTERCEPTORS.keys()), format_func=lambda x: x.upper())
-            if faq_topic: st.info(dm.INTERCEPTORS[faq_topic])
+            
+            # 使用 data_matrix 里的 FAQ_LIST，显示所有 Question
+            faq_options = [item["q"] for item in dm.FAQ_LIST]
+            selected_q = st.selectbox("Select Question:", faq_options)
+            
+            # 查找并显示答案
+            answer = next((item["a"] for item in dm.FAQ_LIST if item["q"] == selected_q), "")
+            st.info(answer)
             
             st.divider()
             st.markdown("**📩 Submit Ticket**")
@@ -187,36 +185,14 @@ def show_main_app():
                 elif can_gen:
                     st.session_state.daily_usage += 1
                     res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
+                    st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
                     
-                    st.markdown(f"### {ui['result']}")
-                    st.text_area("Payload:", value=res, height=300)
-                    
-                    # Action Deck
-                    st.caption("🧠 AI Connect")
-                    a1, a2, a3, a4 = st.columns(4)
-                    with a1: st.link_button("ChatGPT", "https://chat.openai.com", use_container_width=True)
-                    with a2: st.link_button("Gemini", "https://gemini.google.com", use_container_width=True)
-                    with a3: st.link_button("Claude", "https://claude.ai", use_container_width=True)
-                    with a4: st.link_button("Midjourney", "https://www.midjourney.com", use_container_width=True)
-                    
-                    st.caption("💬 Social Share")
-                    s_links = lc.get_social_links(res)
-                    s1, s2, s3, s4 = st.columns(4)
-                    with s1: st.link_button("WhatsApp", s_links['WhatsApp'], use_container_width=True)
-                    with s2: st.link_button("Telegram", s_links['Telegram'], use_container_width=True)
-                    with s3: st.link_button("Email", s_links['Email'], use_container_width=True)
-                    with s4: st.link_button("X", s_links['X'], use_container_width=True)
-                    
-                    st.caption("💾 Download")
-                    d1, d2, d3 = st.columns(3)
-                    with d1: st.download_button("📄 TXT", res, "prompt.txt")
-                    with d2:
+                    c1, c2 = st.columns(2)
+                    with c1: st.link_button("🟢 WhatsApp", lc.get_whatsapp_link(res), use_container_width=True)
+                    with c2: 
                         if st.session_state.user_tier == "Pro":
                             pdf = lc.create_pdf(res, role, mode)
-                            if pdf: st.download_button("📕 PDF", pdf, "report.pdf", "application/pdf")
-                    with d3:
-                        if st.session_state.user_tier == "Pro":
-                            st.download_button("📊 CSV", lc.create_csv(res), "data.csv", "text/csv")
+                            if pdf: st.download_button("📕 PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
 
     render_footer()
 
