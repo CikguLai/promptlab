@@ -1,6 +1,6 @@
 # logic_core.py
 # Lai's Lab V9.28 - 2026 READY
-# Backend Logic: Integrations, PDF, Security, PASEC Engine
+# Backend Logic: Integrations, PDF, CSV, Security, PASEC Engine
 
 import requests
 import datetime
@@ -14,7 +14,7 @@ from fpdf import FPDF
 import data_matrix as dm
 
 # ==========================================
-# 1. 全局配置 (黑科技接口预留)
+# 1. 全局配置
 # ==========================================
 CONFIG = {
     "EMAIL_APP_PASSWORD": "", 
@@ -55,10 +55,8 @@ def log_activation(email, key, method):
         send_telegram_alert(f"💎 New Activation: {email} via {method}")
     except Exception: pass
 
-# 🔥 SMTP 真实邮件发送
 def send_email_smtp(to_email, subject, body):
-    if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]:
-        return False
+    if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]: return False
     try:
         msg = MIMEMultipart()
         msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]
@@ -77,29 +75,23 @@ def send_email_smtp(to_email, subject, body):
         print(f"SMTP Error: {e}")
         return False
 
-# 🔥 工单记录与自动回复
-def log_ticket_to_airtable(email, issue, tier):
-    # 1. 发 Telegram 通知
-    send_telegram_alert(f"🆘 New Ticket ({tier}): {email}\nIssue: {issue}")
-    
-    # 2. 存 Airtable
+def log_ticket_to_airtable(email, ticket_type, issue, tier):
+    send_telegram_alert(f"🆘 New Ticket: {ticket_type}\nUser: {email} ({tier})\nIssue: {issue}")
     if CONFIG["AIRTABLE_API_KEY"]:
         url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
         now = datetime.datetime.now().isoformat()
-        data = {"fields": {"Email": email, "Issue": issue, "Tier": tier, "Status": "Pending", "CreatedAt": now}}
+        data = {"fields": {"Email": email, "Type": ticket_type, "Issue": issue, "Tier": tier, "Status": "Pending", "CreatedAt": now}}
         try:
             requests.post(url, json={"records": [{"fields": data['fields']}]}, 
                           headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
         except Exception: pass
     
-    # 3. 发回执邮件
     if tier == "Pro":
-        subject = "💎 [VIP Priority] Support Request Received"
-        body = f"Dear Pro Member,\n\nWe have received your priority ticket: '{issue}'.\n\n💎 Status: VIP Queue (1-2 Days response).\n\nBest,\nLai's Lab Support"
+        subject = f"💎 [VIP] Ticket Received: {ticket_type}"
+        body = f"Dear Pro Member,\n\nWe received your {ticket_type}.\nIssue: {issue}\n\n💎 Status: VIP Queue (1-2 Days).\n\nBest,\nCikgu Lai"
     else:
-        subject = "[Ticket] Support Request Received"
-        body = f"Dear User,\n\nWe have received your ticket: '{issue}'.\n\nStatus: Standard Queue (3-5 Days).\n\nBest,\nLai's Lab Support"
-    
+        subject = f"[Ticket] Received: {ticket_type}"
+        body = f"Dear User,\n\nWe received your {ticket_type}.\nIssue: {issue}\n\nStatus: Standard Queue (3-5 Days).\n\nBest,\nLai's Lab Support"
     send_email_smtp(email, subject, body)
 
 # ==========================================
@@ -125,7 +117,6 @@ def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     
-    # 🔥 核心：在这里把语言传给 AI
     res = f"### [PASEC PROTOCOL V2.8]\n"
     res += f"**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n"
     res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
@@ -136,8 +127,19 @@ def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
         res += "\n\n(Generated via Lai's Lab Free Trial - Upgrade for Clean Output)"
     return res
 
-def get_whatsapp_link(text):
-    return f"https://wa.me/?text={urllib.parse.quote(text)}"
+# 🔥 新增：生成 CSV (带 BOM 头防止乱码)
+def create_csv(text):
+    return ("\ufeff" + text).encode("utf-8")
+
+# 🔥 新增：生成社交分享链接
+def get_social_links(text):
+    encoded = urllib.parse.quote(text)
+    return {
+        "WhatsApp": f"https://wa.me/?text={encoded}",
+        "Telegram": f"https://t.me/share/url?url=https://laislab.com&text={encoded}",
+        "Email": f"mailto:?subject=Generated%20Content&body={encoded}",
+        "X": f"https://twitter.com/intent/tweet?text={encoded}"
+    }
 
 def create_pdf(text, role, mode):
     try:
@@ -166,16 +168,13 @@ def create_pdf(text, role, mode):
     except: return None
 
 # ==========================================
-# 5. 客服拦截
+# 5. 客服拦截与权限
 # ==========================================
 def smart_intercept(text):
     for k, v in dm.INTERCEPTORS.items():
         if k.lower() in text.lower(): return True, v
     return False, ""
 
-# ==========================================
-# 6. 权限控制
-# ==========================================
 def check_daily_limit_by_email(email, tier, current_usage):
     limit = 1000 if tier == "Pro" else 5
     return (current_usage < limit), limit - current_usage, limit
