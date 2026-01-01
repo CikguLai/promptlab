@@ -1,6 +1,6 @@
 # logic_core.py
-# Lai's Lab V9.28 - PRODUCTION READY (FINAL)
-# Logic: SMTP, PDF(CJK), Intercept, Integrations
+# Lai's Lab V9.30 - PRODUCTION GOLD
+# Logic: Smart Email (A/B), Ticket ID, Real Links, PDF CJK
 
 import requests, datetime, smtplib, io, urllib.parse, os
 from email.mime.text import MIMEText
@@ -46,36 +46,72 @@ def send_email_smtp(to_email, subject, body):
         return True
     except: return False
 
+# 🔥 核心：生成 Ticket ID & 智能邮件分流
 def log_ticket_to_airtable(email, ticket_type, issue, tier):
-    send_telegram_alert(f"🆘 Ticket: {ticket_type}\nUser: {email}\nIssue: {issue}")
-    # 1. Airtable Write
+    # 1. 生成 ID
+    ticket_id = f"#{datetime.datetime.now().strftime('%Y%m%d%H%M')}"
+    send_telegram_alert(f"🆘 Ticket {ticket_id}: {ticket_type}\nUser: {email}\nIssue: {issue}")
+    
+    # 2. 存 Airtable
     if CONFIG["AIRTABLE_API_KEY"]:
         url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
         now = datetime.datetime.now().isoformat()
-        data = {"fields": {"Email": email, "Type": ticket_type, "Issue": issue, "Tier": tier, "Status": "Pending", "CreatedAt": now}}
+        data = {"fields": {"TicketID": ticket_id, "Email": email, "Type": ticket_type, "Issue": issue, "Tier": tier, "Status": "Pending", "CreatedAt": now}}
         try: requests.post(url, json={"records": [{"fields": data['fields']}]}, headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
         except: pass
     
-    # 2. SMTP Auto-Reply (SLA Logic)
-    if tier == "Pro":
-        subject = f"💎 [VIP] Priority Ticket Received: {ticket_type}"
-        body = f"Dear Valued Pro Member,\n\nWe have received your priority ticket.\nIssue: {issue}\n\nStatus: VIP Queue (Response in 1-2 business days).\n\nBest Regards,\nLai's Lab Support"
+    # 3. 智能判断 (Check Keywords)
+    is_auto_solvable = False
+    issue_lower = issue.lower()
+    auto_reply_msg = ""
+    
+    # 关键词匹配 (复用 data_matrix 的逻辑)
+    for keywords, idx in dm.INTERCEPT_LOGIC:
+        if any(k in issue_lower for k in keywords):
+            is_auto_solvable = True
+            # 获取英文版答案作为标准回复 (简化处理)
+            auto_reply_msg = dm.FAQ_DATABASE["English"][idx]["a"]
+            break
+            
+    # 4. 发送邮件 (分流)
+    if is_auto_solvable:
+        # ✅ Email A: Auto-Close
+        subject = f"✅ [Case Closed] Ticket {ticket_id}: Solution found"
+        body = f"Dear User,\n\nWe received your ticket regarding '{ticket_type}'.\n\n💡 Official Solution:\n{auto_reply_msg}\n\nThis ticket is marked as auto-resolved. If this didn't help, please REPLY to this email.\n\nBest,\nLai's Lab Support"
     else:
-        subject = f"[Ticket] Support Request Received: {ticket_type}"
-        body = f"Dear User,\n\nWe have received your ticket.\nIssue: {issue}\n\nStatus: Standard Queue (Response in 3-5 business days).\n\nBest Regards,\nLai's Lab Support"
+        # 🎫 Email B: Queued
+        subject = f"🎫 [Ticket Received] Ticket {ticket_id}: We are reviewing"
+        wait_time = "1-2 business days" if tier == "Pro" else "3-4 business days"
+        priority = "💎 VIP Priority" if tier == "Pro" else "Standard Queue"
+        body = f"Dear User,\n\nWe successfully received your ticket.\nTicket ID: {ticket_id}\nIssue: {issue}\n\n⏳ Status: {priority}\nEstimated Reply: {wait_time}.\n\nBest,\nLai's Lab Support"
+        
     send_email_smtp(email, subject, body)
 
+# 🔥 核心：真实鉴权
 def check_user_tier(email, key):
-    if key == CONFIG["MASTER_KEY"]: return "Pro"
-    # (LemonSqueezy check omitted for brevity, add if needed)
-    return "Guest"
+    if key == CONFIG["MASTER_KEY"]: return "Pro", "Master Key"
+    if not CONFIG["LEMONSQUEEZY_API_KEY"]: return "Guest", "No API Key"
+    
+    url = "https://api.lemonsqueezy.com/v1/licenses/activate"
+    payload = {"license_key": key, "instance_name": "LaisLab_App"}
+    try:
+        response = requests.post(url, data=payload, timeout=8)
+        data = response.json()
+        if response.status_code == 200 and data.get("activated"):
+            log_activation(email, key, "LemonSqueezy")
+            return "Pro", "Success"
+        elif data.get("error"):
+            return "Guest", f"Activation Failed: {data.get('error')}"
+    except Exception as e:
+        return "Guest", f"Connection Error: {str(e)}"
+    return "Guest", "Invalid Key"
 
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
     res = f"### [PASEC PROTOCOL V2.8]\n**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n**INSTRUCTION**: {template_str.format(input=user_input)}\n"
     res += f"\n[SYSTEM]: Ensure the final output is in **{lang}** language."
-    if tier == "Pro": res += "\n[MODE]: Clean Output. Human-like tone. No markdown symbols."
+    if tier == "Pro": res += "\n[MODE]: Clean Output. Human-like tone."
     else: res += "\n\n(Generated via Lai's Lab Free Version)"
     return res
 
@@ -95,8 +131,6 @@ def get_whatsapp_link(text): return f"https://wa.me/?text={urllib.parse.quote(te
 def create_pdf(text, role, mode):
     try:
         pdf = FPDF(); pdf.add_page(); 
-        
-        # 🔥 FONT FIX: 使用用户上传的 font.ttf
         font_path = "font.ttf"
         font_loaded = False
         if os.path.exists(font_path):
@@ -105,12 +139,10 @@ def create_pdf(text, role, mode):
                 pdf.set_font("CustomFont", size=12)
                 font_loaded = True
             except: pass
-        
         if not font_loaded:
-            pdf.set_font("Arial", size=12) # Fallback
-            pdf.cell(0, 10, txt="[Font Error: CJK characters may fail - font.ttf missing]", ln=True)
-            
-        pdf.cell(200, 10, txt=f"Lai's Lab Report - {role}", ln=True, align='C')
+            pdf.set_font("Arial", size=12)
+            pdf.cell(0, 10, txt="[Font Error: Upload font.ttf]", ln=True)
+        pdf.cell(200, 10, txt=f"Report: {role}", ln=True, align='C')
         pdf.multi_cell(0, 10, txt=text)
         return pdf.output(dest='S').encode('latin-1')
     except: return None
@@ -119,8 +151,7 @@ def smart_intercept(text, lang="English"):
     text_lower = text.lower()
     for keywords, faq_index in dm.INTERCEPT_LOGIC:
         if any(k in text_lower for k in keywords):
-            faq_db = dm.FAQ_DATABASE.get(lang, dm.FAQ_DATABASE["English"])
-            if 0 <= faq_index < len(faq_db): return True, faq_db[faq_index]["a"]
+            return True, "Check FAQ for solution."
     return False, ""
 
 def check_daily_limit_by_email(email, tier, current_usage):
