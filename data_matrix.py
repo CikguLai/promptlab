@@ -1,9 +1,9 @@
 # data_matrix.py
-# Lai's Lab V9.28 - PRODUCTION READY (FINAL)
-# 100% Data Integrity: 16 Langs | 126 Options | 60 Tones | 16 FAQs
+# Lai's Lab V9.30 - PRODUCTION GOLD (Smart Email Logic)
+# 100% Data: 16 Langs | 126 Options | 60 Tones | 16 FAQs | Smart Reply Rules
 
 # ==========================================
-# 1. 语言定义
+# 1. 语言选项 (全解锁)
 # ==========================================
 ALL_LANGUAGES = [
     "English", "简体中文", "繁體中文", "Bahasa Melayu", "Español", 
@@ -12,12 +12,12 @@ ALL_LANGUAGES = [
     "Hindi", "Thai", "Vietnamese"
 ]
 
-# 访客限制：只能用前3种
-LANG_OPTIONS_GUEST = ["English", "简体中文", "Español"]
+# 🔥 锁定：Guest 和 Pro 都能看到所有语言 (方便演示/测试)
+LANG_OPTIONS_GUEST = ALL_LANGUAGES
 LANG_OPTIONS_PRO = ALL_LANGUAGES
 
 # ==========================================
-# 2. UI 界面字典 (防崩架构)
+# 2. UI 界面翻译 (完整版)
 # ==========================================
 BASE_UI = {
     "sidebar_title": "Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise",
@@ -28,7 +28,6 @@ BASE_UI = {
     "faq_title": "❓ FAQ / Support", "quick_ans": "💡 Quick Answers", "sel_topic": "Select Topic:",
     "submit_ticket": "📩 Submit Ticket", "type_lbl": "Type", "issue_lbl": "Issue Description", "send_btn": "Send Ticket",
     "ui_lang_lbl": "🌐 Interface Language", "out_lang_lbl": "📝 Output Language", "tone_lbl": "🗣️ Tone Style",
-    # Action Deck Labels
     "ad_copy": "📋 Copy", "ad_connect": "🧠 AI Connect", "ad_social": "💬 Social Share", 
     "ad_manual": "📱 App Manual", "ad_download": "💾 Download", "ad_toast": "Copied! Open App to paste."
 }
@@ -96,17 +95,14 @@ UI_TRANSLATIONS = {
         "ad_manual": "📱 アプリ誘導", "ad_download": "💾 ダウンロード", "ad_toast": "コピーしました！アプリを開いて貼り付けてください。"
     }
 }
-
-# 自动补全剩余语言 (防止 KeyError)
+# 兜底补充
 for lang in ALL_LANGUAGES:
-    if lang not in UI_TRANSLATIONS:
-        UI_TRANSLATIONS[lang] = BASE_UI
+    if lang not in UI_TRANSLATIONS: UI_TRANSLATIONS[lang] = BASE_UI
 
-def get_safe_ui(lang):
-    return UI_TRANSLATIONS.get(lang, BASE_UI)
+def get_safe_ui(lang): return UI_TRANSLATIONS.get(lang, BASE_UI)
 
 # ==========================================
-# 3. 对比表数据 (16 种语言支持)
+# 3. 对比表数据 (16 种语言)
 # ==========================================
 def get_table_data(lang):
     headers = ["Capability", "Guest", "💎 PRO Lifetime"]
@@ -114,32 +110,30 @@ def get_table_data(lang):
         {"k": "Daily Limit", "v1": "5 / Day", "v2": "*Unlimited"},
         {"k": "Content Format", "v1": "With AI Symbols", "v2": "100% Clean"},
         {"k": "Sharing", "v1": "Text + Watermark", "v2": "PDF + Clean Share"},
-        {"k": "Languages", "v1": "3 Basic", "v2": "16+ Global"},
+        {"k": "Languages", "v1": "16+ Global", "v2": "16+ Global"},
         {"k": "Expert Modes", "v1": "Basic (6)", "v2": "All 18 + Custom"},
         {"k": "Watermark", "v1": "Forced", "v2": "Removed"},
         {"k": "Support", "v1": "Standard", "v2": "VIP Priority"},
         {"k": "Price", "v1": "Free", "v2": "Limited $12.90"}
     ]
-    
     if lang == "简体中文":
         headers = ["功能特性", "访客试用", "💎 PRO 永久版"]
-        rows = [{"k": "每日限额", "v1": "5次 / 天", "v2": "*无限生成"}, {"k": "内容纯净度", "v1": "含AI符号", "v2": "100% 纯净拟人"}, {"k": "分享导出", "v1": "文本 + 水印", "v2": "PDF + 纯净分享"}, {"k": "语言支持", "v1": "仅限3种", "v2": "16+ 全球语言"}, {"k": "专业模式", "v1": "基础 (6个)", "v2": "全套 18个 + 自定义"}, {"k": "水印", "v1": "强制显示", "v2": "完全移除"}, {"k": "客服响应", "v1": "标准速度", "v2": "VIP 优先通道"}, {"k": "价格", "v1": "免费", "v2": "限时 $12.90"}]
+        rows = [{"k": "每日限额", "v1": "5次 / 天", "v2": "*无限生成"}, {"k": "内容纯净度", "v1": "含AI符号", "v2": "100% 纯净拟人"}, {"k": "分享导出", "v1": "文本 + 水印", "v2": "PDF + 纯净分享"}, {"k": "语言支持", "v1": "16+ 全球语言", "v2": "16+ 全球语言"}, {"k": "专业模式", "v1": "基础 (6个)", "v2": "全套 18个 + 自定义"}, {"k": "水印", "v1": "强制显示", "v2": "完全移除"}, {"k": "客服响应", "v1": "标准速度", "v2": "VIP 优先通道"}, {"k": "价格", "v1": "免费", "v2": "限时 $12.90"}]
     elif lang == "繁體中文":
         headers = ["功能特性", "訪客試用", "💎 PRO 永久版"]
-        rows = [{"k": "每日限額", "v1": "5次 / 天", "v2": "*無限生成"}, {"k": "內容純淨度", "v1": "含AI符號", "v2": "100% 純淨擬人"}, {"k": "分享導出", "v1": "文本 + 水印", "v2": "PDF + 純淨分享"}, {"k": "語言支援", "v1": "僅限3種", "v2": "16+ 全球語言"}, {"k": "專業模式", "v1": "基礎 (6個)", "v2": "全套 18個 + 自定義"}, {"k": "水印", "v1": "強制顯示", "v2": "完全移除"}, {"k": "客服響應", "v1": "標準速度", "v2": "VIP 優先通道"}, {"k": "價格", "v1": "免費", "v2": "限時 $12.90"}]
+        rows = [{"k": "每日限額", "v1": "5次 / 天", "v2": "*無限生成"}, {"k": "內容純淨度", "v1": "含AI符號", "v2": "100% 純淨擬人"}, {"k": "分享導出", "v1": "文本 + 水印", "v2": "PDF + 純淨分享"}, {"k": "語言支援", "v1": "16+ 全球語言", "v2": "16+ 全球語言"}, {"k": "專業模式", "v1": "基礎 (6個)", "v2": "全套 18個 + 自定義"}, {"k": "水印", "v1": "強制顯示", "v2": "完全移除"}, {"k": "客服響應", "v1": "標準速度", "v2": "VIP 優先通道"}, {"k": "價格", "v1": "免費", "v2": "限時 $12.90"}]
     elif lang == "Bahasa Melayu":
         headers = ["Ciri", "Tetamu", "💎 PRO Seumur Hidup"]
-        rows = [{"k": "Had Harian", "v1": "5 / Hari", "v2": "*Tanpa Had"}, {"k": "Format", "v1": "Simbol AI", "v2": "100% Bersih"}, {"k": "Perkongsian", "v1": "Teks + Tera Air", "v2": "PDF + Bersih"}, {"k": "Bahasa", "v1": "3 Asas", "v2": "16+ Global"}, {"k": "Mod Pakar", "v1": "Asas (6)", "v2": "Semua 18 + Custom"}, {"k": "Tera Air", "v1": "Ada", "v2": "Tiada"}, {"k": "Sokongan", "v1": "Biasa", "v2": "VIP Prioriti"}, {"k": "Harga", "v1": "Percuma", "v2": "Terhad $12.90"}]
+        rows = [{"k": "Had Harian", "v1": "5 / Hari", "v2": "*Tanpa Had"}, {"k": "Format", "v1": "Simbol AI", "v2": "100% Bersih"}, {"k": "Perkongsian", "v1": "Teks + Tera Air", "v2": "PDF + Bersih"}, {"k": "Bahasa", "v1": "16+ Global", "v2": "16+ Global"}, {"k": "Mod Pakar", "v1": "Asas (6)", "v2": "Semua 18 + Custom"}, {"k": "Tera Air", "v1": "Ada", "v2": "Tiada"}, {"k": "Sokongan", "v1": "Biasa", "v2": "VIP Prioriti"}, {"k": "Harga", "v1": "Percuma", "v2": "Terhad $12.90"}]
     elif lang == "Español":
         headers = ["Capacidad", "Invitado", "💎 PRO Vitalicio"]
-        rows = [{"k": "Límite Diario", "v1": "5 / Día", "v2": "*Ilimitado"}, {"k": "Formato", "v1": "Símbolos IA", "v2": "100% Limpio"}, {"k": "Compartir", "v1": "Texto + Marca", "v2": "PDF + Limpio"}, {"k": "Idiomas", "v1": "3 Básicos", "v2": "16+ Global"}, {"k": "Modos Expertos", "v1": "Básico (6)", "v2": "Todos 18 + Custom"}, {"k": "Marca de Agua", "v1": "Forzada", "v2": "Removida"}, {"k": "Soporte", "v1": "Estándar", "v2": "VIP Prioridad"}, {"k": "Precio", "v1": "Gratis", "v2": "Oferta $12.90"}]
-    
+        rows = [{"k": "Límite Diario", "v1": "5 / Día", "v2": "*Ilimitado"}, {"k": "Formato", "v1": "Símbolos IA", "v2": "100% Limpio"}, {"k": "Compartir", "v1": "Texto + Marca", "v2": "PDF + Limpio"}, {"k": "Idiomas", "v1": "16+ Global", "v2": "16+ Global"}, {"k": "Modos Expertos", "v1": "Básico (6)", "v2": "Todos 18 + Custom"}, {"k": "Marca de Agua", "v1": "Forzada", "v2": "Removida"}, {"k": "Soporte", "v1": "Estándar", "v2": "VIP Prioridad"}, {"k": "Precio", "v1": "Gratis", "v2": "Oferta $12.90"}]
     return headers, rows
 
 TABLE_ROWS_DEFAULT = get_table_data("English")[1]
 
 # ==========================================
-# 4. 🔥 126 个功能点 (结构化全量录入)
+# 4. 🔥 126 功能点 (结构化全量)
 # ==========================================
 RAW_ROLES_DATA = {
     "Global Educator": {
@@ -180,12 +174,12 @@ for role, modes in RAW_ROLES_DATA.items():
     for mode_name, options in modes.items():
         ROLES_CONFIG[role][mode_name] = []
         for opt in options:
-            template = f"Act as a {role}. Mode: {mode_name}. Task: Create content for '{opt}'. Input context: {{input}}"
+            template = f"Act as a {role}. Mode: {mode_name}. Task: {opt}. Context: {{input}}"
             ROLES_CONFIG[role][mode_name].append({"label": opt, "template": template})
         ROLES_CONFIG[role][mode_name].append({"label": "7. Custom / DIY", "template": "{input}"})
 
 # ==========================================
-# 5. 🔥 60 个语调 (6角色 x 10语调)
+# 5. 60 语调 & FAQ
 # ==========================================
 ROLE_TONES = {
     "Global Educator": ["📚 Academic", "🌟 Encouraging", "📢 Instructional", "🤝 Patient", "💡 Socratic", "🧠 Cognitive", "✨ Storytelling", "🎯 Objective", "🌈 Inclusive", "🔥 Passionate"],
@@ -197,9 +191,7 @@ ROLE_TONES = {
 }
 DEFAULT_TONES = ["Professional", "Friendly", "Informative"]
 
-# ==========================================
-# 6. FAQ & 智能拦截 (16项全)
-# ==========================================
+# 🔥 智能拦截词库 (用于自动回复分流)
 INTERCEPT_LOGIC = [
     (["subscription", "monthly", "fee", "订阅", "月费"], 0), (["refund", "money", "back", "退款", "退钱"], 1),
     (["key", "license", "code", "lost", "激活码", "丢失"], 2), (["device", "mobile", "phone", "设备", "手机"], 3),
@@ -241,5 +233,4 @@ TICKET_OPTIONS = {
     "English": ["🔴 Bug/Error", "🟠 Billing", "🟡 Feature", "🟢 Partner", "🔵 Other"],
     "简体中文": ["🔴 程序报错", "🟠 账单问题", "🟡 功能建议", "🟢 商务合作", "🔵 其他"]
 }
-def get_ticket_types(lang): 
-    return TICKET_OPTIONS.get(lang, TICKET_OPTIONS["English"])
+def get_ticket_types(lang): return TICKET_OPTIONS.get(lang, TICKET_OPTIONS["English"])
