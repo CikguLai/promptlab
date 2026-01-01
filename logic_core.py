@@ -1,5 +1,5 @@
-# logic_core.py (V9.32 - FINAL GOLD)
-# Features: Real Ticket ID, Smart Email, Prompt Language Injection, Real Activation
+# logic_core.py (V9.33 - FINAL RELEASE)
+# Features: Real Ticket ID, Smart Email, App Password, Airtable Fix
 
 import requests, datetime, smtplib, io, urllib.parse, os
 from email.mime.text import MIMEText
@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from fpdf import FPDF
 import data_matrix as dm
 
+# ⚠️ 请确保 .streamlit/secrets.toml 里填的是 "应用专用密码"
 CONFIG = {
     "EMAIL_APP_PASSWORD": "", "EMAIL_SENDER_ADDRESS": "", "EMAIL_ADMIN_ADDRESS": "",
     "TELEGRAM_BOT_TOKEN": "", "TELEGRAM_CHAT_ID": "", "LEMONSQUEEZY_API_KEY": "", 
@@ -23,6 +24,7 @@ def log_activation(email, key, method):
     if not CONFIG["AIRTABLE_API_KEY"]: return
     url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
     now = datetime.datetime.now().isoformat()
+    # Airtable 列名必须严格匹配: Email, LicenseKey, ActivationMethod, ActivatedAt
     data = {"fields": {"Email": email, "LicenseKey": key, "ActivationMethod": method, "ActivatedAt": now}}
     try: 
         requests.post(url, json={"records": [{"fields": data['fields']}]}, headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
@@ -33,23 +35,26 @@ def send_email_smtp(to_email, subject, body):
     if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]: return False
     try:
         msg = MIMEMultipart()
-        msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]
+        # 🔥 修正发件人显示名称
+        msg['From'] = f"Lai's Lab Support <{CONFIG['EMAIL_SENDER_ADDRESS']}>"
         msg['To'] = to_email
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
+        # 使用 App Password 登录
         server.login(CONFIG["EMAIL_SENDER_ADDRESS"], CONFIG["EMAIL_APP_PASSWORD"])
         server.sendmail(CONFIG["EMAIL_SENDER_ADDRESS"], to_email, msg.as_string())
         server.quit()
         return True
     except: return False
 
-# 🔥 核心：真实工单逻辑 (ID + 智能回复)
+# 🔥 核心：真实工单逻辑
 def log_ticket_to_airtable(email, ticket_type, issue, tier):
     ticket_id = f"#{datetime.datetime.now().strftime('%Y%m%d%H%M')}"
     send_telegram_alert(f"🆘 Ticket {ticket_id}: {ticket_type}\nUser: {email}\nIssue: {issue}")
     
+    # Airtable 列名精准匹配: TicketID, Email, Type, Issue, Tier, Status, CreatedAt
     if CONFIG["AIRTABLE_API_KEY"]:
         url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
         now = datetime.datetime.now().isoformat()
@@ -57,7 +62,7 @@ def log_ticket_to_airtable(email, ticket_type, issue, tier):
         try: requests.post(url, json={"records": [{"fields": data['fields']}]}, headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
         except: pass
     
-    # Smart Intercept for Email
+    # 智能判断 (用于发送不同邮件)
     is_auto_solvable = False
     issue_lower = issue.lower()
     auto_reply_msg = ""
@@ -78,7 +83,7 @@ def log_ticket_to_airtable(email, ticket_type, issue, tier):
         
     send_email_smtp(email, subject, body)
 
-# 🔥 核心：真实激活验证
+# 真实激活
 def check_user_tier(email, key):
     if key == CONFIG["MASTER_KEY"]: return "Pro", "Master Key"
     if not CONFIG["LEMONSQUEEZY_API_KEY"]: return "Guest", "No API Key"
@@ -97,7 +102,7 @@ def check_user_tier(email, key):
         return "Guest", f"Connection Error: {str(e)}"
     return "Guest", "Invalid Key"
 
-# 🔥 核心：Prompt 强指令生成
+# Prompt 强指令生成
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
@@ -142,11 +147,13 @@ def create_pdf(text, role, mode):
         return pdf.output(dest='S').encode('latin-1')
     except: return None
 
+# 智能拦截 (返回 True/False, Answer)
 def smart_intercept(text, lang="English"):
     text_lower = text.lower()
     for keywords, faq_index in dm.INTERCEPT_LOGIC:
         if any(k in text_lower for k in keywords):
-            return True, "Check FAQ for solution."
+            # 优先返回英文答案作为标准参考
+            return True, dm.FAQ_DATABASE["English"][faq_index]["a"]
     return False, ""
 
 def check_daily_limit_by_email(email, tier, current_usage):
