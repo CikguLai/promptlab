@@ -1,6 +1,5 @@
-# logic_core.py
-# Lai's Lab V9.30 - PRODUCTION GOLD
-# Logic: Smart Email (A/B), Ticket ID, Real Links, PDF CJK
+# logic_core.py (V9.32 - FINAL GOLD)
+# Features: Real Ticket ID, Smart Email, Prompt Language Injection, Real Activation
 
 import requests, datetime, smtplib, io, urllib.parse, os
 from email.mime.text import MIMEText
@@ -46,13 +45,11 @@ def send_email_smtp(to_email, subject, body):
         return True
     except: return False
 
-# 🔥 核心：生成 Ticket ID & 智能邮件分流
+# 🔥 核心：真实工单逻辑 (ID + 智能回复)
 def log_ticket_to_airtable(email, ticket_type, issue, tier):
-    # 1. 生成 ID
     ticket_id = f"#{datetime.datetime.now().strftime('%Y%m%d%H%M')}"
     send_telegram_alert(f"🆘 Ticket {ticket_id}: {ticket_type}\nUser: {email}\nIssue: {issue}")
     
-    # 2. 存 Airtable
     if CONFIG["AIRTABLE_API_KEY"]:
         url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
         now = datetime.datetime.now().isoformat()
@@ -60,26 +57,20 @@ def log_ticket_to_airtable(email, ticket_type, issue, tier):
         try: requests.post(url, json={"records": [{"fields": data['fields']}]}, headers={"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"})
         except: pass
     
-    # 3. 智能判断 (Check Keywords)
+    # Smart Intercept for Email
     is_auto_solvable = False
     issue_lower = issue.lower()
     auto_reply_msg = ""
-    
-    # 关键词匹配 (复用 data_matrix 的逻辑)
     for keywords, idx in dm.INTERCEPT_LOGIC:
         if any(k in issue_lower for k in keywords):
             is_auto_solvable = True
-            # 获取英文版答案作为标准回复 (简化处理)
             auto_reply_msg = dm.FAQ_DATABASE["English"][idx]["a"]
             break
             
-    # 4. 发送邮件 (分流)
     if is_auto_solvable:
-        # ✅ Email A: Auto-Close
         subject = f"✅ [Case Closed] Ticket {ticket_id}: Solution found"
-        body = f"Dear User,\n\nWe received your ticket regarding '{ticket_type}'.\n\n💡 Official Solution:\n{auto_reply_msg}\n\nThis ticket is marked as auto-resolved. If this didn't help, please REPLY to this email.\n\nBest,\nLai's Lab Support"
+        body = f"Dear User,\n\nWe received your ticket '{ticket_type}'.\n\n💡 Official Solution:\n{auto_reply_msg}\n\nThis ticket is marked as auto-resolved. If this didn't help, please REPLY to this email.\n\nBest,\nLai's Lab Support"
     else:
-        # 🎫 Email B: Queued
         subject = f"🎫 [Ticket Received] Ticket {ticket_id}: We are reviewing"
         wait_time = "1-2 business days" if tier == "Pro" else "3-4 business days"
         priority = "💎 VIP Priority" if tier == "Pro" else "Standard Queue"
@@ -87,7 +78,7 @@ def log_ticket_to_airtable(email, ticket_type, issue, tier):
         
     send_email_smtp(email, subject, body)
 
-# 🔥 核心：真实鉴权
+# 🔥 核心：真实激活验证
 def check_user_tier(email, key):
     if key == CONFIG["MASTER_KEY"]: return "Pro", "Master Key"
     if not CONFIG["LEMONSQUEEZY_API_KEY"]: return "Guest", "No API Key"
@@ -106,12 +97,16 @@ def check_user_tier(email, key):
         return "Guest", f"Connection Error: {str(e)}"
     return "Guest", "Invalid Key"
 
+# 🔥 核心：Prompt 强指令生成
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
     templates = dm.ROLES_CONFIG.get(role, {}).get(mode, [])
     template_str = next((t['template'] for t in templates if t['label'] == option), "{input}")
-    res = f"### [PASEC PROTOCOL V2.8]\n**ROLE**: {role}\n**TONE**: {tone}\n**OUTPUT LANGUAGE**: {lang}\n**INSTRUCTION**: {template_str.format(input=user_input)}\n"
-    res += f"\n[SYSTEM]: Ensure the final output is in **{lang}** language."
-    if tier == "Pro": res += "\n[MODE]: Clean Output. Human-like tone."
+    
+    res = f"### [PASEC PROTOCOL V2.8]\n**ROLE**: {role}\n**TONE**: {tone}\n**TARGET LANGUAGE**: {lang}\n"
+    res += f"**INSTRUCTION**: {template_str.format(input=user_input)}\n"
+    res += f"\n[SYSTEM]: You MUST write the final output content in **{lang}**. Do not use English unless the user asked for it."
+    
+    if tier == "Pro": res += "\n[MODE]: Clean Output. Human-like tone. No markdown headers."
     else: res += "\n\n(Generated via Lai's Lab Free Version)"
     return res
 
