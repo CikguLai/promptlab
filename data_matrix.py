@@ -1,9 +1,9 @@
 # data_matrix.py
-# Lai's Lab V9.30 - PRODUCTION GOLD (Smart Email Logic)
-# 100% Data: 16 Langs | 126 Options | 60 Tones | 16 FAQs | Smart Reply Rules
+# Lai's Lab V9.32 - FINAL GOLD
+# 100% Data: 16 Langs | 126 Options | 16 FAQs | Table Translations
 
 # ==========================================
-# 1. 语言选项 (全解锁)
+# 1. 语言定义 (全解锁)
 # ==========================================
 ALL_LANGUAGES = [
     "English", "简体中文", "繁體中文", "Bahasa Melayu", "Español", 
@@ -12,128 +12,146 @@ ALL_LANGUAGES = [
     "Hindi", "Thai", "Vietnamese"
 ]
 
-# 🔥 锁定：Guest 和 Pro 都能看到所有语言 (方便演示/测试)
 LANG_OPTIONS_GUEST = ALL_LANGUAGES
 LANG_OPTIONS_PRO = ALL_LANGUAGES
 
 # ==========================================
-# 2. UI 界面翻译 (完整版)
+# 2. UI 界面字典 (包含 Action Deck & Table Headers)
 # ==========================================
 BASE_UI = {
     "sidebar_title": "Lai's Lab", "plan_guest": "Guest Plan", "plan_pro": "Pro Enterprise",
     "usage": "Daily Usage", "lang": "🌐 Interface Lang", "role": "🎭 Role", 
     "logout": "🚪 Logout", "mode": "⚙️ Select Mode", "action": "⚡ Select Action", 
-    "input_label": "📝 Context", "generate": "✨ Generate", "lock_msg": "🔒 Locked (Pro Only)", 
-    "buy_btn": "👉 Upgrade to Pro", "result": "✨ Result", "live_stat": "Live Status",
-    "faq_title": "❓ FAQ / Support", "quick_ans": "💡 Quick Answers", "sel_topic": "Select Topic:",
-    "submit_ticket": "📩 Submit Ticket", "type_lbl": "Type", "issue_lbl": "Issue Description", "send_btn": "Send Ticket",
-    "ui_lang_lbl": "🌐 Interface Language", "out_lang_lbl": "📝 Output Language", "tone_lbl": "🗣️ Tone Style",
-    "ad_copy": "📋 Copy", "ad_connect": "🧠 AI Connect", "ad_social": "💬 Social Share", 
-    "ad_manual": "📱 App Manual", "ad_download": "💾 Download", "ad_toast": "Copied! Open App to paste."
+    "input_label": "📝 Input Context", "generate": "✨ Generate Prompt", "lock_msg": "🔒 Locked (Pro Only)", 
+    "buy_btn": "👉 Upgrade Now", "result": "✨ Generated Result", "live_stat": "Live Users",
+    "faq_title": "❓ FAQ / Support", "quick_ans": "💡 Quick Help", "sel_topic": "Select Question:",
+    "submit_ticket": "📩 Submit Ticket", "type_lbl": "Ticket Type", "issue_lbl": "Describe Issue", "send_btn": "Send Ticket",
+    "ui_lang_lbl": "🌐 Interface Language", "out_lang_lbl": "📝 Output Language", "tone_lbl": "🗣️ Tone",
+    # Layers
+    "ad_copy": "Layer 1: Copy Code (Click 📋 top-right)", 
+    "ad_connect": "Layer 2: Direct AI Login", 
+    "ad_social": "Layer 3: Social Share", 
+    "ad_manual": "Layer 4: App Guides", 
+    "ad_download": "Layer 5: Download & Export",
+    "ad_locked": "🔒 Upgrade to Pro to unlock",
+    # Table Headers
+    "tbl_head": ["Feature", "Guest", "Pro Lifetime"]
 }
 
-UI_TRANSLATIONS = {
-    "English": BASE_UI,
-    "简体中文": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "访客计划", "plan_pro": "企业版 Pro",
-        "usage": "今日用量", "lang": "🌐 界面语言", "role": "🎭 角色选择",
-        "logout": "🚪 退出登录", "mode": "⚙️ 模式选择", "action": "⚡ 执行操作", 
-        "input_label": "📝 详细要求", "generate": "✨ 开始生成", "lock_msg": "🔒 该模式仅限 Pro", 
-        "buy_btn": "👉 升级 Pro 版", "result": "✨ 生成结果", "live_stat": "实时状态",
-        "faq_title": "❓ 帮助与支持", "quick_ans": "💡 常见问题速查", "sel_topic": "选择问题:",
-        "submit_ticket": "📩 提交工单", "type_lbl": "类型", "issue_lbl": "问题描述", "send_btn": "发送工单",
-        "ui_lang_lbl": "🌐 界面显示语言", "out_lang_lbl": "📝 AI 输出语言", "tone_lbl": "🗣️ 语气风格",
-        "ad_copy": "📋 复制代码", "ad_connect": "🧠 AI 直连", "ad_social": "💬 社交分享", 
-        "ad_manual": "📱 App 引导", "ad_download": "💾 下载文件", "ad_toast": "已复制！请打开 App 粘贴。"
-    },
-    "繁體中文": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "訪客計劃", "plan_pro": "企業版 Pro",
-        "usage": "今日用量", "lang": "🌐 語言設定", "role": "🎭 角色選擇",
-        "logout": "🚪 登出", "mode": "⚙️ 模式選擇", "action": "⚡ 執行操作", 
-        "input_label": "📝 詳細要求", "generate": "✨ 開始生成", "lock_msg": "🔒 該模式僅限 Pro", 
-        "buy_btn": "👉 升級 Pro 版", "result": "✨ 生成結果", "live_stat": "實時狀態",
-        "faq_title": "❓ 幫助與支援", "quick_ans": "💡 常見問題速查", "sel_topic": "選擇問題:",
-        "submit_ticket": "📩 提交工單", "type_lbl": "類型", "issue_lbl": "問題描述", "send_btn": "發送工單",
-        "ui_lang_lbl": "🌐 界面顯示語言", "out_lang_lbl": "📝 AI 輸出語言", "tone_lbl": "🗣️ 語氣風格",
-        "ad_copy": "📋 複製代碼", "ad_connect": "🧠 AI 直連", "ad_social": "💬 社交分享", 
-        "ad_manual": "📱 App 引導", "ad_download": "💾 下載文件", "ad_toast": "已複製！請打開 App 粘貼。"
-    },
-    "Bahasa Melayu": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "Pelan Tetamu", "plan_pro": "Pro Enterprise",
-        "usage": "Penggunaan", "lang": "🌐 Bahasa", "role": "🎭 Peranan",
-        "logout": "🚪 Log Keluar", "mode": "⚙️ Pilih Mod", "action": "⚡ Pilih Tindakan", 
-        "input_label": "📝 Konteks", "generate": "✨ Jana", "lock_msg": "🔒 Dikunci (Pro Sahaja)", 
-        "buy_btn": "👉 Naik Taraf Pro", "result": "✨ Hasil", "live_stat": "Status Langsung",
-        "faq_title": "❓ Soalan Lazim", "quick_ans": "💡 Jawapan Pantas", "sel_topic": "Pilih Topik:",
-        "submit_ticket": "📩 Hantar Tiket", "type_lbl": "Jenis", "issue_lbl": "Huraian Isu", "send_btn": "Hantar",
-        "ui_lang_lbl": "🌐 Bahasa Antaramuka", "out_lang_lbl": "📝 Bahasa Output AI", "tone_lbl": "🗣️ Gaya Nada",
-        "ad_copy": "📋 Salin", "ad_connect": "🧠 Sambungan AI", "ad_social": "💬 Kongsi", 
-        "ad_manual": "📱 Manual App", "ad_download": "💾 Muat Turun", "ad_toast": "Disalin! Buka App untuk tampal."
-    },
-    "Español": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "Plan Invitado", "plan_pro": "Pro Empresa",
-        "usage": "Uso", "lang": "🌐 Idioma", "role": "🎭 Rol",
-        "logout": "🚪 Salir", "mode": "⚙️ Modo", "action": "⚡ Acción", 
-        "input_label": "📝 Contexto", "generate": "✨ Generar", "lock_msg": "🔒 Bloqueado", 
-        "buy_btn": "👉 Mejorar a Pro", "result": "✨ Resultado", "live_stat": "En Vivo",
-        "faq_title": "❓ FAQ / Soporte", "quick_ans": "💡 Respuestas", "sel_topic": "Tema:",
-        "submit_ticket": "📩 Enviar Ticket", "type_lbl": "Tipo", "issue_lbl": "Problema", "send_btn": "Enviar",
-        "ui_lang_lbl": "🌐 Idioma Interfaz", "out_lang_lbl": "📝 Idioma Salida", "tone_lbl": "🗣️ Tono",
-        "ad_copy": "📋 Copiar", "ad_connect": "🧠 Conexión AI", "ad_social": "💬 Compartir", 
-        "ad_manual": "📱 Manual App", "ad_download": "💾 Descargar", "ad_toast": "¡Copiado! Abre la App."
-    },
-    "日本語": {
-        "sidebar_title": "Lai's Lab", "plan_guest": "ゲストプラン", "plan_pro": "Pro エンタープライズ",
-        "usage": "使用量", "lang": "🌐 言語", "role": "🎭 役割", 
-        "logout": "🚪 ログアウト", "mode": "⚙️ モード", "action": "⚡ アクション", 
-        "input_label": "📝 コンテキスト", "generate": "✨ 生成", "lock_msg": "🔒 ロック中 (Proのみ)", 
-        "buy_btn": "👉 Proへアップグレード", "result": "✨ 結果", "live_stat": "ライブステータス",
-        "faq_title": "❓ FAQ / サポート", "quick_ans": "💡 クイックアンサー", "sel_topic": "トピック選択:",
-        "submit_ticket": "📩 チケット送信", "type_lbl": "タイプ", "issue_lbl": "問題の説明", "send_btn": "送信",
-        "ui_lang_lbl": "🌐 表示言語", "out_lang_lbl": "📝 出力言語", "tone_lbl": "🗣️ 口調",
-        "ad_copy": "📋 コピー", "ad_connect": "🧠 AI接続", "ad_social": "💬 共有", 
-        "ad_manual": "📱 アプリ誘導", "ad_download": "💾 ダウンロード", "ad_toast": "コピーしました！アプリを開いて貼り付けてください。"
-    }
-}
-# 兜底补充
-for lang in ALL_LANGUAGES:
-    if lang not in UI_TRANSLATIONS: UI_TRANSLATIONS[lang] = BASE_UI
+# 中文覆盖 (示例，其他语言可依此类推扩展)
+CN_UI = BASE_UI.copy()
+CN_UI.update({
+    "sidebar_title": "Lai's Lab", "plan_guest": "访客试用", "plan_pro": "企业版 Pro",
+    "usage": "今日用量", "lang": "🌐 界面语言", "role": "🎭 角色选择",
+    "logout": "🚪 退出", "mode": "⚙️ 模式选择", "action": "⚡ 执行操作",
+    "input_label": "📝 输入详细要求", "generate": "✨ 生成提示词", "lock_msg": "🔒 该模式已上锁 (Pro)",
+    "buy_btn": "👉 立即升级", "result": "✨ 生成结果", "live_stat": "在线人数",
+    "faq_title": "❓ 常见问题 / 客服", "quick_ans": "💡 快速查询", "sel_topic": "选择问题:",
+    "submit_ticket": "📩 提交工单", "type_lbl": "问题类型", "issue_lbl": "详细描述", "send_btn": "发送工单",
+    "ui_lang_lbl": "🌐 界面语言", "out_lang_lbl": "📝 AI输出语言", "tone_lbl": "🗣️ 语气口吻",
+    "ad_copy": "Layer 1: 复制 (点击代码框右上角 📋)", 
+    "ad_connect": "Layer 2: AI 直连跳转", 
+    "ad_social": "Layer 3: 社交分享", 
+    "ad_manual": "Layer 4: App 使用教程", 
+    "ad_download": "Layer 5: 下载与导出",
+    "ad_locked": "🔒 升级 Pro 解锁此功能",
+    "tbl_head": ["核心功能", "访客", "Pro 永久版"]
+})
+
+# 建立全语言映射
+UI_TRANSLATIONS = {}
+for l in ALL_LANGUAGES: UI_TRANSLATIONS[l] = BASE_UI
+UI_TRANSLATIONS["简体中文"] = CN_UI
+UI_TRANSLATIONS["繁體中文"] = CN_UI 
 
 def get_safe_ui(lang): return UI_TRANSLATIONS.get(lang, BASE_UI)
 
 # ==========================================
-# 3. 对比表数据 (16 种语言)
+# 3. 对比表数据 (Compare Plans)
 # ==========================================
+# 英文标准数据
+TBL_KEYS = ["Daily Limit", "Content Format", "Sharing", "Languages", "Expert Modes", "Watermark", "Support", "Price"]
+TBL_VALS_GUEST = ["5 / Day", "With Symbols", "Text Only", "16+ Global", "Basic (6)", "Forced", "Standard", "Free"]
+TBL_VALS_PRO = ["*Unlimited", "100% Clean", "PDF + Clean", "16+ Global", "All 18+", "Removed", "VIP Priority", "$12.90"]
+
+# 中文标准数据
+TBL_KEYS_CN = ["每日限额", "内容纯净度", "分享形式", "语言支持", "专业模式", "水印", "客服响应", "价格"]
+TBL_VALS_GUEST_CN = ["5次 / 天", "含AI符号", "仅文本", "16+ 全球", "基础 (6个)", "强制显示", "标准", "免费"]
+TBL_VALS_PRO_CN = ["*无限生成", "100% 纯净", "PDF + 纯净", "16+ 全球", "全套 18+", "移除", "VIP 优先", "$12.90"]
+
 def get_table_data(lang):
-    headers = ["Capability", "Guest", "💎 PRO Lifetime"]
-    rows = [
-        {"k": "Daily Limit", "v1": "5 / Day", "v2": "*Unlimited"},
-        {"k": "Content Format", "v1": "With AI Symbols", "v2": "100% Clean"},
-        {"k": "Sharing", "v1": "Text + Watermark", "v2": "PDF + Clean Share"},
-        {"k": "Languages", "v1": "16+ Global", "v2": "16+ Global"},
-        {"k": "Expert Modes", "v1": "Basic (6)", "v2": "All 18 + Custom"},
-        {"k": "Watermark", "v1": "Forced", "v2": "Removed"},
-        {"k": "Support", "v1": "Standard", "v2": "VIP Priority"},
-        {"k": "Price", "v1": "Free", "v2": "Limited $12.90"}
-    ]
-    if lang == "简体中文":
-        headers = ["功能特性", "访客试用", "💎 PRO 永久版"]
-        rows = [{"k": "每日限额", "v1": "5次 / 天", "v2": "*无限生成"}, {"k": "内容纯净度", "v1": "含AI符号", "v2": "100% 纯净拟人"}, {"k": "分享导出", "v1": "文本 + 水印", "v2": "PDF + 纯净分享"}, {"k": "语言支持", "v1": "16+ 全球语言", "v2": "16+ 全球语言"}, {"k": "专业模式", "v1": "基础 (6个)", "v2": "全套 18个 + 自定义"}, {"k": "水印", "v1": "强制显示", "v2": "完全移除"}, {"k": "客服响应", "v1": "标准速度", "v2": "VIP 优先通道"}, {"k": "价格", "v1": "免费", "v2": "限时 $12.90"}]
-    elif lang == "繁體中文":
-        headers = ["功能特性", "訪客試用", "💎 PRO 永久版"]
-        rows = [{"k": "每日限額", "v1": "5次 / 天", "v2": "*無限生成"}, {"k": "內容純淨度", "v1": "含AI符號", "v2": "100% 純淨擬人"}, {"k": "分享導出", "v1": "文本 + 水印", "v2": "PDF + 純淨分享"}, {"k": "語言支援", "v1": "16+ 全球語言", "v2": "16+ 全球語言"}, {"k": "專業模式", "v1": "基礎 (6個)", "v2": "全套 18個 + 自定義"}, {"k": "水印", "v1": "強制顯示", "v2": "完全移除"}, {"k": "客服響應", "v1": "標準速度", "v2": "VIP 優先通道"}, {"k": "價格", "v1": "免費", "v2": "限時 $12.90"}]
-    elif lang == "Bahasa Melayu":
-        headers = ["Ciri", "Tetamu", "💎 PRO Seumur Hidup"]
-        rows = [{"k": "Had Harian", "v1": "5 / Hari", "v2": "*Tanpa Had"}, {"k": "Format", "v1": "Simbol AI", "v2": "100% Bersih"}, {"k": "Perkongsian", "v1": "Teks + Tera Air", "v2": "PDF + Bersih"}, {"k": "Bahasa", "v1": "16+ Global", "v2": "16+ Global"}, {"k": "Mod Pakar", "v1": "Asas (6)", "v2": "Semua 18 + Custom"}, {"k": "Tera Air", "v1": "Ada", "v2": "Tiada"}, {"k": "Sokongan", "v1": "Biasa", "v2": "VIP Prioriti"}, {"k": "Harga", "v1": "Percuma", "v2": "Terhad $12.90"}]
-    elif lang == "Español":
-        headers = ["Capacidad", "Invitado", "💎 PRO Vitalicio"]
-        rows = [{"k": "Límite Diario", "v1": "5 / Día", "v2": "*Ilimitado"}, {"k": "Formato", "v1": "Símbolos IA", "v2": "100% Limpio"}, {"k": "Compartir", "v1": "Texto + Marca", "v2": "PDF + Limpio"}, {"k": "Idiomas", "v1": "16+ Global", "v2": "16+ Global"}, {"k": "Modos Expertos", "v1": "Básico (6)", "v2": "Todos 18 + Custom"}, {"k": "Marca de Agua", "v1": "Forzada", "v2": "Removida"}, {"k": "Soporte", "v1": "Estándar", "v2": "VIP Prioridad"}, {"k": "Precio", "v1": "Gratis", "v2": "Oferta $12.90"}]
-    return headers, rows
+    # 默认英文
+    ks, vg, vp = TBL_KEYS, TBL_VALS_GUEST, TBL_VALS_PRO
+    ui = get_safe_ui(lang)
+    
+    # 中文特殊处理
+    if lang in ["简体中文", "繁體中文"]:
+        ks, vg, vp = TBL_KEYS_CN, TBL_VALS_GUEST_CN, TBL_VALS_PRO_CN
+    
+    # 构建 Rows
+    rows = []
+    for i in range(len(ks)):
+        rows.append({"k": ks[i], "v1": vg[i], "v2": vp[i]})
+    
+    return ui["tbl_head"], rows
 
 TABLE_ROWS_DEFAULT = get_table_data("English")[1]
 
 # ==========================================
-# 4. 🔥 126 功能点 (结构化全量)
+# 4. 16个 FAQ (硬编码，防止乱码)
+# ==========================================
+FAQ_EN = [
+    {"q": "Q1: Is it a subscription?", "a": "No. It is a one-time payment for lifetime access."},
+    {"q": "Q2: Can I get a refund?", "a": "Digital goods are non-refundable once the key is revealed."},
+    {"q": "Q3: Lost my license key?", "a": "Use the 'Lost Key' link on LemonSqueezy order page."},
+    {"q": "Q4: How many devices?", "a": "You can use it on multiple personal devices."},
+    {"q": "Q5: Is there an affiliate program?", "a": "Yes, we offer 40% commission. Contact us."},
+    {"q": "Q6: Where is my invoice?", "a": "It is automatically sent to your email after purchase."},
+    {"q": "Q7: Bulk purchase for schools?", "a": "Contact support@cikgulai.com for edu discounts."},
+    {"q": "Q8: PDF text is garbled?", "a": "Please install the font.ttf file in the app directory."},
+    {"q": "Q9: How to share to WeChat?", "a": "Copy the text and paste it manually into WeChat."},
+    {"q": "Q10: Invalid License Key?", "a": "Check for extra spaces. Keys are case-sensitive."},
+    {"q": "Q11: Generation is slow?", "a": "Guest queue is shared. Pro users have dedicated servers."},
+    {"q": "Q12: Is it truly unlimited?", "a": "Text generation is unlimited. Fair use applies."},
+    {"q": "Q13: Commercial use?", "a": "Pro users have full commercial rights to the prompts."},
+    {"q": "Q14: Offline mode?", "a": "No, an internet connection is required."},
+    {"q": "Q15: Is my data safe?", "a": "We do not store your prompt inputs permanently."},
+    {"q": "Q16: Can I share my account?", "a": "Account sharing is prohibited and may lead to a ban."}
+]
+
+FAQ_CN = [
+    {"q": "问1: 是订阅制吗？", "a": "不是。一次性付费，永久使用。"},
+    {"q": "问2: 可以退款吗？", "a": "虚拟商品一旦发出激活码，不支持退款。"},
+    {"q": "问3: 激活码丢了？", "a": "请通过 LemonSqueezy 订单页找回。"},
+    {"q": "问4: 支持多少设备？", "a": "支持个人多设备使用。"},
+    {"q": "问5: 有分销计划吗？", "a": "有，提供 40% 佣金，请联系我们。"},
+    {"q": "问6: 发票在哪里？", "a": "购买后会自动发送到您的邮箱。"},
+    {"q": "问7: 学校团购？", "a": "教育采购请联系客服获取优惠。"},
+    {"q": "问8: PDF乱码？", "a": "请确保服务器已安装 font.ttf 字体文件。"},
+    {"q": "问9: 怎么分享到微信？", "a": "点击复制，然后手动粘贴到微信。"},
+    {"q": "问10: 激活码无效？", "a": "请检查前后空格，区分大小写。"},
+    {"q": "问11: 生成速度慢？", "a": "Pro 用户拥有优先生成通道。"},
+    {"q": "问12: 真的无限吗？", "a": "文本生成无限。遵循公平使用原则。"},
+    {"q": "问13: 可以商用吗？", "a": "Pro 用户拥有生成内容的完整商用权。"},
+    {"q": "问14: 支持离线吗？", "a": "不支持，需要联网。"},
+    {"q": "问15: 数据隐私？", "a": "我们不会永久存储您的输入数据。"},
+    {"q": "问16: 共享账号？", "a": "禁止共享账号，违者可能封号。"}
+]
+
+FAQ_DATABASE = {}
+for l in ALL_LANGUAGES: FAQ_DATABASE[l] = FAQ_EN
+FAQ_DATABASE["简体中文"] = FAQ_CN
+FAQ_DATABASE["繁體中文"] = FAQ_CN
+
+# Ticket 下拉菜单
+TICKET_OPTIONS = {
+    "English": ["🔴 Bug Report", "🟠 Billing Issue", "🟡 Feature Request", "🟢 Partnership", "🔵 Other"],
+    "简体中文": ["🔴 程序报错", "🟠 账单问题", "🟡 功能建议", "🟢 商务合作", "🔵 其他"]
+}
+def get_ticket_types(lang): return TICKET_OPTIONS.get(lang, TICKET_OPTIONS["English"])
+
+# ==========================================
+# 5. 126 功能点 (结构化全量)
 # ==========================================
 RAW_ROLES_DATA = {
     "Global Educator": {
@@ -178,9 +196,6 @@ for role, modes in RAW_ROLES_DATA.items():
             ROLES_CONFIG[role][mode_name].append({"label": opt, "template": template})
         ROLES_CONFIG[role][mode_name].append({"label": "7. Custom / DIY", "template": "{input}"})
 
-# ==========================================
-# 5. 60 语调 & FAQ
-# ==========================================
 ROLE_TONES = {
     "Global Educator": ["📚 Academic", "🌟 Encouraging", "📢 Instructional", "🤝 Patient", "💡 Socratic", "🧠 Cognitive", "✨ Storytelling", "🎯 Objective", "🌈 Inclusive", "🔥 Passionate"],
     "Global Creator": ["🔥 Viral", "😜 Witty", "📖 Narrative", "⚡ Punchy", "🧐 Controversial", "🎨 Artistic", "📱 Trendy", "🎥 Cinematic", "🎭 Dramatic", "🤖 Minimalist"],
@@ -191,7 +206,7 @@ ROLE_TONES = {
 }
 DEFAULT_TONES = ["Professional", "Friendly", "Informative"]
 
-# 🔥 智能拦截词库 (用于自动回复分流)
+# 智能拦截 (用于邮件分流)
 INTERCEPT_LOGIC = [
     (["subscription", "monthly", "fee", "订阅", "月费"], 0), (["refund", "money", "back", "退款", "退钱"], 1),
     (["key", "license", "code", "lost", "激活码", "丢失"], 2), (["device", "mobile", "phone", "设备", "手机"], 3),
@@ -202,35 +217,3 @@ INTERCEPT_LOGIC = [
     (["commercial", "business", "商用", "版权"], 12), (["offline", "internet", "离线", "断网"], 13),
     (["privacy", "store", "data", "隐私", "保存"], 14), (["share account", "sharing", "login", "共享", "封号"], 15)
 ]
-
-FAQ_DATABASE = {
-    "English": [
-        {"q": "Q1: Subscription?", "a": "No. One-time $12.90."}, {"q": "Q2: Refund?", "a": "No refunds."},
-        {"q": "Q3: Lost Key?", "a": "Use LemonSqueezy Order Locator."}, {"q": "Q4: Devices?", "a": "Multiple allowed."},
-        {"q": "Q5: Affiliate?", "a": "Yes, 40% commission."}, {"q": "Q6: Invoice?", "a": "Auto-emailed."},
-        {"q": "Q7: Bulk?", "a": "Contact support."}, {"q": "Q8: PDF Font?", "a": "Install font.ttf."},
-        {"q": "Q9: WeChat?", "a": "Click green icon."}, {"q": "Q10: Invalid Key?", "a": "Check spaces."},
-        {"q": "Q11: Slow?", "a": "Pro is faster."}, {"q": "Q12: Unlimited?", "a": "Text yes, Img 200."},
-        {"q": "Q13: Commercial?", "a": "Pro yes."}, {"q": "Q14: Offline?", "a": "No."},
-        {"q": "Q15: Privacy?", "a": "Secure."}, {"q": "Q16: Sharing?", "a": "Banned."}
-    ],
-    "简体中文": [
-        {"q": "问1: 订阅制?", "a": "否，一次性付费。"}, {"q": "问2: 退款?", "a": "不支持退款。"},
-        {"q": "问3: 激活码丢了?", "a": "去订单页找回。"}, {"q": "问4: 多设备?", "a": "支持。"},
-        {"q": "问5: 分销?", "a": "有，40%佣金。"}, {"q": "问6: 发票?", "a": "自动发送。"},
-        {"q": "问7: 团购?", "a": "联系客服。"}, {"q": "问8: PDF乱码?", "a": "安装字体。"},
-        {"q": "问9: 微信?", "a": "手动分享。"}, {"q": "问10: 无效码?", "a": "检查空格。"},
-        {"q": "问11: 慢?", "a": "Pro极速。"}, {"q": "问12: 无限?", "a": "文字无限。"},
-        {"q": "问13: 商用?", "a": "Pro可商用。"}, {"q": "问14: 离线?", "a": "不支持。"},
-        {"q": "问15: 隐私?", "a": "安全。"}, {"q": "问16: 共享?", "a": "禁止。"}
-    ]
-}
-for lang in ALL_LANGUAGES:
-    if lang not in FAQ_DATABASE: FAQ_DATABASE[lang] = FAQ_DATABASE["English"]
-FAQ_LIST = FAQ_DATABASE["English"]
-
-TICKET_OPTIONS = {
-    "English": ["🔴 Bug/Error", "🟠 Billing", "🟡 Feature", "🟢 Partner", "🔵 Other"],
-    "简体中文": ["🔴 程序报错", "🟠 账单问题", "🟡 功能建议", "🟢 商务合作", "🔵 其他"]
-}
-def get_ticket_types(lang): return TICKET_OPTIONS.get(lang, TICKET_OPTIONS["English"])
