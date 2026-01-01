@@ -1,4 +1,4 @@
-# app.py (V9.28 - 2026 FINAL - BUG FREE)
+# app.py (V9.28 - 2026 FINAL - DUAL LANGUAGE SUPPORT)
 import streamlit as st
 import logic_core as lc
 import data_matrix as dm
@@ -9,21 +9,28 @@ from datetime import datetime
 # 1. 设置
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# CSS
+# CSS (Footer 居中 + 价格划线)
 st.markdown("""
 <style>
-    .compare-table { width: 100%; border-collapse: collapse; border: 1px solid #eee; background: white; font-size: 13px; margin-top: 10px; }
-    .compare-table th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; text-align: left; color: #333; }
-    .compare-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; color: #555; }
-    .pro-column { background: #f0f7ff; color: #0277bd; font-weight: bold; border-left: 1px solid #cce5ff; }
-    .price-tag { color: #d32f2f; font-size: 1.1em; font-weight: 800; }
-    a:hover { text-decoration: underline !important; }
+    .footer-container {
+        position: fixed; bottom: 0; left: 0; width: 100%;
+        background: white; border-top: 1px solid #eee;
+        padding: 15px 0; z-index: 1000;
+        text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .footer-row-1 { font-weight: bold; color: #333; font-size: 13px; margin-bottom: 3px; }
+    .footer-row-2 { font-size: 10px; color: #999; font-style: italic; max-width: 800px; line-height: 1.4; }
+    .footer-row-3 { font-size: 11px; color: #aaa; margin-top: 5px; display: flex; gap: 15px; }
+    
+    .price-strike { text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px; }
+    .price-promo { color: #d32f2f; font-weight: 800; font-size: 1.1em; }
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # Session 初始化
-for key, val in {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English'}.items():
+defaults = {'logged_in': False, 'user_tier': 'Guest', 'user_email': '', 'daily_usage': 0, 'language': 'English', 'output_language': 'English'}
+for key, val in defaults.items():
     if key not in st.session_state: st.session_state[key] = val
 
 # Secrets
@@ -39,7 +46,7 @@ if "general" in st.secrets:
     lc.CONFIG["AIRTABLE_BASE_ID"] = sec.get("airtable_base_id", "")
     if "master_key" in sec: lc.CONFIG["MASTER_KEY"] = sec["master_key"]
 
-# 🔥 Pro Audit Footer
+# Pro Audit Footer
 def render_footer():
     current_hour = datetime.now().hour
     online_count = 110 + (current_hour * 4) + random.randint(1, 10)
@@ -48,54 +55,41 @@ def render_footer():
     tier_color = "#0277bd" if is_pro else "#666"
 
     st.markdown(f"""
-        <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid #f1f1f1; padding: 20px 40px; z-index: 1000;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 12px;">
-                <div style="flex: 1; text-align: left;">© 2025-2026 <b>LAI'S LAB</b></div>
-                <div style="flex: 1; text-align: center; color: #999; font-weight: 400;">SYSTEM V9.28 PRO AUDIT</div>
-                <div style="flex: 1; text-align: right; color: {tier_color};">{tier_label}</div>
+        <div class="footer-container">
+            <div class="footer-row-1">
+                © 2025-2026 LAI'S LAB &nbsp; • &nbsp; <span style="color:#999;font-weight:400;">SYSTEM V9.28 PRO AUDIT</span> &nbsp; • &nbsp; <span style="color:{tier_color}">{tier_label}</span>
             </div>
-            <div style="margin-bottom: 12px; text-align: center;">
-                <p style="font-size: 10.5px; color: #888; margin: 0; line-height: 1.5; font-style: italic;">
-                    Generative AI can make mistakes; please verify important information. 
-                    Users are solely responsible for how they use the generated content.
-                </p>
+            <div class="footer-row-2">
+                Generative AI can make mistakes; please verify important information. Users are solely responsible for usage.
+                <br>Lai's Lab assumes no liability for actions taken based on outputs.
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #aaa; border-top: 1px solid #fafafa; padding-top: 8px;">
-                <div style="flex: 1; text-align: left;">
-                    <b>Status:</b> <span style="color: #28a745;">🟢 Operational</span> | <b>Live:</b> {online_count}
-                </div>
-                <div style="flex: 1; text-align: right;">
-                    <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color: #0277bd; text-decoration: none; font-weight: bold;">Retrieve License (Verify)</a>
-                </div>
+            <div class="footer-row-3">
+                <span><b>Status:</b> <span style="color:#28a745;">🟢 Operational</span></span>
+                <span><b>Live:</b> {online_count}</span>
+                <span><a href="#" style="color:#aaa;text-decoration:none;">Privacy</a></span>
+                <span><a href="https://app.lemonsqueezy.com/my-orders" target="_blank" style="color:#0277bd;font-weight:bold;text-decoration:none;">Retrieve License</a></span>
             </div>
         </div>
-        <div style="height: 150px;"></div> 
+        <div style="height: 120px;"></div>
     """, unsafe_allow_html=True)
 
 def show_login_page():
     st.write("🌍 Select Language")
-    
-    # 强制 Index 获取，防止语言列表变动导致崩溃
-    try:
-        idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.language)
-    except:
-        idx = 0 # 默认英文
-        
+    try: idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.language)
+    except: idx = 0
     lang_sel = st.selectbox("", dm.LANG_OPTIONS_GUEST, index=idx, key="lang_login", label_visibility="collapsed")
     
-    # 🔥 核心：语言切换触发重载
     if st.session_state.language != lang_sel:
         st.session_state.language = lang_sel
-        st.rerun() 
+        st.rerun()
 
-    # 安全获取 UI
     ui = dm.LANG_MAP.get(lang_sel, dm.LANG_MAP["default"])
 
     col1, col2 = st.columns([1, 1.4], gap="large")
     with col1:
         st.title(f"🧬 {ui.get('sidebar_title', 'Lais Lab')}")
         st.markdown('<div class="app-slogan">🚀 Your Automated Prompt Engineer</div>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color:#e53935; background:#fff5f5; padding:10px; border-radius:5px;">🔥 <b>Lifetime Pro:</b> $12.90</p>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:#fff5f5; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ffcdd2;">🔥 <b>Lifetime Pro:</b> <span class="price-strike">$39.90</span> <span class="price-promo">$12.90</span></div>', unsafe_allow_html=True)
         
         t1, t2 = st.tabs([ui['plan_guest'], ui['plan_pro']])
         with t1:
@@ -113,10 +107,8 @@ def show_login_page():
 
     with col2:
         st.subheader("🆚 Compare Plans")
-        # 🔥 核心：这里使用了 dm.TABLE_ROWS_DEFAULT 作为保底
         headers = ui.get('tbl_headers', ["Capability", "Guest", "Pro"])
         rows = ui.get('tbl_data', dm.TABLE_ROWS_DEFAULT)
-        
         html = f'<table class="compare-table"><tr><th>{headers[0]}</th><th>{headers[1]}</th><th class="pro-column">{headers[2]}</th></tr>'
         for r in rows:
             v2 = f'<span class="price-tag">{r["v2"]}</span>' if "$" in r['v2'] else r['v2']
@@ -138,35 +130,48 @@ def show_main_app():
         st.caption(f"📊 {ui['usage']}: {st.session_state.daily_usage} / {tot}")
         st.divider()
         
-        # 语言切换 (16种)
-        try:
-            idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.language)
-        except:
-            idx = 0
-        lang_sel_main = st.selectbox("Language", dm.LANG_OPTIONS_GUEST, index=idx, key="lang_main")
+        # 🔥 双语言选择器
+        # 1. 界面语言 (Interface Language)
+        try: idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.language)
+        except: idx = 0
+        lang_sel_main = st.selectbox(ui.get("ui_lang_lbl", "🌐 Interface Language"), dm.LANG_OPTIONS_GUEST, index=idx, key="lang_main")
+        
         if st.session_state.language != lang_sel_main:
             st.session_state.language = lang_sel_main
-            st.rerun() # 立即刷新
+            # 切换界面语言时，默认把输出语言也同步过去（用户体验更好），但允许用户随后修改
+            st.session_state.output_language = lang_sel_main 
+            st.rerun()
+
+        # 2. 输出语言 (Output Language) - 独立控制
+        try: out_idx = dm.LANG_OPTIONS_GUEST.index(st.session_state.output_language)
+        except: out_idx = 0
+        output_lang_sel = st.selectbox(ui.get("out_lang_lbl", "📝 Output Language"), dm.LANG_OPTIONS_GUEST, index=out_idx, key="lang_out")
+        
+        if st.session_state.output_language != output_lang_sel:
+            st.session_state.output_language = output_lang_sel
+            # 这里不需要 rerun，因为不影响界面显示
             
         role = st.selectbox(ui['role'], list(dm.ROLES_CONFIG.keys()))
         
-        # 🔥 完整 16 Q&A 下拉菜单
-        with st.expander("❓ FAQ / Support", expanded=False):
-            st.markdown("**💡 Quick Answers (16 Topics)**")
-            faq_options = [item["q"] for item in dm.FAQ_LIST]
-            selected_q = st.selectbox("Select Question:", faq_options)
-            answer = next((item["a"] for item in dm.FAQ_LIST if item["q"] == selected_q), "")
-            st.info(answer)
+        # FAQ (读取当前 Interface 语言的数据库)
+        with st.expander(ui.get("faq_title", "FAQ"), expanded=False):
+            st.markdown(f"**{ui.get('quick_ans', 'Quick Answers')}**")
+            current_faq_list = dm.FAQ_DATABASE.get(st.session_state.language, dm.FAQ_DATABASE["English"])
+            
+            faq_qs = [item["q"] for item in current_faq_list]
+            selected_q = st.selectbox(ui.get("sel_topic", "Topic"), faq_qs)
+            ans = next((item["a"] for item in current_faq_list if item["q"] == selected_q), "")
+            st.info(ans)
             
             st.divider()
-            st.markdown("**📩 Submit Ticket**")
-            ticket_type = st.selectbox("Type", dm.TICKET_TYPES, key="t_type")
-            ticket_msg = st.text_area("Issue", placeholder="Describe your issue...", height=80, key="t_msg")
+            st.markdown(f"**{ui.get('submit_ticket', 'Submit Ticket')}**")
+            ticket_type = st.selectbox(ui.get("type_lbl", "Type"), dm.TICKET_TYPES, key="t_type")
+            ticket_msg = st.text_area(ui.get("issue_lbl", "Issue"), height=80, key="t_msg")
             
-            if st.button("Send Ticket", use_container_width=True):
+            if st.button(ui.get("send_btn", "Send"), use_container_width=True):
                 if ticket_msg:
                     lc.log_ticket_to_airtable(st.session_state.user_email, ticket_type, ticket_msg, st.session_state.user_tier)
-                    st.success("Ticket Sent! Check email.")
+                    st.success("Sent!")
         
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
@@ -191,7 +196,8 @@ def show_main_app():
                     st.success("🤖 AI Support:"); st.info(reply)
                 elif can_gen:
                     st.session_state.daily_usage += 1
-                    res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.language, tone)
+                    # 🔥 核心：传入 st.session_state.output_language
+                    res = lc.generate_pasec_prompt(role, mode, opt, inp, st.session_state.user_tier, st.session_state.output_language, tone)
                     st.markdown(f"### {ui['result']}"); st.text_area("Payload:", value=res, height=300)
                     
                     c1, c2 = st.columns(2)
@@ -201,7 +207,6 @@ def show_main_app():
                             pdf = lc.create_pdf(res, role, mode)
                             if pdf: st.download_button("📕 PDF", pdf, "report.pdf", "application/pdf", use_container_width=True)
                     
-                    # 🔥 Action Deck 下载区
                     if st.session_state.user_tier == "Pro":
                         st.caption("💾 Download & Connect")
                         d1, d2 = st.columns(2)
