@@ -1,8 +1,9 @@
 # dm_ui.py
-# Lai's Lab UI Module - COMMERCIAL V9.33
-# Features: 30+ UI Keys per language to prevent crashes.
+# Lai's Lab UI Module - COMMERCIAL V9.33 (FULL 16 LANGUAGES)
+# Features: Complete UI Dictionary for 16 Languages to prevent KeyError.
 
 UI_BUNDLE = {
+    # 1. English
     "English": {
         "sidebar_title": "Lai's Lab AI",
         "plan_guest": "Guest Plan", "plan_pro": "Pro Plan",
@@ -28,6 +29,7 @@ UI_BUNDLE = {
         "tbl_head": ["Feature Comparison", "Guest (Free)", "Pro (Paid)"]
     },
     
+    # 2. 简体中文
     "简体中文": {
         "sidebar_title": "Lai's Lab AI",
         "plan_guest": "游客版", "plan_pro": "专业版",
@@ -53,6 +55,7 @@ UI_BUNDLE = {
         "tbl_head": ["功能权益对比", "游客 (免费)", "Pro (付费)"]
     },
 
+    # 3. 繁體中文
     "繁體中文": {
         "sidebar_title": "Lai's Lab AI",
         "plan_guest": "遊客版", "plan_pro": "專業版",
@@ -78,6 +81,7 @@ UI_BUNDLE = {
         "tbl_head": ["功能權益對比", "遊客 (免費)", "Pro (付費)"]
     },
 
+    # 4. Bahasa Melayu
     "Bahasa Melayu": {
         "sidebar_title": "Lai's Lab AI",
         "plan_guest": "Pelan Tetamu", "plan_pro": "Pelan Pro",
@@ -101,12 +105,331 @@ UI_BUNDLE = {
         "ad_download": "5. Simpan Fail",
         "ad_locked": "Pro Sahaja",
         "tbl_head": ["Perbandingan Ciri", "Tetamu (Percuma)", "Pro (Berbayar)"]
+    },
+
+    # 5. Español
+    "Español": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Plan Invitado", "plan_pro": "Plan Pro",
+        "usage": "Uso Diario", "lang": "Idioma Interfaz",
+        "role": "Seleccionar Rol", "faq_title": "Ayuda y FAQ",
+        "quick_ans": "Respuestas Rápidas", "sel_topic": "Seleccionar Tema",
+        "submit_ticket": "Enviar Ticket", "type_lbl": "Tipo de Ticket",
+        "issue_lbl": "Describa el problema o presione Enter...",
+        "send_btn": "Enviar", "logout": "Reiniciar",
+        "mode": "Seleccionar Modo", "action": "Seleccionar Acción",
+        "out_lang_lbl": "Idioma de Salida", "tone_lbl": "Tono de Voz",
+        "input_label": "Ingrese su tema, contenido o palabras clave...",
+        "generate": "✨ Generar Contenido",
+        "lock_msg": "Función Pro. Por favor actualice.",
+        "buy_btn": "👉 Obtener Pro Ahora",
+        "result": "Resultado Generado",
+        "ad_copy": "1. Copiar", 
+        "ad_connect": "2. Herramientas AI",
+        "ad_social": "3. Compartir",
+        "ad_manual": "4. Publicar",
+        "ad_download": "5. Guardar Archivos",
+        "ad_locked": "Solo Pro",
+        "tbl_head": ["Comparación", "Invitado (Gratis)", "Pro (Pago)"]
+    },
+
+    # 6. 日本語
+    "日本語": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "ゲストプラン", "plan_pro": "Proプラン",
+        "usage": "本日の使用量", "lang": "表示言語",
+        "role": "役割を選択", "faq_title": "ヘルプとサポート",
+        "quick_ans": "クイックQA", "sel_topic": "トピックを選択",
+        "submit_ticket": "チケット送信", "type_lbl": "チケット種類",
+        "issue_lbl": "問題を記述またはEnterで検索...",
+        "send_btn": "送信する", "logout": "リセット/ログアウト",
+        "mode": "モード選択", "action": "アクション選択",
+        "out_lang_lbl": "出力言語", "tone_lbl": "口調・トーン",
+        "input_label": "トピック、内容、キーワードを入力...",
+        "generate": "✨ コンテンツ生成",
+        "lock_msg": "これはPro機能です。アップグレードしてください。",
+        "buy_btn": "👉 今すぐProへ",
+        "result": "生成結果",
+        "ad_copy": "1. コピー", 
+        "ad_connect": "2. AIツール連携",
+        "ad_social": "3. シェア",
+        "ad_manual": "4. 手動投稿",
+        "ad_download": "5. 保存",
+        "ad_locked": "Pro限定",
+        "tbl_head": ["機能比較", "ゲスト (無料)", "Pro (有料)"]
+    },
+
+    # 7. 한국어
+    "한국어": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "게스트 플랜", "plan_pro": "Pro 플랜",
+        "usage": "일일 사용량", "lang": "인터페이스 언어",
+        "role": "역할 선택", "faq_title": "고객 지원",
+        "quick_ans": "빠른 답변", "sel_topic": "주제 선택",
+        "submit_ticket": "티켓 제출", "type_lbl": "티켓 유형",
+        "issue_lbl": "문제를 설명하거나 Enter를 눌러 검색...",
+        "send_btn": "제출하기", "logout": "초기화 / 로그아웃",
+        "mode": "모드 선택", "action": "작업 선택",
+        "out_lang_lbl": "출력 언어", "tone_lbl": "어조",
+        "input_label": "주제, 내용 또는 키워드를 입력하세요...",
+        "generate": "✨ 콘텐츠 생성",
+        "lock_msg": "Pro 기능입니다. 업그레이드해주세요.",
+        "buy_btn": "👉 Pro 업그레이드",
+        "result": "생성 결과",
+        "ad_copy": "1. 복사", 
+        "ad_connect": "2. AI 도구",
+        "ad_social": "3. 공유",
+        "ad_manual": "4. 수동 게시",
+        "ad_download": "5. 파일 저장",
+        "ad_locked": "Pro 전용",
+        "tbl_head": ["기능 비교", "게스트 (무료)", "Pro (유료)"]
+    },
+
+    # 8. Français
+    "Français": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Plan Invité", "plan_pro": "Plan Pro",
+        "usage": "Usage Quotidien", "lang": "Langue",
+        "role": "Choisir Rôle", "faq_title": "Aide & Support",
+        "quick_ans": "Réponses Rapides", "sel_topic": "Choisir Sujet",
+        "submit_ticket": "Soumettre Ticket", "type_lbl": "Type de Ticket",
+        "issue_lbl": "Décrivez le problème ou Entrée...",
+        "send_btn": "Envoyer", "logout": "Réinitialiser",
+        "mode": "Choisir Mode", "action": "Choisir Action",
+        "out_lang_lbl": "Langue de Sortie", "tone_lbl": "Ton",
+        "input_label": "Entrez votre sujet ou mots-clés...",
+        "generate": "✨ Générer",
+        "lock_msg": "Fonctionnalité Pro. Veuillez mettre à jour.",
+        "buy_btn": "👉 Obtenir Pro",
+        "result": "Résultat",
+        "ad_copy": "1. Copier", 
+        "ad_connect": "2. Outils IA",
+        "ad_social": "3. Partager",
+        "ad_manual": "4. Manuel",
+        "ad_download": "5. Enregistrer",
+        "ad_locked": "Pro Uniquement",
+        "tbl_head": ["Comparaison", "Invité (Gratuit)", "Pro (Payant)"]
+    },
+
+    # 9. Deutsch
+    "Deutsch": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Gast Plan", "plan_pro": "Pro Plan",
+        "usage": "Nutzung", "lang": "Sprache",
+        "role": "Rolle wählen", "faq_title": "Hilfe & Support",
+        "quick_ans": "Schnellantworten", "sel_topic": "Thema wählen",
+        "submit_ticket": "Ticket senden", "type_lbl": "Ticket-Typ",
+        "issue_lbl": "Problem beschreiben oder Enter...",
+        "send_btn": "Senden", "logout": "Reset / Logout",
+        "mode": "Modus wählen", "action": "Aktion wählen",
+        "out_lang_lbl": "Ausgabesprache", "tone_lbl": "Tonfall",
+        "input_label": "Thema oder Stichworte eingeben...",
+        "generate": "✨ Generieren",
+        "lock_msg": "Dies ist ein Pro-Feature.",
+        "buy_btn": "👉 Jetzt Pro holen",
+        "result": "Ergebnis",
+        "ad_copy": "1. Kopieren", 
+        "ad_connect": "2. KI-Tools",
+        "ad_social": "3. Teilen",
+        "ad_manual": "4. Manuell",
+        "ad_download": "5. Speichern",
+        "ad_locked": "Nur Pro",
+        "tbl_head": ["Vergleich", "Gast (Gratis)", "Pro (Bezahlt)"]
+    },
+
+    # 10. Italiano
+    "Italiano": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Piano Ospite", "plan_pro": "Piano Pro",
+        "usage": "Uso Giornaliero", "lang": "Lingua",
+        "role": "Scegli Ruolo", "faq_title": "Aiuto & Supporto",
+        "quick_ans": "Risposte Rapide", "sel_topic": "Scegli Argomento",
+        "submit_ticket": "Invia Ticket", "type_lbl": "Tipo Ticket",
+        "issue_lbl": "Descrivi il problema o premi Invio...",
+        "send_btn": "Invia", "logout": "Reset / Logout",
+        "mode": "Scegli Modalità", "action": "Scegli Azione",
+        "out_lang_lbl": "Lingua Output", "tone_lbl": "Tono",
+        "input_label": "Inserisci argomento o parole chiave...",
+        "generate": "✨ Genera",
+        "lock_msg": "Funzione Pro. Aggiorna per accedere.",
+        "buy_btn": "👉 Passa a Pro",
+        "result": "Risultato",
+        "ad_copy": "1. Copia", 
+        "ad_connect": "2. Strumenti AI",
+        "ad_social": "3. Condividi",
+        "ad_manual": "4. Manuale",
+        "ad_download": "5. Salva File",
+        "ad_locked": "Solo Pro",
+        "tbl_head": ["Confronto", "Ospite (Gratis)", "Pro (Pagato)"]
+    },
+
+    # 11. Português
+    "Português": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Plano Visitante", "plan_pro": "Plano Pro",
+        "usage": "Uso Diário", "lang": "Idioma",
+        "role": "Escolher Papel", "faq_title": "Ajuda e Suporte",
+        "quick_ans": "Respostas Rápidas", "sel_topic": "Escolher Tópico",
+        "submit_ticket": "Enviar Ticket", "type_lbl": "Tipo de Ticket",
+        "issue_lbl": "Descreva o problema ou Enter...",
+        "send_btn": "Enviar", "logout": "Reiniciar",
+        "mode": "Escolher Modo", "action": "Escolher Ação",
+        "out_lang_lbl": "Idioma de Saída", "tone_lbl": "Tom de Voz",
+        "input_label": "Insira tópico ou palavras-chave...",
+        "generate": "✨ Gerar Conteúdo",
+        "lock_msg": "Recurso Pro. Por favor, atualize.",
+        "buy_btn": "👉 Obter Pro",
+        "result": "Resultado",
+        "ad_copy": "1. Copiar", 
+        "ad_connect": "2. Ferramentas IA",
+        "ad_social": "3. Partilhar",
+        "ad_manual": "4. Manual",
+        "ad_download": "5. Salvar",
+        "ad_locked": "Apenas Pro",
+        "tbl_head": ["Comparação", "Visitante", "Pro (Pago)"]
+    },
+
+    # 12. Русский
+    "Русский": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Гостевой план", "plan_pro": "Pro план",
+        "usage": "Использование", "lang": "Язык интерфейса",
+        "role": "Выберите роль", "faq_title": "Помощь",
+        "quick_ans": "Вопросы-ответы", "sel_topic": "Выберите тему",
+        "submit_ticket": "Создать тикет", "type_lbl": "Тип тикета",
+        "issue_lbl": "Опишите проблему или нажмите Enter...",
+        "send_btn": "Отправить", "logout": "Сброс / Выход",
+        "mode": "Выберите режим", "action": "Выберите действие",
+        "out_lang_lbl": "Язык результата", "tone_lbl": "Тон",
+        "input_label": "Введите тему или ключевые слова...",
+        "generate": "✨ Создать",
+        "lock_msg": "Это Pro функция. Обновитесь для доступа.",
+        "buy_btn": "👉 Купить Pro",
+        "result": "Результат",
+        "ad_copy": "1. Копировать", 
+        "ad_connect": "2. ИИ инструменты",
+        "ad_social": "3. Поделиться",
+        "ad_manual": "4. Вручную",
+        "ad_download": "5. Сохранить",
+        "ad_locked": "Только Pro",
+        "tbl_head": ["Сравнение", "Гость (0₽)", "Pro (Платный)"]
+    },
+
+    # 13. Arabic
+    "Arabic": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "خطة الزوار", "plan_pro": "خطة المحترفين",
+        "usage": "الاستخدام اليومي", "lang": "لغة الواجهة",
+        "role": "اختر الدور", "faq_title": "الدعم والأسئلة",
+        "quick_ans": "إجابات سريعة", "sel_topic": "اختر الموضوع",
+        "submit_ticket": "إرسال تذكرة", "type_lbl": "نوع التذكرة",
+        "issue_lbl": "صف المشكلة أو اضغط Enter...",
+        "send_btn": "إرسال", "logout": "إعادة تعيين",
+        "mode": "اختر الوضع", "action": "اختر الإجراء",
+        "out_lang_lbl": "لغة الإخراج", "tone_lbl": "نبرة الصوت",
+        "input_label": "أدخل الموضوع أو الكلمات الرئيسية...",
+        "generate": "✨ توليد المحتوى",
+        "lock_msg": "هذه ميزة Pro. يرجى الترقية.",
+        "buy_btn": "👉 احصل على Pro",
+        "result": "النتيجة",
+        "ad_copy": "1. نسخ", 
+        "ad_connect": "2. أدوات الذكاء",
+        "ad_social": "3. مشاركة",
+        "ad_manual": "4. نشر يدوي",
+        "ad_download": "5. حفظ الملفات",
+        "ad_locked": "للمحترفين فقط",
+        "tbl_head": ["مقارنة الميزات", "زائر (مجاني)", "Pro (مدفوع)"]
+    },
+
+    # 14. Hindi
+    "Hindi": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "अतिथि योजना", "plan_pro": "Pro योजना",
+        "usage": "दैनिक उपयोग", "lang": "इंटरफ़ेस भाषा",
+        "role": "भूमिका चुनें", "faq_title": "सहायता और प्रश्न",
+        "quick_ans": "त्वरित उत्तर", "sel_topic": "विषय चुनें",
+        "submit_ticket": "टिकट भेजें", "type_lbl": "टिकट प्रकार",
+        "issue_lbl": "समस्या का वर्णन करें या Enter दबाएं...",
+        "send_btn": "भेजें", "logout": "रीसेट / लॉगआउट",
+        "mode": "मोड चुनें", "action": "कार्य चुनें",
+        "out_lang_lbl": "आउटपुट भाषा", "tone_lbl": "लहज़ा",
+        "input_label": "अपना विषय या कीवर्ड यहां दर्ज करें...",
+        "generate": "✨ सामग्री उत्पन्न करें",
+        "lock_msg": "यह Pro सुविधा है। कृपया अपग्रेड करें।",
+        "buy_btn": "👉 अभी Pro प्राप्त करें",
+        "result": "परिणाम",
+        "ad_copy": "1. कॉपी करें", 
+        "ad_connect": "2. एआई टूल्स",
+        "ad_social": "3. साझा करें",
+        "ad_manual": "4. मैनुअल",
+        "ad_download": "5. सहेजें",
+        "ad_locked": "केवल Pro",
+        "tbl_head": ["सुविधा तुलना", "अतिथि (मुफ़्त)", "Pro (भुगतान)"]
+    },
+
+    # 15. Thai
+    "Thai": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "แผนผู้เยี่ยมชม", "plan_pro": "แผน Pro",
+        "usage": "การใช้งานรายวัน", "lang": "ภาษาอินเทอร์เฟซ",
+        "role": "เลือกบทบาท", "faq_title": "ช่วยเหลือ",
+        "quick_ans": "คำตอบด่วน", "sel_topic": "เลือกหัวข้อ",
+        "submit_ticket": "ส่งตั๋ว", "type_lbl": "ประเภทตั๋ว",
+        "issue_lbl": "อธิบายปัญหาหรือกด Enter...",
+        "send_btn": "ส่ง", "logout": "รีเซ็ต / ออก",
+        "mode": "เลือกโหมด", "action": "เลือกการกระทำ",
+        "out_lang_lbl": "ภาษาผลลัพธ์", "tone_lbl": "น้ำเสียง",
+        "input_label": "ป้อนหัวข้อหรือคำหลักที่นี่...",
+        "generate": "✨ สร้างเนื้อหา",
+        "lock_msg": "นี่คือคุณสมบัติ Pro โปรดอัปเกรด",
+        "buy_btn": "👉 รับ Pro ทันที",
+        "result": "ผลลัพธ์",
+        "ad_copy": "1. คัดลอก", 
+        "ad_connect": "2. เครื่องมือ AI",
+        "ad_social": "3. แชร์",
+        "ad_manual": "4. โพสต์เอง",
+        "ad_download": "5. บันทึกไฟล์",
+        "ad_locked": "Pro เท่านั้น",
+        "tbl_head": ["เปรียบเทียบ", "ผู้เยี่ยมชม (ฟรี)", "Pro (จ่ายเงิน)"]
+    },
+
+    # 16. Vietnamese
+    "Vietnamese": {
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Gói Khách", "plan_pro": "Gói Pro",
+        "usage": "Sử dụng", "lang": "Ngôn ngữ",
+        "role": "Chọn Vai trò", "faq_title": "Hỗ trợ & FAQ",
+        "quick_ans": "Trả lời nhanh", "sel_topic": "Chọn chủ đề",
+        "submit_ticket": "Gửi phiếu", "type_lbl": "Loại phiếu",
+        "issue_lbl": "Mô tả vấn đề hoặc nhấn Enter...",
+        "send_btn": "Gửi", "logout": "Đặt lại / Thoát",
+        "mode": "Chọn Chế độ", "action": "Chọn Hành động",
+        "out_lang_lbl": "Ngôn ngữ đích", "tone_lbl": "Giọng văn",
+        "input_label": "Nhập chủ đề hoặc từ khóa...",
+        "generate": "✨ Tạo nội dung",
+        "lock_msg": "Tính năng Pro. Vui lòng nâng cấp.",
+        "buy_btn": "👉 Mua Pro ngay",
+        "result": "Kết quả",
+        "ad_copy": "1. Sao chép", 
+        "ad_connect": "2. Công cụ AI",
+        "ad_social": "3. Chia sẻ",
+        "ad_manual": "4. Thủ công",
+        "ad_download": "5. Lưu tệp",
+        "ad_locked": "Chỉ Pro",
+        "tbl_head": ["So sánh tính năng", "Khách (Miễn phí)", "Pro (Trả phí)"]
     }
 }
 
-# 辅助函数：防止其他 12 种语言报错，自动回退到英文
+# ==========================================
+# 核心函数: 获取UI字典 (Core Function)
+# ==========================================
 def get_safe_ui(lang):
-    base = UI_BUNDLE.get("English").copy() # 复制一份英文作为底版
-    target = UI_BUNDLE.get(lang, {}) # 获取目标语言（如果只有部分翻译）
-    base.update(target) # 用目标语言覆盖底版
+    """
+    Returns the UI dictionary for the specified language.
+    Falls back to 'English' if the language is not found.
+    Ensures no keys are missing by merging with English defaults.
+    """
+    base = UI_BUNDLE.get("English").copy() 
+    target = UI_BUNDLE.get(lang, {})
+    base.update(target) 
     return base
