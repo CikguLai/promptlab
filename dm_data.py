@@ -1,9 +1,7 @@
 # dm_data.py
 # Lai's Lab Data Module - FINAL COMPLETE VERSION
-# Features: 16 Languages for FAQ, Tickets, and Comparison Tables
-# NO OMISSIONS.
-
-import dm_ui
+# Features: 16 Languages including Traditional Chinese (TC)
+# Fixes: Indentation errors & Missing ALL_LANGUAGES
 
 # ==========================================
 # 1. FAQ 数据 (FAQ Database - 16 Languages)
@@ -315,7 +313,7 @@ FAQ_VN = [ # Vietnamese
 # 映射所有 16 种语言 (Full Mapping)
 FAQ_DATABASE = {
     "English": FAQ_EN,
-    "简体中文": FAQ_CN, 
+    "简体中文": FAQ_CN,
     "繁體中文": FAQ_TC,
     "Bahasa Melayu": FAQ_MY,
     "Español": FAQ_ES,
@@ -461,9 +459,7 @@ def get_table_data(lang):
     return ui["tbl_head"], rows
 
 # ==========================================
-# 4. 导出语言列表 (关键修复 / Critical Fix)
+# 4. 导出语言列表 (CRITICAL FIX FOR APP.PY)
 # ==========================================
-# 这一步生成 ["English", "简体中文", "繁體中文", ...] 供 app.py 调用
+# Generates: ["English", "简体中文", "繁體中文", ...]
 ALL_LANGUAGES = list(FAQ_DATABASE.keys())
-
-    return ui["tbl_head"], rows
