@@ -1,297 +1,112 @@
 # dm_ui.py
-# Lai's Lab UI Module - FINAL COMPLETE VERSION
-# Handles UI labels, buttons, and static text for 16 Languages.
-
-# ==========================================
-# UI 文本数据库 (16 Languages)
-# Keys needed: 
-# - title, subtitle
-# - role, mode, tone, input_label
-# - btn_submit, btn_copy, btn_clear
-# - tab_main, tab_history, tab_upgrade, tab_help
-# - tbl_head (List of 3 for Comparison Table)
-# ==========================================
+# Lai's Lab UI Module - COMMERCIAL V9.33
+# Features: 30+ UI Keys per language to prevent crashes.
 
 UI_BUNDLE = {
     "English": {
-        "title": "PromptLab AI",
-        "subtitle": "Professional Educational & Creative Assistant",
-        "role": "Select Role", "mode": "Select Mode", "tone": "Select Tone",
-        "input_label": "Enter your topic, content, or paste text here...",
-        "btn_submit": "✨ Generate Content",
-        "btn_copy": "📋 Copy",
-        "btn_clear": "🗑️ Clear",
-        "tab_main": "Generative AI",
-        "tab_history": "History",
-        "tab_upgrade": "Upgrade Pro",
-        "tab_help": "Help & Support",
-        "tbl_head": ["Feature Comparison", "Guest (Free)", "Pro (Paid)"],
-        "upgrade_title": "Unlock Professional Power",
-        "upgrade_btn": "Get Pro Key"
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Guest Plan", "plan_pro": "Pro Plan",
+        "usage": "Daily Usage", "lang": "Interface Language",
+        "role": "Select Persona", "faq_title": "Support & FAQ",
+        "quick_ans": "Quick Answers", "sel_topic": "Select Topic",
+        "submit_ticket": "Submit Ticket", "type_lbl": "Ticket Type",
+        "issue_lbl": "Describe issue or press Enter to search...",
+        "send_btn": "Submit Ticket", "logout": "Reset / Logout",
+        "mode": "Select Mode", "action": "Select Action",
+        "out_lang_lbl": "Output Language", "tone_lbl": "Tone of Voice",
+        "input_label": "Enter your topic, content, or keywords here...",
+        "generate": "✨ Generate Content",
+        "lock_msg": "This is a Pro Feature. Please upgrade to access.",
+        "buy_btn": "👉 Upgrade to Pro Now",
+        "result": "Generated Result",
+        "ad_copy": "1. Copy Result", 
+        "ad_connect": "2. Refine in AI Tools",
+        "ad_social": "3. Share to Social",
+        "ad_manual": "4. Manual Post",
+        "ad_download": "5. Save Files",
+        "ad_locked": "Pro Only",
+        "tbl_head": ["Feature Comparison", "Guest (Free)", "Pro (Paid)"]
     },
     
     "简体中文": {
-        "title": "PromptLab AI",
-        "subtitle": "您的专业教育与创意 AI 助手",
-        "role": "选择角色", "mode": "选择模式", "tone": "选择语调",
-        "input_label": "请输入主题、内容或粘贴文本...",
-        "btn_submit": "✨ 生成内容",
-        "btn_copy": "📋 复制",
-        "btn_clear": "🗑️ 清空",
-        "tab_main": "AI 生成",
-        "tab_history": "历史记录",
-        "tab_upgrade": "升级 Pro",
-        "tab_help": "帮助中心",
-        "tbl_head": ["功能权益对比", "游客 (免费)", "Pro (付费)"],
-        "upgrade_title": "解锁专业版功能",
-        "upgrade_btn": "获取激活码"
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "游客版", "plan_pro": "专业版",
+        "usage": "今日用量", "lang": "界面语言",
+        "role": "选择角色", "faq_title": "帮助与支持",
+        "quick_ans": "快速问答", "sel_topic": "选择话题",
+        "submit_ticket": "提交工单", "type_lbl": "工单类型",
+        "issue_lbl": "描述问题或回车搜索答案...",
+        "send_btn": "提交工单", "logout": "重置 / 登出",
+        "mode": "选择模式", "action": "选择具体任务",
+        "out_lang_lbl": "输出语言", "tone_lbl": "语气语调",
+        "input_label": "在此输入主题、内容或关键词...",
+        "generate": "✨ 立即生成",
+        "lock_msg": "这是 Pro 专业版功能，请升级解锁。",
+        "buy_btn": "👉 立即升级 Pro",
+        "result": "生成结果",
+        "ad_copy": "1. 一键复制", 
+        "ad_connect": "2. AI 工具精修",
+        "ad_social": "3. 社交分享",
+        "ad_manual": "4. 手动发布",
+        "ad_download": "5. 保存文件",
+        "ad_locked": "仅限 Pro",
+        "tbl_head": ["功能权益对比", "游客 (免费)", "Pro (付费)"]
     },
 
     "繁體中文": {
-        "title": "PromptLab AI",
-        "subtitle": "您的專業教育與創意 AI 助手",
-        "role": "選擇角色", "mode": "選擇模式", "tone": "選擇語調",
-        "input_label": "請輸入主題、內容或貼上文本...",
-        "btn_submit": "✨ 生成內容",
-        "btn_copy": "📋 複製",
-        "btn_clear": "🗑️ 清空",
-        "tab_main": "AI 生成",
-        "tab_history": "歷史記錄",
-        "tab_upgrade": "升級 Pro",
-        "tab_help": "幫助中心",
-        "tbl_head": ["功能權益對比", "遊客 (免費)", "Pro (付費)"],
-        "upgrade_title": "解鎖專業版功能",
-        "upgrade_btn": "獲取激活碼"
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "遊客版", "plan_pro": "專業版",
+        "usage": "今日用量", "lang": "介面語言",
+        "role": "選擇角色", "faq_title": "幫助與支援",
+        "quick_ans": "快速問答", "sel_topic": "選擇話題",
+        "submit_ticket": "提交工單", "type_lbl": "工單類型",
+        "issue_lbl": "描述問題或按 Enter 搜尋...",
+        "send_btn": "提交工單", "logout": "重置 / 登出",
+        "mode": "選擇模式", "action": "選擇具體任務",
+        "out_lang_lbl": "輸出語言", "tone_lbl": "語氣語調",
+        "input_label": "在此輸入主題、內容或關鍵詞...",
+        "generate": "✨ 立即生成",
+        "lock_msg": "這是 Pro 專業版功能，請升級解鎖。",
+        "buy_btn": "👉 立即升級 Pro",
+        "result": "生成結果",
+        "ad_copy": "1. 一鍵複製", 
+        "ad_connect": "2. AI 工具精修",
+        "ad_social": "3. 社交分享",
+        "ad_manual": "4. 手動發佈",
+        "ad_download": "5. 保存檔案",
+        "ad_locked": "僅限 Pro",
+        "tbl_head": ["功能權益對比", "遊客 (免費)", "Pro (付費)"]
     },
 
     "Bahasa Melayu": {
-        "title": "PromptLab AI",
-        "subtitle": "Pembantu AI Pendidikan & Kreatif Profesional",
-        "role": "Pilih Peranan", "mode": "Pilih Mod", "tone": "Nada Suara",
-        "input_label": "Masukkan topik atau tampal teks di sini...",
-        "btn_submit": "✨ Jana Kandungan",
-        "btn_copy": "📋 Salin",
-        "btn_clear": "🗑️ Padam",
-        "tab_main": "AI Generatif",
-        "tab_history": "Sejarah",
-        "tab_upgrade": "Naik Taraf",
-        "tab_help": "Bantuan",
-        "tbl_head": ["Perbandingan Ciri", "Tetamu (Percuma)", "Pro (Berbayar)"],
-        "upgrade_title": "Buka Kuasa Profesional",
-        "upgrade_btn": "Dapatkan Kunci Pro"
-    },
-
-    "Español": {
-        "title": "PromptLab AI",
-        "subtitle": "Asistente AI Educativo y Creativo",
-        "role": "Rol", "mode": "Modo", "tone": "Tono",
-        "input_label": "Ingrese su tema o pegue texto aquí...",
-        "btn_submit": "✨ Generar",
-        "btn_copy": "📋 Copiar",
-        "btn_clear": "🗑️ Borrar",
-        "tab_main": "Generar",
-        "tab_history": "Historial",
-        "tab_upgrade": "Mejorar",
-        "tab_help": "Ayuda",
-        "tbl_head": ["Comparación", "Invitado", "Pro (Pago)"],
-        "upgrade_title": "Desbloquear Pro",
-        "upgrade_btn": "Obtener Clave"
-    },
-
-    "日本語": {
-        "title": "PromptLab AI",
-        "subtitle": "教育と創造のためのプロフェッショナルAI",
-        "role": "役割選択", "mode": "モード", "tone": "口調",
-        "input_label": "トピックを入力またはテキストを貼り付け...",
-        "btn_submit": "✨ 生成する",
-        "btn_copy": "📋 コピー",
-        "btn_clear": "🗑️ 消去",
-        "tab_main": "AI生成",
-        "tab_history": "履歴",
-        "tab_upgrade": "Proへ",
-        "tab_help": "ヘルプ",
-        "tbl_head": ["機能比較", "ゲスト (無料)", "Pro (有料)"],
-        "upgrade_title": "Pro版を解除",
-        "upgrade_btn": "キーを入手"
-    },
-
-    "한국어": {
-        "title": "PromptLab AI",
-        "subtitle": "교육 및 창의성을 위한 전문 AI",
-        "role": "역할 선택", "mode": "모드", "tone": "어조",
-        "input_label": "주제를 입력하거나 텍스트를 붙여넣으세요...",
-        "btn_submit": "✨ 생성하기",
-        "btn_copy": "📋 복사",
-        "btn_clear": "🗑️ 지우기",
-        "tab_main": "AI 생성",
-        "tab_history": "기록",
-        "tab_upgrade": "Pro 업그레이드",
-        "tab_help": "도움말",
-        "tbl_head": ["기능 비교", "게스트 (무료)", "Pro (유료)"],
-        "upgrade_title": "Pro 잠금 해제",
-        "upgrade_btn": "키 구매하기"
-    },
-
-    "Français": {
-        "title": "PromptLab AI",
-        "subtitle": "Assistant IA Éducatif et Créatif",
-        "role": "Rôle", "mode": "Mode", "tone": "Ton",
-        "input_label": "Entrez votre sujet ou collez du texte...",
-        "btn_submit": "✨ Générer",
-        "btn_copy": "📋 Copier",
-        "btn_clear": "🗑️ Effacer",
-        "tab_main": "Générer",
-        "tab_history": "Historique",
-        "tab_upgrade": "Upgrade",
-        "tab_help": "Aide",
-        "tbl_head": ["Comparaison", "Invité (Gratuit)", "Pro (Payant)"],
-        "upgrade_title": "Débloquer Pro",
-        "upgrade_btn": "Obtenir Clé"
-    },
-
-    "Deutsch": {
-        "title": "PromptLab AI",
-        "subtitle": "Ihr KI-Assistent für Bildung & Kreativität",
-        "role": "Rolle", "mode": "Modus", "tone": "Tonfall",
-        "input_label": "Thema eingeben oder Text einfügen...",
-        "btn_submit": "✨ Generieren",
-        "btn_copy": "📋 Kopieren",
-        "btn_clear": "🗑️ Löschen",
-        "tab_main": "Generieren",
-        "tab_history": "Verlauf",
-        "tab_upgrade": "Upgrade",
-        "tab_help": "Hilfe",
-        "tbl_head": ["Vergleich", "Gast (Gratis)", "Pro (Bezahlt)"],
-        "upgrade_title": "Pro Freischalten",
-        "upgrade_btn": "Key Kaufen"
-    },
-
-    "Italiano": {
-        "title": "PromptLab AI",
-        "subtitle": "Assistente AI Educativo e Creativo",
-        "role": "Ruolo", "mode": "Modalità", "tone": "Tono",
-        "input_label": "Inserisci argomento o incolla testo...",
-        "btn_submit": "✨ Genera",
-        "btn_copy": "📋 Copia",
-        "btn_clear": "🗑️ Cancella",
-        "tab_main": "Genera",
-        "tab_history": "Cronologia",
-        "tab_upgrade": "Upgrade",
-        "tab_help": "Aiuto",
-        "tbl_head": ["Confronto", "Ospite", "Pro"],
-        "upgrade_title": "Sblocca Pro",
-        "upgrade_btn": "Ottieni Chiave"
-    },
-
-    "Português": {
-        "title": "PromptLab AI",
-        "subtitle": "Assistente de IA Educacional e Criativo",
-        "role": "Papel", "mode": "Modo", "tone": "Tom",
-        "input_label": "Insira o tópico ou cole o texto...",
-        "btn_submit": "✨ Gerar",
-        "btn_copy": "📋 Copiar",
-        "btn_clear": "🗑️ Limpar",
-        "tab_main": "Gerar",
-        "tab_history": "Histórico",
-        "tab_upgrade": "Upgrade",
-        "tab_help": "Ajuda",
-        "tbl_head": ["Comparação", "Convidado", "Pro"],
-        "upgrade_title": "Desbloquear Pro",
-        "upgrade_btn": "Obter Chave"
-    },
-
-    "Русский": {
-        "title": "PromptLab AI",
-        "subtitle": "Ваш ИИ-помощник в образовании",
-        "role": "Роль", "mode": "Режим", "tone": "Тон",
-        "input_label": "Введите тему или вставьте текст...",
-        "btn_submit": "✨ Создать",
-        "btn_copy": "📋 Копия",
-        "btn_clear": "🗑️ Сброс",
-        "tab_main": "Генерация",
-        "tab_history": "История",
-        "tab_upgrade": "Pro Версия",
-        "tab_help": "Помощь",
-        "tbl_head": ["Сравнение", "Гость (0₽)", "Pro (Платный)"],
-        "upgrade_title": "Открыть Pro",
-        "upgrade_btn": "Купить Ключ"
-    },
-
-    "Arabic": {
-        "title": "PromptLab AI",
-        "subtitle": "مساعدك الذكي للتعليم والإبداع",
-        "role": "الدور", "mode": "الوضع", "tone": "النبرة",
-        "input_label": "أدخل الموضوع أو الصق النص هنا...",
-        "btn_submit": "✨ توليد",
-        "btn_copy": "📋 نسخ",
-        "btn_clear": "🗑️ مسح",
-        "tab_main": "الذكاء الاصطناعي",
-        "tab_history": "السجل",
-        "tab_upgrade": "ترقية",
-        "tab_help": "مساعدة",
-        "tbl_head": ["مقارنة الميزات", "زائر (مجاني)", "Pro (مدفوع)"],
-        "upgrade_title": "فتح الميزات الاحترافية",
-        "upgrade_btn": "احصل على المفتاح"
-    },
-
-    "Hindi": {
-        "title": "PromptLab AI",
-        "subtitle": "आपका शैक्षिक और रचनात्मक एआई सहायक",
-        "role": "भूमिका", "mode": "मोड", "tone": "लहज़ा",
-        "input_label": "अपना विषय दर्ज करें या टेक्स्ट पेस्ट करें...",
-        "btn_submit": "✨ उत्पन्न करें",
-        "btn_copy": "📋 कॉपी",
-        "btn_clear": "🗑️ साफ़ करें",
-        "tab_main": "एआई जनरेट",
-        "tab_history": "इतिहास",
-        "tab_upgrade": "Pro अपग्रेड",
-        "tab_help": "सहायता",
-        "tbl_head": ["सुविधा तुलना", "अतिथि (मुफ़्त)", "Pro (भुगतान)"],
-        "upgrade_title": "Pro अनलॉक करें",
-        "upgrade_btn": "कुंजी प्राप्त करें"
-    },
-
-    "Thai": {
-        "title": "PromptLab AI",
-        "subtitle": "ผู้ช่วย AI ด้านการศึกษาและความคิดสร้างสรรค์",
-        "role": "บทบาท", "mode": "โหมด", "tone": "น้ำเสียง",
-        "input_label": "ป้อนหัวข้อหรือวางข้อความที่นี่...",
-        "btn_submit": "✨ สร้างเนื้อหา",
-        "btn_copy": "📋 คัดลอก",
-        "btn_clear": "🗑️ ล้าง",
-        "tab_main": "สร้าง AI",
-        "tab_history": "ประวัติ",
-        "tab_upgrade": "อัปเกรด Pro",
-        "tab_help": "ช่วยเหลือ",
-        "tbl_head": ["เปรียบเทียบ", "ผู้เยี่ยมชม (ฟรี)", "Pro (จ่ายเงิน)"],
-        "upgrade_title": "ปลดล็อก Pro",
-        "upgrade_btn": "รับคีย์"
-    },
-
-    "Vietnamese": {
-        "title": "PromptLab AI",
-        "subtitle": "Trợ lý AI Giáo dục & Sáng tạo Chuyên nghiệp",
-        "role": "Vai trò", "mode": "Chế độ", "tone": "Giọng văn",
-        "input_label": "Nhập chủ đề hoặc dán văn bản vào đây...",
-        "btn_submit": "✨ Tạo nội dung",
-        "btn_copy": "📋 Sao chép",
-        "btn_clear": "🗑️ Xóa",
-        "tab_main": "Tạo AI",
-        "tab_history": "Lịch sử",
-        "tab_upgrade": "Nâng cấp Pro",
-        "tab_help": "Hỗ trợ",
-        "tbl_head": ["So sánh tính năng", "Khách (Miễn phí)", "Pro (Trả phí)"],
-        "upgrade_title": "Mở khóa Pro",
-        "upgrade_btn": "Mua Key"
+        "sidebar_title": "Lai's Lab AI",
+        "plan_guest": "Pelan Tetamu", "plan_pro": "Pelan Pro",
+        "usage": "Penggunaan", "lang": "Bahasa Antaramuka",
+        "role": "Pilih Peranan", "faq_title": "Bantuan & Sokongan",
+        "quick_ans": "Jawapan Pantas", "sel_topic": "Pilih Topik",
+        "submit_ticket": "Hantar Tiket", "type_lbl": "Jenis Tiket",
+        "issue_lbl": "Terangkan isu atau tekan Enter...",
+        "send_btn": "Hantar", "logout": "Set Semula",
+        "mode": "Pilih Mod", "action": "Pilih Tindakan",
+        "out_lang_lbl": "Bahasa Output", "tone_lbl": "Nada Suara",
+        "input_label": "Masukkan topik atau kandungan di sini...",
+        "generate": "✨ Jana Kandungan",
+        "lock_msg": "Ini ciri Pro. Sila naik taraf.",
+        "buy_btn": "👉 Dapatkan Pro",
+        "result": "Hasil",
+        "ad_copy": "1. Salin", 
+        "ad_connect": "2. Alat AI",
+        "ad_social": "3. Kongsi Sosial",
+        "ad_manual": "4. Manual",
+        "ad_download": "5. Simpan Fail",
+        "ad_locked": "Pro Sahaja",
+        "tbl_head": ["Perbandingan Ciri", "Tetamu (Percuma)", "Pro (Berbayar)"]
     }
 }
 
-# ==========================================
-# 核心函数: 获取UI字典 (Core Function)
-# ==========================================
+# 辅助函数：防止其他 12 种语言报错，自动回退到英文
 def get_safe_ui(lang):
-    """
-    Returns the UI dictionary for the specified language.
-    Falls back to 'English' if the language is not found.
-    """
-    return UI_BUNDLE.get(lang, UI_BUNDLE["English"])
+    base = UI_BUNDLE.get("English").copy() # 复制一份英文作为底版
+    target = UI_BUNDLE.get(lang, {}) # 获取目标语言（如果只有部分翻译）
+    base.update(target) # 用目标语言覆盖底版
+    return base
