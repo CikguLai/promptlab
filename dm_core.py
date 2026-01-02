@@ -36,166 +36,154 @@ RAW_ROLES_DATA = {
     "Global Creator": {
         "Scripting (Free)": [
             "1. Visual-to-Script", 
-            "2. TikTok/Reels Hook", 
-            "3. YouTube Edutainment", 
-            "4. Storytelling Vlog", 
-            "5. Podcast Interview", 
-            "6. Live Stream Flow"
+            "2. Storyboard Outline", 
+            "3. Character Backstory", 
+            "4. Plot Twist Generator", 
+            "5. Dialogue Enhancer", 
+            "6. World Building"
         ],
-        "Thumbnail (Pro)": [
-            "1. High CTR (Shocked)", 
-            "2. Cinematic Poster", 
-            "3. Tech/Neon/Glowing", 
-            "4. Before & After", 
-            "5. Minimalist Apple", 
-            "6. Comic Book Style"
+        "Copywriting (Pro)": [
+            "1. Viral Hook (TickTok/Reels)", 
+            "2. SEO Blog Post", 
+            "3. Sales Landing Page", 
+            "4. Email Drip Campaign", 
+            "5. Press Release", 
+            "6. Ad Copy (FB/IG)"
         ],
-        "Marketing (Pro)": [
-            "1. Xiaohongshu (KOC)", 
-            "2. Instagram Caption", 
-            "3. Facebook Ad", 
-            "4. LinkedIn Leader", 
-            "5. Twitter Thread", 
-            "6. Email Newsletter"
+        "Art Direction (Pro)": [
+            "1. Midjourney Prompts", 
+            "2. Stable Diffusion Specs", 
+            "3. Logo Design Brief", 
+            "4. UI/UX Concept", 
+            "5. Fashion Moodboard", 
+            "6. Game Asset Specs"
         ]
     },
     "Global Parent": {
-        "Story Time (Free)": [
-            "1. From Drawing", 
-            "2. Bedtime Story", 
-            "3. Hero's Journey", 
-            "4. Social Emotional", 
-            "5. Science 'Why'", 
-            "6. Cultural Tale"
+        "Activities (Free)": [
+            "1. Rainy Day Games", 
+            "2. DIY Science Experiments", 
+            "3. Bedtime Story Generator", 
+            "4. Homework Helper Strategy", 
+            "5. Kids Party Planner", 
+            "6. Lunchbox Ideas"
         ],
-        "Activities (Pro)": [
-            "1. DIY Craft Guide", 
-            "2. Rainy Day Game", 
-            "3. Kitchen Science", 
-            "4. Scavenger Hunt", 
-            "5. Family Bonding", 
-            "6. No-Screen Coding"
+        "Guidance (Pro)": [
+            "1. Digital Safety Talk", 
+            "2. Puberty Conversation", 
+            "3. Bullying Advice", 
+            "4. University Planning", 
+            "5. Financial Literacy for Kids", 
+            "6. Screen Time Contract"
         ],
-        "Tutor (Pro)": [
-            "1. Solve Problem (OCR)", 
-            "2. Feynman Technique", 
-            "3. Homework Helper", 
-            "4. Quiz Generator", 
-            "5. Vocabulary Builder", 
-            "6. Essay Proofreader"
+        "Family Mgmt (Pro)": [
+            "1. Weekly Meal Prep", 
+            "2. Vacation Itinerary", 
+            "3. Chore Chart System", 
+            "4. Family Budget", 
+            "5. Emergency Plan", 
+            "6. Gift Organizer"
         ]
     },
     "Global Seller": {
-        "Copywriting (Free)": [
-            "1. Product Desc (OCR)", 
-            "2. PAS Model", 
-            "3. AIDA Model", 
-            "4. FAB Model", 
-            "5. Storytelling Sales", 
-            "6. Objection Handling"
+        "E-Commerce (Free)": [
+            "1. Product Description", 
+            "2. Amazon Bullet Points", 
+            "3. FAQ Generator", 
+            "4. Review Response", 
+            "5. Shopify SEO Title", 
+            "6. Unboxing Script"
         ],
-        "Product Shot (Pro)": [
-            "1. Studio White BG", 
-            "2. Lifestyle Home", 
-            "3. Luxury Gold/Black", 
-            "4. Nature/Sunlight", 
-            "5. Cyberpunk/Tech", 
-            "6. Flat Lay"
+        "Marketing (Pro)": [
+            "1. Influencer Outreach", 
+            "2. Black Friday Strategy", 
+            "3. Retargeting Ad Text", 
+            "4. Brand Story", 
+            "5. Competitor Analysis", 
+            "6. Customer Avatar"
         ],
         "Support (Pro)": [
-            "1. Apology & Recovery", 
-            "2. Review Request", 
-            "3. Complaint Reply", 
-            "4. Promo Announcement", 
-            "5. Crisis Statement", 
-            "6. FAQ Gen"
+            "1. Refund Negotiation", 
+            "2. Crisis Management", 
+            "3. Loyalty Program Rules", 
+            "4. Chatbot Scripts", 
+            "5. Training Manual", 
+            "6. Feedback Survey"
         ]
     },
     "Global Student": {
         "Study (Free)": [
-            "1. Explain Chart (OCR)", 
-            "2. Feynman Technique", 
-            "3. Lit Review Matrix", 
-            "4. Flashcard (Anki)", 
-            "5. Concept Simplifier", 
-            "6. Translation"
+            "1. Summarize Text", 
+            "2. Flashcard Generator", 
+            "3. Essay Outliner", 
+            "4. Citation Formatter", 
+            "5. Complex Topic Simplifier", 
+            "6. Presentation Script"
         ],
-        "Project (Pro)": [
-            "1. Essay Outline", 
-            "2. Presentation Script", 
-            "3. Debate Prep", 
-            "4. Lab Report", 
-            "5. Methodology", 
-            "6. Group Roles"
+        "Research (Pro)": [
+            "1. Literature Review", 
+            "2. Methodology Suggestions", 
+            "3. Data Analysis Plan", 
+            "4. Thesis Statement", 
+            "5. Research Gap Finder", 
+            "6. Abstract Writer"
         ],
         "Career (Pro)": [
-            "1. ATS Resume", 
+            "1. Resume/CV Polish", 
             "2. Cover Letter", 
-            "3. Interview Prep", 
+            "3. Interview Mock Q&A", 
             "4. LinkedIn Bio", 
-            "5. Cold Email", 
-            "6. Portfolio Desc"
+            "5. Networking Email", 
+            "6. Portfolio Description"
         ]
     },
     "Global Corporate": {
-        "Admin (Free)": [
-            "1. Extract Data (OCR)", 
-            "2. Meeting Minutes", 
-            "3. Official Proposal", 
-            "4. Internal Memo", 
-            "5. SOP / Process", 
-            "6. Press Release"
+        "Productivity (Free)": [
+            "1. Meeting Minutes", 
+            "2. Email Polisher", 
+            "3. Task Prioritization", 
+            "4. Project Roadmap", 
+            "5. OKR Generator", 
+            "6. SWOT Analysis"
         ],
         "Strategy (Pro)": [
-            "1. OKRs", 
-            "2. SWOT Analysis", 
-            "3. Competitor Dive", 
-            "4. Business Canvas", 
-            "5. Risk Matrix", 
-            "6. Pitch Deck"
+            "1. Market Entry Plan", 
+            "2. Risk Assessment", 
+            "3. Pitch Deck Outline", 
+            "4. Change Management", 
+            "5. Quarter Review", 
+            "6. M&A Due Diligence"
         ],
         "HR & Team (Pro)": [
-            "1. Performance Review", 
-            "2. Job Desc (JD)", 
-            "3. Onboarding Plan", 
-            "4. Crisis Comms", 
-            "5. Team Building", 
-            "6. Termination"
+            "1. Job Description", 
+            "2. Onboarding Checklist", 
+            "3. Performance Review", 
+            "4. Team Building Event", 
+            "5. Conflict Resolution", 
+            "6. Internal Memo"
         ]
     }
 }
 
-# 自动生成 Template 配置 (不要删除)
-ROLES_CONFIG = {}
-for role, modes in RAW_ROLES_DATA.items():
-    ROLES_CONFIG[role] = {}
-    for mode_name, options in modes.items():
-        ROLES_CONFIG[role][mode_name] = []
-        for opt in options:
-            template = f"Act as a {role}. Mode: {mode_name}. Task: {opt}. Context: {{input}}"
-            ROLES_CONFIG[role][mode_name].append({"label": opt, "template": template})
-        # 添加自定义选项
-        ROLES_CONFIG[role][mode_name].append({"label": "7. Custom / DIY", "template": "{input}"})
-
 # ==========================================
-# 2. 60个语调 (6 Roles x 10 Tones)
+# 2. 角色语调 (Tones)
 # ==========================================
 ROLE_TONES = {
     "Global Educator": [
-        "📚 Academic", "🌟 Encouraging", "📢 Instructional", "🤝 Patient", "💡 Socratic", 
-        "🧠 Cognitive", "✨ Storytelling", "🎯 Objective", "🌈 Inclusive", "🔥 Passionate"
+        "🎓 Encouraging", "📚 Academic", "💡 Inspiring", "🧠 Analytical", "🧸 Playful (Kids)", 
+        "⚡ Strict", "🗣️ Storyteller", "🤝 Collaborative", "📝 Formal", "🌍 Culturally Aware"
     ],
     "Global Creator": [
-        "🔥 Viral", "😜 Witty", "📖 Narrative", "⚡ Punchy", "🧐 Controversial", 
-        "🎨 Artistic", "📱 Trendy", "🎥 Cinematic", "🎭 Dramatic", "🤖 Minimalist"
+        "🎨 Creative", "🔥 Viral/Hype", "📖 Narrative", "🤪 Humorous", "🎬 Cinematic", 
+        "💡 Minimalist", "📢 Persuasive", "🕶️ Edgy", "💖 Emotional", "🤖 Tech-Savvy"
     ],
     "Global Parent": [
-        "🥰 Warm", "🎉 Playful", "🛡️ Firm", "👩‍🏫 Patient", "🤝 Supportive", 
-        "🧘 Calm", "🎈 Creative", "📖 Storyteller", "🩺 Caregiver", "🎓 Mentor"
+        "❤️ Nurturing", "🛡️ Protective", "🧸 Playful", "🗣️ Firm", "🤝 Understanding", 
+        "🧠 Educational", "🧘 Calm", "⚡ Energetic", "📖 Storytelling", "💡 Practical"
     ],
     "Global Seller": [
-        "💰 Persuasive", "⏳ Urgent", "💎 Luxury", "🤝 Trustworthy", "📢 Hype", 
-        "📊 Data-Driven", "🎯 Targeted", "🗣️ Conversational", "🔥 Aggressive", "✨ Solution"
+        "💰 Persuasive", "📢 Urgent (FOMO)", "🤝 Trustworthy", "😎 Professional", "🔥 Hype", 
+        "📊 Data-Driven", "❤️ Empathetic", "⚡ Direct", "🌟 Luxury", "🤓 Technical"
     ],
     "Global Student": [
         "🎓 Formal", "📝 Concise", "🤓 Geeky", "🎯 Goal-Oriented", "📚 Detailed", 
@@ -220,13 +208,34 @@ INTERCEPT_LOGIC = [
     (["affiliate", "partner", "commission", "分销", "佣金"], 4), 
     (["invoice", "receipt", "bill", "发票", "收据"], 5),
     (["school", "student", "bulk", "教育", "团购"], 6), 
-    (["pdf", "font", "box", "乱码", "字体"], 7),
-    (["wechat", "share", "微信", "分享"], 8), 
-    (["invalid", "error", "activate", "无效", "错误"], 9),
-    (["slow", "speed", "wait", "慢", "卡"], 10), 
-    (["limit", "quota", "unlimited", "限制", "无限"], 11),
-    (["commercial", "business", "商用", "版权"], 12), 
-    (["offline", "internet", "离线", "断网"], 13),
-    (["privacy", "store", "data", "隐私", "保存"], 14), 
-    (["share account", "sharing", "login", "共享", "封号"], 15)
+    (["pdf", "font", "garbled", "乱码", "字体"], 7),
+    (["wechat", "share", "weixin", "微信", "分享"], 8),
+    (["invalid", "error", "work", "无效", "报错"], 9),
+    (["slow", "speed", "fast", "慢", "速度"], 10),
+    (["unlimited", "limit", "cap", "无限", "限制"], 11),
+    (["commercial", "sell", "business", "商用", "卖"], 12),
+    (["offline", "internet", "wifi", "离线", "断网"], 13),
+    (["privacy", "data", "store", "隐私", "数据"], 14),
+    (["share account", "multiple users", "共享", "共用"], 15)
 ]
+
+# ==========================================
+# 4. 自动生成处理逻辑 (CRITICAL LOGIC)
+# ==========================================
+# ⚠️ 之前的文件缺失了这一段，必须补上，否则 lc_gen.py 会报错
+ROLES_CONFIG = {}
+
+for role, modes in RAW_ROLES_DATA.items():
+    ROLES_CONFIG[role] = {}
+    for mode, options in modes.items():
+        ROLES_CONFIG[role][mode] = []
+        for opt in options:
+            # 自动生成 7. DIY 选项
+            base_opts = [{"label": opt, "template": "{input}"}]
+            ROLES_CONFIG[role][mode].extend(base_opts)
+        
+        # 追加 Custom 选项
+        ROLES_CONFIG[role][mode].append({
+            "label": "7. Custom / DIY", 
+            "template": "{input}"
+        })
