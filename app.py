@@ -1,5 +1,5 @@
-# app.py (V9.38 - SLOGAN FIXED)
-# Features: Dynamic Slogan "Your AI Automated Prompt Engineer", Restored Footer, Gold Lock
+# app.py (V9.40 - AI TOOLKIT EXPANDED)
+# Features: Added DeepSeek, Meta AI, Copilot to Layer 2
 
 import streamlit as st
 import lc_services as lcs  # Backend
@@ -12,16 +12,13 @@ from datetime import datetime
 
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# CSS Styling (包含恢复的高级 Footer 样式)
+# CSS Styling
 st.markdown("""
 <style>
-    /* Footer 样式恢复 */
     .footer-container { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; padding: 15px 0; z-index: 1000; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .footer-row-1 { font-weight: bold; color: #333; font-size: 13px; }
     .footer-row-2 { font-size: 10px; color: #666; font-style: italic; max-width: 800px; line-height: 1.4; text-align: center; }
     .footer-row-3 { font-size: 11px; color: #aaa; margin-top: 5px; display: flex; gap: 15px; }
-    
-    /* 其他样式 */
     .price-strike { text-decoration: line-through; color: #999; }
     .price-promo { color: #d32f2f; font-weight: 800; }
 </style>
@@ -50,7 +47,6 @@ if "general" in st.secrets:
         "MASTER_KEY": sec.get("master_key", "LAI-ADMIN-8888")
     })
 
-# 恢复的高级 Footer 渲染函数
 def render_footer():
     tier = st.session_state.user_tier
     st.markdown(f"""
@@ -63,30 +59,22 @@ def render_footer():
                 Lai's Lab is not liable for any inaccuracies. Fair Use Policy applies to all tiers.
             </div>
             <div class="footer-row-3">
-                <span>SYSTEM: V9.38</span>
+                <span>SYSTEM: V9.40</span>
                 <span>STATUS: <span style="color:green">● ONLINE</span></span>
                 <span>LICENSE: <b>{tier}</b></span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-# 动态进度条颜色逻辑
 def inject_progress_color(usage, limit):
-    if limit > 100: return # Pro 用户不需要变色
-    if usage >= 5: color = "#ff2b2b" # Red
-    elif usage >= 3: color = "#ff9800" # Orange
-    else: color = "#00c853" # Green
-    
-    st.markdown(f"""
-    <style>
-        .stProgress > div > div > div > div {{ background-color: {color} !important; }}
-    </style>
-    """, unsafe_allow_html=True)
+    if limit > 100: return
+    if usage >= 5: color = "#ff2b2b"
+    elif usage >= 3: color = "#ff9800"
+    else: color = "#00c853"
+    st.markdown(f"""<style>.stProgress > div > div > div > div {{ background-color: {color} !important; }}</style>""", unsafe_allow_html=True)
 
 def show_login_page():
     ui = ui_module.get_safe_ui(st.session_state.language)
-    
-    # Language Selector
     try: idx = dm.ALL_LANGUAGES.index(st.session_state.language)
     except: idx = 0
     new_lang = st.selectbox("🌍", dm.ALL_LANGUAGES, index=idx, label_visibility="collapsed")
@@ -95,15 +83,11 @@ def show_login_page():
         st.rerun()
 
     st.title(f"🧬 {ui['sidebar_title']}")
-    
-    # [FIX] 动态调用 Slogan
     st.info(f"🚀 {ui['subtitle']}")
 
     col1, col2 = st.columns([1, 1.5], gap="large")
-    
     with col1:
         t1, t2 = st.tabs([ui['plan_guest'], ui['plan_pro']])
-        
         with t1:
             e = st.text_input("Email", key="login_email", placeholder="you@example.com")
             if st.button(ui['generate'], use_container_width=True):
@@ -112,7 +96,6 @@ def show_login_page():
                     st.session_state.user_tier = "Guest"
                     st.session_state.logged_in = True
                     st.rerun()
-        
         with t2:
             st.markdown(f"🔥 **Pro:** <span class='price-strike'>$39.90</span> <span class='price-promo'>$12.90</span>", unsafe_allow_html=True)
             pe = st.text_input("Billing Email", key="pro_email")
@@ -142,33 +125,23 @@ def show_login_page():
             {''.join([f'<tr><td style="padding:8px; border-bottom:1px solid #eee;">{r["k"]}</td><td style="padding:8px; border-bottom:1px solid #eee;">{r["v1"]}</td><td style="padding:8px; border-bottom:1px solid #eee; font-weight:bold;">{r["v2"]}</td></tr>' for r in rows])}
         </table>
         """, unsafe_allow_html=True)
-
     render_footer()
 
 def show_main_app():
     ui = ui_module.get_safe_ui(st.session_state.language)
-    
-    # Sidebar
     with st.sidebar:
         st.title(f"🧬 {ui['sidebar_title']}")
-        # [NEW] Sidebar Slogan
         st.caption(ui['subtitle'])
-        
-        # Social Proof (1200 - 3000 range)
         fake_count = 1200 + (datetime.now().hour * 75) + random.randint(5, 50)
         st.caption(f"🔥 **{fake_count:,}** Prompts generated today!")
-        
         st.divider()
         st.caption(f"👤 {st.session_state.user_email}")
         
-        # Buy Button for Guests
         if st.session_state.user_tier == "Guest":
             st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy", type="primary", use_container_width=True)
             st.markdown("---")
 
-        # Usage Bar Logic
         can_gen, rem, tot = lcg.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
-        
         if st.session_state.user_tier == "Guest":
             inject_progress_color(st.session_state.daily_usage, tot)
             st.progress(st.session_state.daily_usage / tot)
@@ -179,8 +152,6 @@ def show_main_app():
             st.caption("*Subject to Fair Use Policy")
         
         st.divider()
-        
-        # Settings
         try: idx = dm.ALL_LANGUAGES.index(st.session_state.language)
         except: idx = 0
         new_lang = st.selectbox(ui['lang'], dm.ALL_LANGUAGES, index=idx, key="main_lang")
@@ -188,42 +159,33 @@ def show_main_app():
             st.session_state.language = new_lang
             st.rerun()
 
-        # Support Section
         with st.expander(ui['faq_title']):
             st.markdown(f"**{ui['quick_ans']}**")
             qs = [i["q"] for i in dm.FAQ_DATABASE.get(st.session_state.language, dm.FAQ_DATABASE["English"])]
             q_sel = st.selectbox(ui['sel_topic'], qs)
             for i in dm.FAQ_DATABASE.get(st.session_state.language, dm.FAQ_DATABASE["English"]):
                 if i["q"] == q_sel: st.info(i["a"])
-            
             st.divider()
             st.markdown(f"**{ui['submit_ticket']}**")
             t_type = st.selectbox(ui['type_lbl'], dm.get_ticket_types(st.session_state.language))
             t_msg = st.text_input(ui['issue_lbl'])
-            
             if t_msg:
                 hit, ans = lcg.smart_intercept(t_msg, st.session_state.language)
                 if hit: st.warning(f"💡 AI Suggestion: {ans}")
-            
             if st.button(ui['send_btn'], use_container_width=True):
                 if t_msg:
                     lcs.log_ticket_to_airtable(st.session_state.user_email, t_type, t_msg, st.session_state.user_tier)
                     st.success("Ticket Sent!")
-
         if st.button(ui['logout'], use_container_width=True):
             st.session_state.clear()
             st.rerun()
 
-    # Main Area
     role = st.selectbox(ui['role'], list(core.ROLES_CONFIG.keys()))
-    
-    # Mode with Lock Visual (Updated to 🔐)
     modes = list(core.ROLES_CONFIG[role].keys())
     mode_opts = [f"🔐 {m}" if lcg.check_mode_lock(st.session_state.user_tier, m) else m for m in modes]
     mode_sel_display = st.selectbox(ui['mode'], mode_opts)
     mode = mode_sel_display.replace("🔐 ", "")
     
-    # Options
     opt_labels = [o["label"] for o in core.ROLES_CONFIG[role][mode]]
     opt = st.selectbox(ui['action'], opt_labels)
     
@@ -258,20 +220,49 @@ def show_main_app():
         st.caption(ui['ad_copy'])
         st.code(res, language="text")
         
+        # [UPDATED] Layer 2: All AI Tools (7 Buttons)
         st.caption(ui['ad_connect'])
-        c1, c2, c3, c4 = st.columns(4)
-        c1.link_button("ChatGPT", "https://chat.openai.com", use_container_width=True)
-        c2.link_button("Gemini", "https://gemini.google.com", use_container_width=True)
-        c3.link_button("Claude", "https://claude.ai", use_container_width=True)
-        c4.link_button("Perplexity", "https://www.perplexity.ai", use_container_width=True)
         
+        # Row 1: The "Big 4"
+        r1_c1, r1_c2, r1_c3, r1_c4 = st.columns(4)
+        r1_c1.link_button("ChatGPT", "https://chat.openai.com", use_container_width=True)
+        r1_c2.link_button("Gemini", "https://gemini.google.com", use_container_width=True)
+        r1_c3.link_button("Claude", "https://claude.ai", use_container_width=True)
+        r1_c4.link_button("DeepSeek", "https://chat.deepseek.com", use_container_width=True)
+        
+        # Row 2: The "Power Tools"
+        r2_c1, r2_c2, r2_c3 = st.columns(3)
+        r2_c1.link_button("Copilot", "https://copilot.microsoft.com", use_container_width=True)
+        r2_c2.link_button("Meta AI", "https://www.meta.ai", use_container_width=True)
+        r2_c3.link_button("Perplexity", "https://www.perplexity.ai", use_container_width=True)
+        
+        # Layer 3: Social Links (Added LINE)
         st.caption(ui['ad_social'])
         links = lcg.get_social_links(res)
-        s1, s2, s3 = st.columns(3)
+        s1, s2, s3, s4 = st.columns(4) 
         s1.link_button("WhatsApp", links['WhatsApp'], use_container_width=True)
         s2.link_button("Telegram", links['Telegram'], use_container_width=True)
         s3.link_button("Email", links['Email'], use_container_width=True)
+        s4.link_button("LINE", links['LINE'], use_container_width=True) 
         
+        # Layer 4: Mobile & Cloud
+        st.markdown("---")
+        st.caption("📱 **Mobile Handoff & Cloud Backup**")
+        m1, m2 = st.columns([1, 2])
+        with m1:
+            st.caption("Scan to copy:")
+            qr_img = lcg.generate_qr_code(res)
+            st.image(qr_img, width=150)
+        with m2:
+            st.caption("☁️ **Save to Cloud Drive:**")
+            st.info("Tip: Download first, then upload to:")
+            cl1, cl2, cl3 = st.columns(3)
+            cl1.link_button("Google Drive", "https://drive.google.com", use_container_width=True)
+            cl2.link_button("Dropbox", "https://www.dropbox.com", use_container_width=True)
+            cl3.link_button("OneDrive", "https://onedrive.live.com", use_container_width=True)
+
+        # Layer 5: Downloads
+        st.markdown("---")
         st.caption(ui['ad_download'])
         d1, d2, d3 = st.columns(3)
         d1.download_button("📄 TXT", res, "prompt.txt", use_container_width=True)
@@ -279,7 +270,6 @@ def show_main_app():
         if st.session_state.user_tier == "Pro":
             pdf_bytes = lcg.create_pdf(res, role, mode)
             if pdf_bytes: d2.download_button("📕 PDF", pdf_bytes, "report.pdf", "application/pdf", use_container_width=True)
-            
             csv_bytes = lcg.create_csv(res)
             d3.download_button("📊 CSV", csv_bytes, "data.csv", "text/csv", use_container_width=True)
         else:
