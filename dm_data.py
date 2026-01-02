@@ -459,3 +459,11 @@ def get_table_data(lang):
         rows.append({"k": keys[i], "v1": guest[i], "v2": pro[i]})
     
     return ui["tbl_head"], rows
+
+# ==========================================
+# 4. 导出语言列表 (关键修复 / Critical Fix)
+# ==========================================
+# 这一步生成 ["English", "简体中文", "繁體中文", ...] 供 app.py 调用
+ALL_LANGUAGES = list(FAQ_DATABASE.keys())
+
+    return ui["tbl_head"], rows
