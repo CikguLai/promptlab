@@ -1,60 +1,96 @@
 # lc_gen.py
-# Generation Logic Module
-# Handles: PASEC Engine, PDF/CSV, Social Badges, QR
+# 核心生成逻辑 + 下载徽章黑科技 + Noto字体支持
 
-import urllib.parse, os, io
+import urllib.parse, os, io, base64
 from fpdf import FPDF
 import qrcode
-from PIL import Image
 import dm_core as dc
 import dm_data as dd
 
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
-    # [PASEC ENGINE V10.0] - Dynamic Assembly
-    
-    # 1. P - Persona
-    p_block = f"You are an expert **{role}**. Your knowledge base covers all aspects of this domain."
-    
-    # 2. A - Aim
-    a_block = f"Your specific aim is to execute a **{mode}** strategy."
-    
-    # 3. S - Structure
-    s_block = f"Structure your response strictly according to the framework of: **{option}**. Ensure all standard elements of this framework are included."
-    
-    # 4. E - Effective
-    e_block = f"Maintain a **{tone}** tone of voice throughout the content. Ensure the delivery is effective for the intended audience."
-    
-    # 5. C - Context
-    c_block = f"The specific topic/context provided by the user is: \"{user_input}\""
+    # PASEC 5段式结构
+    p_block = f"You are an expert **{role}**."
+    a_block = f"Aim: **{mode}** strategy."
+    s_block = f"Structure: **{option}**."
+    e_block = f"Tone: **{tone}**."
+    c_block = f"Context: \"{user_input}\""
 
-    # Internal Header (For Guest, or Raw)
-    header = f"### [PASEC PROTOCOL V3.0 - LAI'S LAB INTERNAL]\n"
-    header += f"**1. PERSONA**: {p_block}\n"
-    header += f"**2. AIM**: {a_block}\n"
-    header += f"**3. STRUCTURE**: {s_block}\n"
-    header += f"**4. EFFECTIVE**: {e_block}\n"
-    header += f"**5. CONTEXT**: {c_block}\n"
-    header += "-" * 30 + "\n"
-    header += f"[SYSTEM INSTRUCTION]:\n"
-    header += f"1. Analyze the Context above.\n"
-    header += f"2. Generate the output based on the Structure and Persona.\n"
-    header += f"3. Output strictly in **{lang}** language.\n"
-    
-    # Footer logic
-    footer = ""
+    # 内部指令头
+    header = f"### [PASEC PROTOCOL V3.0]\n"
+    header += f"**1.PERSONA**: {p_block}\n**2.AIM**: {a_block}\n**3.STRUCTURE**: {s_block}\n"
+    header += f"**4.EFFECTIVE**: {e_block}\n**5.CONTEXT**: {c_block}\n"
+    header += "-"*20 + "\n[SYSTEM]: Output strictly in **" + lang + "**.\n"
+
+    # 生成内容
     if tier != "Pro":
-        footer = "\n\n(Generated via Free Version)"
+        header += "(Generated via Free Version)\n"
+    
+    return header
 
-    # Combined Raw Prompt
-    raw_prompt = header + footer
-    
-    # [PRO CLEANING LOGIC]
-    # For Pro users, we assume they want to COPY the prompt to ChatGPT.
-    # So we MUST keep the instructions (Persona, Aim, etc.) otherwise ChatGPT won't know what to do.
-    # "Clean Output" usually means removing the SYSTEM/DEBUG logs, but here the "Prompt" IS the logic.
-    # We will format it nicely.
-    
-    return raw_prompt
+def clean_pro_output(text, tier):
+    if tier == "Pro":
+        text = text.replace("(Generated via Free Version)", "")
+        text = text.replace("### [PASEC PROTOCOL V3.0]", "### ✨ PROMPT READY") 
+    return text
+
+def get_download_badge(file_data, file_name, mime_type, badge_url):
+    b64 = base64.b64encode(file_data).decode()
+    href = f'<a href="data:{mime_type};base64,{b64}" download="{file_name}"><img src="{badge_url}" width="100%"></a>'
+    return href
+
+def create_pdf(text, role, mode):
+    try:
+        pdf = FPDF()
+        pdf.add_page()
+        
+        # [UPDATE] 优先检测 NotoSansCJKtc-Regular.ttf
+        # 请确保您在 GitHub 根目录上传的文件名完全一致
+        font_path = "NotoSansCJKtc-Regular.ttf" 
+        
+        # 如果找不到 Noto，尝试找 font.ttf
+        if not os.path.exists(font_path):
+            font_path = "font.ttf"
+            
+        if os.path.exists(font_path):
+            try: 
+                # uni=True 开启 Unicode 支持
+                pdf.add_font('CustomFont', '', font_path, uni=True)
+                pdf.set_font("CustomFont", size=12)
+            except: 
+                pdf.set_font("Arial", size=12)
+        else:
+            pdf.set_font("Arial", size=12)
+        
+        pdf.cell(0, 10, txt=f"Lai's Lab: {role}", ln=True, align='C')
+        pdf.ln(10)
+        # 清理 markdown 符号以优化 PDF 排版
+        clean_text = text.replace("**", "").replace("###", "")
+        pdf.multi_cell(0, 10, txt=clean_text)
+        return pdf.output(dest='S').encode('latin-1')
+    except Exception as e:
+        print(f"PDF Gen Error: {e}") 
+        return None
+
+def create_csv(text):
+    return ("\ufeff" + text).encode("utf-8")
+
+def generate_qr_code(text):
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(text[:500])
+    qr.make(fit=True)
+    img = qr.make_image(fill='black', back_color='white')
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='PNG')
+    return img_byte_arr.getvalue()
+
+def get_social_links(text):
+    e = urllib.parse.quote(text[:300] + "...")
+    return {
+        "WhatsApp": f"https://wa.me/?text={e}",
+        "Telegram": f"https://t.me/share/url?url=laislab&text={e}",
+        "Email": f"mailto:?body={e}",
+        "LINE": f"https://line.me/R/msg/text/?{e}"
+    }
 
 def check_daily_limit_by_email(email, tier, current_usage):
     limit = 1000 if tier == "Pro" else 5
@@ -64,55 +100,13 @@ def check_mode_lock(tier, mode_name):
     return False if tier == "Pro" else "(Pro)" in mode_name
 
 def smart_intercept(text, lang):
+    import dm_core
+    import dm_data # 确保引用最新的数据总管
     text_lower = text.lower()
-    for keywords, faq_index in dc.INTERCEPT_LOGIC:
+    for keywords, faq_index in dm_core.INTERCEPT_LOGIC:
         if any(k in text_lower for k in keywords):
-            # Safe access
+            # 动态获取当前语言的 FAQ 数据库
             faq_db = dd.FAQ_DATABASE.get(lang, dd.FAQ_DATABASE["English"])
             if faq_index < len(faq_db):
                 return True, faq_db[faq_index]["a"]
     return False, ""
-
-def get_social_links(text):
-    e = urllib.parse.quote(text[:300] + "...")
-    return {
-        "WhatsApp": f"https://wa.me/?text={e}",
-        "Telegram": f"https://t.me/share/url?url=laislab&text={e}",
-        "Email": f"mailto:?body={e}",
-        "X": f"https://twitter.com/intent/tweet?text={e}",
-        "LINE": f"https://line.me/R/msg/text/?{e}"
-    }
-
-def create_csv(text):
-    return ("\ufeff" + text).encode("utf-8")
-
-def create_pdf(text, role, mode):
-    try:
-        pdf = FPDF()
-        pdf.add_page()
-        font_path = "font.ttf"
-        if os.path.exists(font_path):
-            try:
-                pdf.add_font('CustomFont', '', font_path, uni=True)
-                pdf.set_font("CustomFont", size=12)
-            except: 
-                pdf.set_font("Arial", size=12) 
-        else:
-            pdf.set_font("Arial", size=12)
-            
-        pdf.cell(0, 10, txt=f"Lai's Lab Report: {role} - {mode}", ln=True, align='C')
-        pdf.ln(10)
-        # Simple cleanup for PDF readability
-        clean_text = text.replace("**", "").replace("###", "")
-        pdf.multi_cell(0, 10, txt=clean_text)
-        return pdf.output(dest='S').encode('latin-1')
-    except: return None
-
-def generate_qr_code(text):
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(text[:500]) 
-    qr.make(fit=True)
-    img = qr.make_image(fill='black', back_color='white')
-    img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='PNG')
-    return img_byte_arr.getvalue()
