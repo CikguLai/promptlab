@@ -1,10 +1,6 @@
 # dm_core.py
 # 核心功能数据 (Roles, Modes, Options, Tones, Intercepts)
-# Language: English (Core Logic)
 
-# ==========================================
-# 1. 核心功能选项 (6 Roles x 3 Modes x 7 Options = 126 Options)
-# ==========================================
 RAW_ROLES_DATA = {
     "Global Educator": {
         "Pedagogy (Free)": ["1. Direct Instruction", "2. Gamification", "3. Project-Based Learning", "4. Socratic Method", "5. Flipped Classroom", "6. Differentiated Instruction", "7. Analyze Student Work (OCR)"],
@@ -38,9 +34,6 @@ RAW_ROLES_DATA = {
     }
 }
 
-# ==========================================
-# 2. 角色语调 (Tones)
-# ==========================================
 ROLE_TONES = {
     "Global Educator": ["🎓 Encouraging", "📚 Academic", "💡 Inspiring", "🧠 Analytical", "🧸 Playful (Kids)", "⚡ Strict", "🗣️ Storyteller", "🤝 Collaborative", "📝 Formal", "🌍 Culturally Aware"],
     "Global Creator": ["🎨 Creative", "🔥 Viral/Hype", "📖 Narrative", "🤪 Humorous", "🎬 Cinematic", "💡 Minimalist", "📢 Persuasive", "🕶️ Edgy", "💖 Emotional", "🤖 Tech-Savvy"],
@@ -51,10 +44,7 @@ ROLE_TONES = {
 }
 DEFAULT_TONES = ["Professional", "Friendly", "Informative"]
 
-# ==========================================
-# 3. 智能拦截逻辑 (Intercept Logic) - 匹配 16 FAQ
-# ==========================================
-# 顺序对应 dm_data.py 中的 FAQ 顺序 (0-15)
+# [UPDATED] Intercept Logic for 20 FAQs
 INTERCEPT_LOGIC = [
     (["subscription", "monthly", "fee", "订阅", "月费"], 0), 
     (["refund", "money", "back", "return", "退款", "退钱"], 1),
@@ -64,19 +54,23 @@ INTERCEPT_LOGIC = [
     (["invoice", "receipt", "bill", "发票", "收据"], 5),
     (["school", "student", "bulk", "discount", "教育", "团购"], 6), 
     (["pdf", "font", "garbled", "character", "乱码", "字体"], 7),
-    (["wechat", "share", "weixin", "moment", "微信", "分享"], 8),
+    # [FIXED Q9] WeChat/QR
+    (["wechat", "tiktok", "qr", "scan", "transfer", "share", "微信", "抖音", "扫码", "传"], 8),
     (["invalid", "error", "activate", "not working", "无效", "报错"], 9),
     (["slow", "speed", "lag", "waiting", "慢", "速度", "卡"], 10),
+    # [FIXED Q12] Text Limit
     (["unlimited", "limit", "cap", "quota", "无限", "限制"], 11),
     (["commercial", "sell", "business", "copyright", "rights", "商用", "版权"], 12),
     (["offline", "internet", "wifi", "connect", "离线", "断网"], 13),
     (["privacy", "data", "store", "save", "隐私", "数据"], 14),
-    (["share account", "multiple users", "sharing", "ban", "共享", "共用"], 15)
+    (["share account", "multiple users", "sharing", "ban", "共享", "共用"], 15),
+    # [NEW Q17-Q20]
+    (["chatgpt", "why buy", "difference", "value", "为什么买"], 16),
+    (["update", "future", "pay again", "version", "更新", "升级"], 17),
+    (["custom", "diy", "own", "modify", "edit", "自定义"], 18),
+    (["app", "ios", "android", "download", "mobile", "下载"], 19)
 ]
 
-# ==========================================
-# 4. 自动生成处理逻辑
-# ==========================================
 ROLES_CONFIG = {}
 for role, modes in RAW_ROLES_DATA.items():
     ROLES_CONFIG[role] = {}
