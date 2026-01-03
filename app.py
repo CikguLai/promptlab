@@ -1,16 +1,16 @@
-# app.py (V10.0 FINAL SPLIT VERSION)
-# 完整商业版：Logo, 16语言, 徽章下载, 隐藏菜单
+# app.py (V10.2 - FINAL LOGIC UPGRADE)
+# Features: Real Leads Capture, Sync Ticket ID, Dynamic Counter 500-2500
 
 import streamlit as st
 import lc_services as lcs
 import lc_gen as lcg
-import dm_data as dm   # 加载数据总管
+import dm_data as dm
 import dm_core as core
 import dm_ui as ui_module
 import random
 from datetime import datetime
 
-# 1. 配置
+# 1. Config & Hide Menu
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 st.markdown("""
 <style>
@@ -52,7 +52,7 @@ def render_footer():
         <div class="footer-container">
             <div class="footer-row-1">© 2026 LAI'S LAB AI • PROFESSIONAL PROMPT SYSTEM</div>
             <div class="footer-row-2">Disclaimer: Verified before commercial use. Fair Use Policy applies.</div>
-            <div class="footer-row-3"><span>SYSTEM: V10.0</span><span>STATUS: <span style="color:green">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
+            <div class="footer-row-3"><span>SYSTEM: V10.2</span><span>STATUS: <span style="color:green">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -85,7 +85,12 @@ def show_login_page():
             e = st.text_input("Email", key="login_email", placeholder="you@example.com")
             if st.button(ui['generate'], use_container_width=True):
                 if "@" in e:
-                    st.session_state.user_email = e; st.session_state.user_tier = "Guest"; st.session_state.logged_in = True; st.rerun()
+                    st.session_state.user_email = e
+                    st.session_state.user_tier = "Guest"
+                    st.session_state.logged_in = True
+                    # [LEAD CAPTURE] 登录即抓取
+                    lcs.log_lead_to_airtable(e)
+                    st.rerun()
         with t2:
             st.markdown(f"<span class='price-strike'>$39.90</span> <span class='price-promo'>$12.90</span>", unsafe_allow_html=True)
             pe = st.text_input("Billing Email", key="pro_email")
@@ -116,8 +121,11 @@ def show_main_app():
         st.image("logo.png", width=200)
         st.title(f"🧬 {ui['sidebar_title']}")
         st.caption(ui['subtitle'])
-        active_u = 1200 + (datetime.now().minute * 7) + random.randint(1, 50)
-        st.caption(f"🔥 Active Users: **{active_u:,}**")
+        
+        # [FAKE DATA] 500-2500 Range
+        prompts_today = random.randint(500, 2500)
+        st.caption(f"🔥 Prompts Generated Today: **{prompts_today:,}**")
+        
         st.divider()
         st.caption(f"👤 {st.session_state.user_email}")
         
@@ -157,7 +165,12 @@ def show_main_app():
                 hit, ans = lcg.smart_intercept(t_msg, st.session_state.language)
                 if hit: st.warning(f"💡 AI Suggestion: {ans}")
             if st.button(ui['send_btn'], use_container_width=True):
-                if t_msg: lcs.log_ticket_to_airtable(st.session_state.user_email, t_type, t_msg, st.session_state.user_tier); st.success("Ticket Sent!")
+                if t_msg:
+                    # [TICKET SYNC] Front generates ID -> Backend saves SAME ID
+                    tid = f"T-{random.randint(1000, 9999)}"
+                    lcs.log_ticket_to_airtable(st.session_state.user_email, t_type, t_msg, st.session_state.user_tier, tid)
+                    st.success(f"✅ Ticket #{tid} Submitted! Check your email.")
+                    
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
     role = st.selectbox(ui['role'], list(core.ROLES_CONFIG.keys()))
@@ -227,20 +240,15 @@ def show_main_app():
         d1.download_button("📄 TXT", res, "prompt.txt", use_container_width=True)
         
         if st.session_state.user_tier == "Pro":
-            # Layer 5 [徽章化下载按钮]
             pdf_b = lcg.create_pdf(res, role, mode)
             csv_b = lcg.create_csv(res)
             if pdf_b: 
-                # 这里用 Markdown 渲染成 <a> 标签形式的徽章下载链接 (Streamlit 黑科技)
-                # 注意：Streamlit 原生按钮更稳定，但为了满足“全徽章”要求，我提供了原生按钮 + 徽章样式
                 d2.download_button("📕 PDF (Direct)", pdf_b, "report.pdf", "application/pdf", use_container_width=True)
-                # 如果您想用纯徽章，可以解开下面这行 (但原生体验更好)
-                # d2.markdown(lcg.get_download_badge(pdf_b, "report.pdf", "application/pdf", "https://img.shields.io/badge/Download-PDF-EC1C24?style=for-the-badge&logo=adobeacrobatreader&logoColor=white"), unsafe_allow_html=True)
             else: d2.error("PDF Error")
             d3.download_button("📊 CSV (Direct)", csv_b, "data.csv", "text/csv", use_container_width=True)
         else:
-            d2.button(ui['ad_locked'], disabled=True, use_container_width=True)
-            d3.button(ui['ad_locked'], disabled=True, use_container_width=True)
+            d2.button("🔒 PDF (Pro)", disabled=True, use_container_width=True)
+            d3.button("🔒 CSV (Pro)", disabled=True, use_container_width=True)
 
     render_footer()
 
