@@ -1,5 +1,5 @@
 # lc_services.py
-# Backend Services: Airtable (Leads/Tickets), SMTP, LemonSqueezy
+# Backend Services: Airtable, SMTP, LemonSqueezy
 
 import requests, smtplib, datetime
 from email.mime.text import MIMEText
@@ -25,12 +25,12 @@ def send_email_smtp(to_email, subject, body):
     if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]: return False
     try:
         msg = MIMEMultipart()
-        # [UI] 发件人显示为 Lai's Lab Support
-        msg['From'] = formataddr(("Lai's Lab Support", CONFIG["EMAIL_SENDER_ADDRESS"]))
+        # [FIX] Sender Name
+        msg['From'] = formataddr(("Lai's Lab Team", CONFIG["EMAIL_SENDER_ADDRESS"]))
         msg['To'] = to_email
         msg['Subject'] = subject
-        # [LOGIC] 用户回复邮件时，会发到这里
-        msg.add_header('Reply-To', 'cikgulaibm@gmail.com')
+        # [FIX] Reply-To
+        msg.add_header('Reply-To', 'laislabteam@gmail.com')
         
         msg.attach(MIMEText(body, 'plain'))
         
@@ -64,7 +64,7 @@ def log_ticket_to_airtable(email, issue_type, msg, tier, ticket_id):
             requests.post(url, json={"records": [data]}, headers=headers, timeout=3)
         except: pass
         
-    # [SLA UPDATE] 更新后的专业回复文案
+    # [FIX] Final SLA Text
     sla_text = """
 Dear User,
 
@@ -79,7 +79,7 @@ Due to time zone differences, please allow:
 Your Ticket ID is: {tid}
 
 Best regards,
-The PromptLab Team
+The Lai's Lab Team
     """.format(tid=ticket_id)
     
     send_email_smtp(email, f"[Ticket Received] We are looking into your issue #{ticket_id}", sla_text)
