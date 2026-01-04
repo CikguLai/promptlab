@@ -4,16 +4,16 @@
 import requests, smtplib, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formataddr
 
-# [配置] 请在 .streamlit/secrets.toml 填入真实 Key
 CONFIG = {
     "EMAIL_APP_PASSWORD": "", "EMAIL_SENDER_ADDRESS": "", 
     "TELEGRAM_BOT_TOKEN": "", "TELEGRAM_CHAT_ID": "", 
     "LEMONSQUEEZY_API_KEY": "", "MASTER_KEY": "LAI-ADMIN-8888", 
     "AIRTABLE_API_KEY": "", "AIRTABLE_BASE_ID": "",
     "AIRTABLE_TABLE_TICKETS": "SupportTickets", 
-    "AIRTABLE_TABLE_LEADS": "FreeLeads",  # 新增：免费用户表
-    "AIRTABLE_TABLE_USERS": "ActiveUsers" # Pro用户表
+    "AIRTABLE_TABLE_LEADS": "FreeLeads",
+    "AIRTABLE_TABLE_USERS": "ActiveUsers"
 }
 
 def send_telegram_alert(msg):
@@ -25,10 +25,15 @@ def send_email_smtp(to_email, subject, body):
     if not CONFIG["EMAIL_APP_PASSWORD"] or not CONFIG["EMAIL_SENDER_ADDRESS"]: return False
     try:
         msg = MIMEMultipart()
-        msg['From'] = CONFIG["EMAIL_SENDER_ADDRESS"]
+        # [UI] 发件人显示为 Lai's Lab Support
+        msg['From'] = formataddr(("Lai's Lab Support", CONFIG["EMAIL_SENDER_ADDRESS"]))
         msg['To'] = to_email
         msg['Subject'] = subject
+        # [LOGIC] 用户回复邮件时，会发到这里
+        msg.add_header('Reply-To', 'cikgulaibm@gmail.com')
+        
         msg.attach(MIMEText(body, 'plain'))
+        
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(CONFIG["EMAIL_SENDER_ADDRESS"], CONFIG["EMAIL_APP_PASSWORD"])
@@ -39,23 +44,18 @@ def send_email_smtp(to_email, subject, body):
         print(f"Email Error: {e}")
         return False
 
-# [新增] 收集免费用户 Leads
 def log_lead_to_airtable(email):
     if not CONFIG["AIRTABLE_API_KEY"]: return
     try:
         url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_LEADS']}"
         headers = {"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"}
-        # 记录邮箱、来源、时间
         data = {"fields": {"Email": email, "Source": "Guest_Login", "CapturedAt": datetime.datetime.now().isoformat()}}
         requests.post(url, json={"records": [data]}, headers=headers, timeout=2)
     except: pass
 
-# [升级] 记录工单 (接受前端生成的 ticket_id)
 def log_ticket_to_airtable(email, issue_type, msg, tier, ticket_id):
-    # 1. Telegram 通知
     send_telegram_alert(f"Ticket {ticket_id} [{tier}]: {msg} ({email})")
     
-    # 2. Airtable 存储
     if CONFIG["AIRTABLE_API_KEY"]:
         try:
             url = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_TICKETS']}"
@@ -64,8 +64,25 @@ def log_ticket_to_airtable(email, issue_type, msg, tier, ticket_id):
             requests.post(url, json={"records": [data]}, headers=headers, timeout=3)
         except: pass
         
-    # 3. 自动回复邮件 (确保 ID 一致)
-    send_email_smtp(email, f"🎫 [Received] Ticket {ticket_id}", f"Ticket ID: {ticket_id}\n\nWe received your request: '{msg}'.\nOur support team will check it shortly.")
+    # [SLA UPDATE] 更新后的专业回复文案
+    sla_text = """
+Dear User,
+
+Thank you for contacting Lai's Lab AI Support. We have received your request.
+
+All tickets are processed in a queue to ensure quality support.
+Due to time zone differences, please allow:
+
+💎 Pro Users: 1-3 Business Days (Priority Queue)
+👤 Free Users: 3-5 Business Days (Standard Queue)
+
+Your Ticket ID is: {tid}
+
+Best regards,
+The PromptLab Team
+    """.format(tid=ticket_id)
+    
+    send_email_smtp(email, f"[Ticket Received] We are looking into your issue #{ticket_id}", sla_text)
 
 def check_user_tier(email, key):
     if key == CONFIG["MASTER_KEY"]: return "Pro", "Master Key Activated"
@@ -75,7 +92,6 @@ def check_user_tier(email, key):
         resp = requests.post(url, data={"license_key": key, "instance_name": "LaisLab_App"}, timeout=8)
         data = resp.json()
         if data.get("activated"):
-            # 记录 Pro 用户
             if CONFIG["AIRTABLE_API_KEY"]:
                 u2 = f"https://api.airtable.com/v0/{CONFIG['AIRTABLE_BASE_ID']}/{CONFIG['AIRTABLE_TABLE_USERS']}"
                 headers = {"Authorization": f"Bearer {CONFIG['AIRTABLE_API_KEY']}", "Content-Type": "application/json"}
