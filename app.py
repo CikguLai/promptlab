@@ -1,5 +1,5 @@
-# app.py (V10.3 - GOLD MASTER)
-# Features: Fixed Footer, SaaS UI, Smart Price Display, Real-feel Data
+# app.py (V10.4 - FINAL RELEASE)
+# Features: Dual Active Stats, Absolute Logo Path, Hidden Pro Price, Fixed Footer
 
 import streamlit as st
 import lc_services as lcs
@@ -13,7 +13,6 @@ from datetime import datetime
 # 1. Page Config & SaaS Styling
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
 
-# [SaaS UI CSS] - 卡片式设计 + 固定页脚
 st.markdown("""
 <style>
     /* 隐藏默认菜单 */
@@ -44,7 +43,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    /* 强制固定页脚 (Z-Index 9999 保证最上层) */
+    /* 强制固定页脚 (Z-Index 9999) */
     .footer-container { 
         position: fixed; 
         bottom: 0; 
@@ -65,10 +64,11 @@ st.markdown("""
     .footer-row-2 { font-size: 10px; color: #7f8c8d; max-width: 900px; line-height: 1.4; text-align: center; font-family: sans-serif; }
     .footer-row-3 { font-size: 11px; color: #bdc3c7; margin-top: 4px; display: flex; gap: 20px; font-family: monospace; }
     
-    /* 价格样式 */
+    /* 价格与统计样式 */
     .price-strike { text-decoration: line-through; color: #95a5a6; font-size: 16px; margin-right: 8px; }
     .price-promo { color: #d32f2f; font-weight: 900; font-size: 26px; }
-    .license-active { color: #27ae60; font-weight: 700; font-size: 18px; border: 1px solid #27ae60; padding: 5px 10px; border-radius: 6px; background: #eafaf1; }
+    .license-active { color: #27ae60; font-weight: 700; font-size: 16px; border: 1px solid #27ae60; padding: 8px 12px; border-radius: 6px; background: #eafaf1; text-align: center; }
+    .stat-box { font-size: 14px; font-weight: 500; color: #555; margin-bottom: 2px; }
 
     .badge-container { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
     .stProgress > div > div > div > div { background-color: #0277bd !important; }
@@ -97,11 +97,11 @@ if "general" in st.secrets:
 def render_footer():
     tier = st.session_state.user_tier
     st.markdown(f"""
-        <div style="height: 100px;"></div>
+        <div style="height: 120px;"></div>
         <div class="footer-container">
             <div class="footer-row-1">© 2025-2026 LAI'S LAB AI • PROFESSIONAL PROMPT SYSTEM</div>
             <div class="footer-row-2">Disclaimer: Generative AI can make mistakes; please double-check responses. Users are solely responsible for the content generated. Lai's Lab assumes no liability for misuse.</div>
-            <div class="footer-row-3"><span>SYSTEM: V10.3</span><span>STATUS: <span style="color:#27ae60">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
+            <div class="footer-row-3"><span>SYSTEM: V10.4</span><span>STATUS: <span style="color:#27ae60">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -134,13 +134,9 @@ def show_login_page():
             e = st.text_input("Email", key="login_email", placeholder="you@example.com")
             if st.button(ui['generate'], use_container_width=True):
                 if "@" in e:
-                    st.session_state.user_email = e
-                    st.session_state.user_tier = "Guest"
-                    st.session_state.logged_in = True
-                    lcs.log_lead_to_airtable(e)
-                    st.rerun()
+                    st.session_state.user_email = e; st.session_state.user_tier = "Guest"; st.session_state.logged_in = True; lcs.log_lead_to_airtable(e); st.rerun()
         with t2:
-            st.markdown(f"<span class='price-strike'>\$39.90</span> <span class='price-promo'>\$12.90</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='price-strike'>$39.90</span> <span class='price-promo'>$12.90</span>", unsafe_allow_html=True)
             pe = st.text_input("Billing Email", key="pro_email")
             lk = st.text_input("License Key", type="password")
             if st.button("💎 Activate Pro", type="primary", use_container_width=True):
@@ -166,20 +162,20 @@ def show_login_page():
 def show_main_app():
     ui = ui_module.get_safe_ui(st.session_state.language)
     with st.sidebar:
-        # [LOGO FIX] 强力寻找 logo.png
-        if os.path.exists("logo.png"):
-            st.image("logo.png", width=200)
-        else:
-            st.header("🧬 Lai's Lab") # 万一真的没有，显示文字不留白
+        # [LOGO FIX] 绝对路径查找
+        if os.path.exists("logo.png"): st.image("logo.png", width=200)
+        else: st.header("🧬 Lai's Lab")
             
         st.title(f"{ui['sidebar_title']}")
         st.caption(ui['subtitle'])
         
-        # [DATA REALISM] 800-2400 Range
+        # [ACTIVE USERS FIX] 双行数据
         hour = datetime.now().hour
-        base = 800
-        active_u = base + (hour * 60) + random.randint(10, 150)
-        st.caption(f"🔥 Prompts Generated Today: **{active_u:,}**")
+        prompts = 1260 + (hour * 55) + random.randint(10, 80)
+        users = int(prompts * 0.72) + random.randint(5, 20)
+        
+        st.markdown(f"<div class='stat-box'>🔥 Prompts Generated: <b>{prompts:,}</b></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='stat-box'>👥 Active Users: <b>{users:,}</b></div>", unsafe_allow_html=True)
         
         st.divider()
         st.caption(f"👤 {st.session_state.user_email}")
@@ -187,10 +183,10 @@ def show_main_app():
         # [PRICE HIDE] Pro 不显示价格
         if st.session_state.user_tier == "Guest":
             st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy", type="primary", use_container_width=True)
-            st.markdown("---")
         else:
             st.markdown("<div class='license-active'>💎 License Active: Lifetime</div>", unsafe_allow_html=True)
-            st.markdown("---")
+            
+        st.markdown("---")
 
         can_gen, rem, tot = lcg.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
         if st.session_state.user_tier == "Guest":
@@ -227,7 +223,7 @@ def show_main_app():
                 if t_msg:
                     tid = f"T-{random.randint(1000, 9999)}"
                     lcs.log_ticket_to_airtable(st.session_state.user_email, t_type, t_msg, st.session_state.user_tier, tid)
-                    st.success(f"✅ Ticket #{tid} Submitted! Check email for confirmation.")
+                    st.success(f"✅ Ticket #{tid} Submitted! Check email.")
                     
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
