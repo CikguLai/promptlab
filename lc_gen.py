@@ -1,8 +1,8 @@
 # lc_gen.py
 # Generation Logic Module
-# Handles: PASEC Engine, PDF/CSV, Social Badges, QR
+# Handles: PASEC Engine (Pro Clean / Guest Watermark), PDF Fix
 
-import urllib.parse, os, io, base64  # ✅ [FIX 1] 补全了 base64
+import urllib.parse, os, io, base64
 from fpdf import FPDF
 import qrcode
 from PIL import Image
@@ -10,30 +10,44 @@ import dm_core as dc
 import dm_data as dd
 
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
-    # [PASEC ENGINE V10.0]
-    p_block = f"You are an expert **{role}**. Your knowledge base covers all aspects of this domain."
-    a_block = f"Your specific aim is to execute a **{mode}** strategy."
-    s_block = f"Structure your response strictly according to the framework of: **{option}**. Ensure all standard elements of this framework are included."
-    e_block = f"Maintain a **{tone}** tone of voice throughout the content. Ensure the delivery is effective for the intended audience."
+    # [PASEC ENGINE V10.3]
+    
+    # 核心内容块
+    p_block = f"You are an expert {role}. Your knowledge base covers all aspects of this domain."
+    a_block = f"Your specific aim is to execute a {mode} strategy."
+    s_block = f"Structure your response strictly according to the framework of: {option}. Ensure all standard elements of this framework are included."
+    e_block = f"Maintain a {tone} tone of voice throughout the content. Ensure the delivery is effective for the intended audience."
     c_block = f"The specific topic/context provided by the user is: \"{user_input}\""
 
-    header = f"### [PASEC PROTOCOL V3.0 - LAI'S LAB INTERNAL]\n"
-    header += f"**1. PERSONA**: {p_block}\n**2. AIM**: {a_block}\n**3. STRUCTURE**: {s_block}\n"
-    header += f"**4. EFFECTIVE**: {e_block}\n**5. CONTEXT**: {c_block}\n"
-    header += "-" * 30 + "\n"
-    header += f"[SYSTEM INSTRUCTION]:\n"
-    header += f"1. Analyze the Context above.\n2. Generate the output based on the Structure and Persona.\n"
-    header += f"3. Output strictly in **{lang}** language.\n"
-    
+    # [GUEST 模式] - 包含 Markdown 格式和系统指令 (为了好看)
     if tier != "Pro":
-        header += "\n(Generated via Free Version)"
-        
-    return header
+        header = f"### [PASEC PROTOCOL V3.0]\n"
+        header += f"**1. PERSONA**: {p_block}\n"
+        header += f"**2. AIM**: {a_block}\n"
+        header += f"**3. STRUCTURE**: {s_block}\n"
+        header += f"**4. EFFECTIVE**: {e_block}\n"
+        header += f"**5. CONTEXT**: {c_block}\n"
+        header += "-" * 30 + "\n"
+        header += f"[SYSTEM INSTRUCTION]:\n1. Analyze the Context above.\n2. Output strictly in **{lang}** language.\n"
+        header += "\n(Generated via Free Version - Lai's Lab AI)"
+        return header
+
+    # [PRO 模式] - 纯净版 (方案 A+)
+    # 移除 ** (加粗), 移除 ### (标题), 移除 [SYSTEM] 底部废话
+    # 只保留核心 Key (PERSONA, AIM...) 供 AI 识别
+    # 增加了 ethical safe instruction (策略A的补充)
+    
+    clean_prompt = f"1. PERSONA: {p_block}\n"
+    clean_prompt += f"2. AIM: {a_block}\n"
+    clean_prompt += f"3. STRUCTURE: {s_block}\n"
+    clean_prompt += f"4. EFFECTIVE: {e_block}\n"
+    clean_prompt += f"5. CONTEXT: {c_block}\n"
+    clean_prompt += f"\n[INSTRUCTION]: Output the result strictly in {lang} language. Ensure the generated content is ethical, safe, and suitable for general audiences."
+    
+    return clean_prompt
 
 def clean_pro_output(text, tier):
-    if tier == "Pro":
-        text = text.replace("(Generated via Free Version)", "")
-        text = text.replace("### [PASEC PROTOCOL V3.0 - LAI'S LAB INTERNAL]", "### ✨ PROMPT READY")
+    # 保持接口兼容
     return text
 
 def check_daily_limit_by_email(email, tier, current_usage):
@@ -65,31 +79,27 @@ def create_csv(text):
     return ("\ufeff" + text).encode("utf-8")
 
 def create_pdf(text, role, mode):
+    # [PDF FIX V9 LEGACY] 
+    # 不做任何检测，假定 font.ttf 就在那里。这是最原始有效的方法。
     try:
         pdf = FPDF()
         pdf.add_page()
         
-        # ✅ [FIX 2] 优先读取 NotoSansCJKtc-Regular.ttf (防乱码)
-        font_path = "NotoSansCJKtc-Regular.ttf"
-        if not os.path.exists(font_path):
-            font_path = "font.ttf" # 如果没找到新字体，才找旧的
-            
-        if os.path.exists(font_path):
-            try:
-                pdf.add_font('CustomFont', '', font_path, uni=True)
-                pdf.set_font("CustomFont", size=12)
-            except: 
-                pdf.set_font("Arial", size=12)
-        else:
-            pdf.set_font("Arial", size=12)
+        # 直接加载字体，不做 fallback
+        pdf.add_font('CustomFont', '', 'font.ttf', uni=True)
+        pdf.set_font("CustomFont", size=12)
             
         pdf.cell(0, 10, txt=f"Lai's Lab Report: {role} - {mode}", ln=True, align='C')
         pdf.ln(10)
+        
+        # 清理不支持的 Markdown 符号
         clean_text = text.replace("**", "").replace("###", "")
         pdf.multi_cell(0, 10, txt=clean_text)
+        
         return pdf.output(dest='S').encode('latin-1')
     except Exception as e:
-        print(f"PDF Error: {e}")
+        # 如果真的报错了（比如忘了上传字体），打印出来，但不要崩整个 App
+        print(f"PDF Gen Error: {e}")
         return None
 
 def generate_qr_code(text):
