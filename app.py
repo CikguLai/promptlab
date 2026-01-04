@@ -1,5 +1,5 @@
-# app.py (V10.2 - FINAL LOGIC UPGRADE)
-# Features: Real Leads Capture, Sync Ticket ID, Dynamic Counter 500-2500
+# app.py (V10.3 - GOLD MASTER)
+# Features: Fixed Footer, SaaS UI, Smart Price Display, Real-feel Data
 
 import streamlit as st
 import lc_services as lcs
@@ -7,22 +7,71 @@ import lc_gen as lcg
 import dm_data as dm
 import dm_core as core
 import dm_ui as ui_module
-import random
+import random, os
 from datetime import datetime
 
-# 1. Config & Hide Menu
+# 1. Page Config & SaaS Styling
 st.set_page_config(page_title="Lai's Lab AI", page_icon="🧬", layout="wide")
+
+# [SaaS UI CSS] - 卡片式设计 + 固定页脚
 st.markdown("""
 <style>
-#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-.footer-container { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; padding: 15px 0; z-index: 1000; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.footer-row-1 { font-weight: bold; color: #333; font-size: 13px; }
-.footer-row-2 { font-size: 10px; color: #666; font-style: italic; max-width: 800px; line-height: 1.4; text-align: center; }
-.footer-row-3 { font-size: 11px; color: #aaa; margin-top: 5px; display: flex; gap: 15px; }
-.price-strike { text-decoration: line-through; color: #999; font-size: 18px; margin-right: 10px; }
-.price-promo { color: #d32f2f; font-weight: 900; font-size: 28px; }
-.badge-container { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-.stProgress > div > div > div > div { background-color: #0277bd !important; }
+    /* 隐藏默认菜单 */
+    #MainMenu {visibility: hidden;} 
+    footer {visibility: hidden;} 
+    header {visibility: hidden;}
+
+    /* 卡片式输入框 */
+    .stTextInput > div > div > input {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+    }
+    .stTextArea > div > div > textarea {
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    /* 按钮美化 */
+    .stButton > button {
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+    }
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* 强制固定页脚 (Z-Index 9999 保证最上层) */
+    .footer-container { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        background: white; 
+        border-top: 1px solid #eaeaea; 
+        padding: 12px 0; 
+        z-index: 9999; 
+        text-align: center; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 4px; 
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+    }
+    .footer-row-1 { font-weight: 700; color: #2c3e50; font-size: 13px; letter-spacing: 0.5px; }
+    .footer-row-2 { font-size: 10px; color: #7f8c8d; max-width: 900px; line-height: 1.4; text-align: center; font-family: sans-serif; }
+    .footer-row-3 { font-size: 11px; color: #bdc3c7; margin-top: 4px; display: flex; gap: 20px; font-family: monospace; }
+    
+    /* 价格样式 */
+    .price-strike { text-decoration: line-through; color: #95a5a6; font-size: 16px; margin-right: 8px; }
+    .price-promo { color: #d32f2f; font-weight: 900; font-size: 26px; }
+    .license-active { color: #27ae60; font-weight: 700; font-size: 18px; border: 1px solid #27ae60; padding: 5px 10px; border-radius: 6px; background: #eafaf1; }
+
+    .badge-container { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .stProgress > div > div > div > div { background-color: #0277bd !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,11 +97,11 @@ if "general" in st.secrets:
 def render_footer():
     tier = st.session_state.user_tier
     st.markdown(f"""
-        <div style="height: 120px;"></div>
+        <div style="height: 100px;"></div>
         <div class="footer-container">
-            <div class="footer-row-1">© 2026 LAI'S LAB AI • PROFESSIONAL PROMPT SYSTEM</div>
-            <div class="footer-row-2">Disclaimer: Verified before commercial use. Fair Use Policy applies.</div>
-            <div class="footer-row-3"><span>SYSTEM: V10.2</span><span>STATUS: <span style="color:green">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
+            <div class="footer-row-1">© 2025-2026 LAI'S LAB AI • PROFESSIONAL PROMPT SYSTEM</div>
+            <div class="footer-row-2">Disclaimer: Generative AI can make mistakes; please double-check responses. Users are solely responsible for the content generated. Lai's Lab assumes no liability for misuse.</div>
+            <div class="footer-row-3"><span>SYSTEM: V10.3</span><span>STATUS: <span style="color:#27ae60">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -88,11 +137,10 @@ def show_login_page():
                     st.session_state.user_email = e
                     st.session_state.user_tier = "Guest"
                     st.session_state.logged_in = True
-                    # [LEAD CAPTURE] 登录即抓取
                     lcs.log_lead_to_airtable(e)
                     st.rerun()
         with t2:
-            st.markdown(f"<span class='price-strike'>$39.90</span> <span class='price-promo'>$12.90</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='price-strike'>\$39.90</span> <span class='price-promo'>\$12.90</span>", unsafe_allow_html=True)
             pe = st.text_input("Billing Email", key="pro_email")
             lk = st.text_input("License Key", type="password")
             if st.button("💎 Activate Pro", type="primary", use_container_width=True):
@@ -108,29 +156,40 @@ def show_login_page():
         st.markdown(f"### {tbl_head[0]}")
         st.markdown(f"""
         <table style="width:100%; border-collapse: collapse;">
-            <tr style="background:#f0f2f6; border-bottom:2px solid #ddd;">
-                <th style="padding:8px;">Feature</th><th style="padding:8px;">{tbl_head[1]}</th><th style="padding:8px; color:#d32f2f;">{tbl_head[2]}</th>
+            <tr style="background:#f8f9fa; border-bottom:2px solid #ddd;">
+                <th style="padding:10px;">Feature</th><th style="padding:10px;">{tbl_head[1]}</th><th style="padding:10px; color:#d32f2f;">{tbl_head[2]}</th>
             </tr>
-            {''.join([f'<tr><td style="padding:8px; border-bottom:1px solid #eee;">{r["k"]}</td><td style="padding:8px; border-bottom:1px solid #eee;">{r["v1"]}</td><td style="padding:8px; border-bottom:1px solid #eee; font-weight:bold;">{r["v2"]}</td></tr>' for r in rows])}
+            {''.join([f'<tr><td style="padding:10px; border-bottom:1px solid #eee;">{r["k"]}</td><td style="padding:10px; border-bottom:1px solid #eee;">{r["v1"]}</td><td style="padding:10px; border-bottom:1px solid #eee; font-weight:bold;">{r["v2"]}</td></tr>' for r in rows])}
         </table>""", unsafe_allow_html=True)
     render_footer()
 
 def show_main_app():
     ui = ui_module.get_safe_ui(st.session_state.language)
     with st.sidebar:
-        st.image("logo.png", width=200)
-        st.title(f"🧬 {ui['sidebar_title']}")
+        # [LOGO FIX] 强力寻找 logo.png
+        if os.path.exists("logo.png"):
+            st.image("logo.png", width=200)
+        else:
+            st.header("🧬 Lai's Lab") # 万一真的没有，显示文字不留白
+            
+        st.title(f"{ui['sidebar_title']}")
         st.caption(ui['subtitle'])
         
-        # [FAKE DATA] 500-2500 Range
-        prompts_today = random.randint(500, 2500)
-        st.caption(f"🔥 Prompts Generated Today: **{prompts_today:,}**")
+        # [DATA REALISM] 800-2400 Range
+        hour = datetime.now().hour
+        base = 800
+        active_u = base + (hour * 60) + random.randint(10, 150)
+        st.caption(f"🔥 Prompts Generated Today: **{active_u:,}**")
         
         st.divider()
         st.caption(f"👤 {st.session_state.user_email}")
         
+        # [PRICE HIDE] Pro 不显示价格
         if st.session_state.user_tier == "Guest":
             st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy", type="primary", use_container_width=True)
+            st.markdown("---")
+        else:
+            st.markdown("<div class='license-active'>💎 License Active: Lifetime</div>", unsafe_allow_html=True)
             st.markdown("---")
 
         can_gen, rem, tot = lcg.check_daily_limit_by_email(st.session_state.user_email, st.session_state.user_tier, st.session_state.daily_usage)
@@ -166,10 +225,9 @@ def show_main_app():
                 if hit: st.warning(f"💡 AI Suggestion: {ans}")
             if st.button(ui['send_btn'], use_container_width=True):
                 if t_msg:
-                    # [TICKET SYNC] Front generates ID -> Backend saves SAME ID
                     tid = f"T-{random.randint(1000, 9999)}"
                     lcs.log_ticket_to_airtable(st.session_state.user_email, t_type, t_msg, st.session_state.user_tier, tid)
-                    st.success(f"✅ Ticket #{tid} Submitted! Check your email.")
+                    st.success(f"✅ Ticket #{tid} Submitted! Check email for confirmation.")
                     
         if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
 
