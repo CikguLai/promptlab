@@ -2,7 +2,7 @@
 # Core Languages: English, Chinese, Malay
 # Features: 20 FAQs (Long Version) & Localized Table
 
-# --- ENGLISH (Full Long Version) ---
+# --- ENGLISH ---
 FAQ_EN = [
     {"q": "Q1: Is this a subscription?", "a": "No. It is a One-Time Payment of $12.90. No monthly fees."},
     {"q": "Q2: What is the Refund Policy?", "a": "Strictly No Refunds. This is a digital product (License Key) with instant access."},
@@ -26,7 +26,7 @@ FAQ_EN = [
     {"q": "Q20: Is there a Mobile App?", "a": "No download needed. This is a Web App. Just open the link on your phone browser."}
 ]
 
-# --- CHINESE (Full Long Version) ---
+# --- CHINESE ---
 FAQ_CN = [
     {"q": "问1: 这是订阅制吗？", "a": "完全不需要。本产品为一次性买断制 ($12.90)，无月费。"},
     {"q": "问2: 退款政策是什么？", "a": "虚拟数字商品（激活码），售出即止，概不退款。"},
@@ -50,7 +50,7 @@ FAQ_CN = [
     {"q": "问20: 有手机 App 吗？", "a": "无需下载。这是网页版应用 (Web App)，手机浏览器打开即用。"}
 ]
 
-# --- BAHASA MELAYU (Full Translation) ---
+# --- BAHASA MELAYU ---
 FAQ_MS = [
     {"q": "S1: Adakah ini langganan?", "a": "Tidak. Ini adalah Bayaran Sekali $12.90. Tiada yuran bulanan."},
     {"q": "S2: Polisi Bayaran Balik?", "a": "Tiada Bayaran Balik. Ini adalah produk digital (Kod Lesen) dengan akses segera."},
@@ -81,16 +81,18 @@ FAQ_DATA = {
     "Bahasa Melayu": FAQ_MS
 }
 
+# [TABLE FIX] 强制指定每个语言的 Key
 TABLE_DATA = {
     "English": {"keys": ["Daily Limit", "Content", "Sharing", "Format", "Watermark", "Support", "Price"], "guest": ["5 / Day", "Text", "Text Only", "Basic", "Forced", "Standard", "Free"], "pro": ["*Unlimited", "Clean", "PDF/CSV", "Pro Struct", "Removed", "VIP", "$12.90"]},
     "简体中文": {"keys": ["每日限额", "内容", "分享", "格式", "水印", "客服", "价格"], "guest": ["5次/天", "文本", "仅文本", "基础", "强制", "标准", "免费"], "pro": ["*无限", "纯净", "PDF+CSV", "专业结构", "移除", "VIP", "$12.90"]},
+    # [CRITICAL FIX] 繁体中文显式定义，确保匹配
+    "繁體中文": {"keys": ["每日限額", "內容", "分享", "格式", "浮水印", "客服", "價格"], "guest": ["5次/天", "文本", "僅文本", "基礎", "強制", "標準", "免費"], "pro": ["*無限", "純淨", "PDF/CSV", "專業結構", "移除", "VIP", "$12.90"]},
     "Bahasa Melayu": {"keys": ["Had Harian", "Kandungan", "Kongsi", "Format", "Watermark", "Sokongan", "Harga"], "guest": ["5 / Hari", "Teks", "Teks Saja", "Asas", "Ada", "Biasa", "Percuma"], "pro": ["*Tanpa Had", "Bersih", "PDF/CSV", "Pro Struktur", "Tiada", "VIP", "$12.90"]}
 }
-TABLE_DATA["繁體中文"] = TABLE_DATA["简体中文"]
 
 TICKET_DATA = {
     "English": ["🔴 Bug", "🟠 Billing", "🟡 Feature", "🟢 Partner", "🔵 Other"],
     "简体中文": ["🔴 报错", "🟠 账单", "🟡 建议", "🟢 合作", "🔵 其他"],
+    "繁體中文": ["🔴 報錯", "🟠 賬單", "🟡 建議", "🟢 合作", "🔵 其他"],
     "Bahasa Melayu": ["🔴 Masalah", "🟠 Bayaran", "🟡 Cadangan", "🟢 Rakan Niaga", "🔵 Lain-lain"]
 }
-TICKET_DATA["繁體中文"] = TICKET_DATA["简体中文"]
