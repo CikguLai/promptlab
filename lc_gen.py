@@ -1,5 +1,6 @@
 # lc_gen.py
 # Generation Logic Module
+# Handles: PASEC Engine (Pro Clean / Guest Watermark), PDF Debug Mode
 
 import urllib.parse, os, io, base64
 from fpdf import FPDF
@@ -68,43 +69,39 @@ def create_csv(text):
     return ("\ufeff" + text).encode("utf-8")
 
 def create_pdf(text, role, mode):
+    # [PDF DEBUG MODE]
     try:
         pdf = FPDF()
         pdf.add_page()
         
-        # [FONT FIX] 根据截图中的文件名 NotoSansCJKtc-Regular.ttf
+        # 1. 尝试您的新字体 (根据截图 NotoSansCJKtc-Regular.ttf)
         font_path = "NotoSansCJKtc-Regular.ttf"
-        font_loaded = False
         
-        if os.path.exists(font_path):
-            try:
-                pdf.add_font('CustomFont', '', font_path, uni=True)
-                pdf.set_font("CustomFont", size=12)
-                font_loaded = True
-            except: pass
-        
-        # Fallback 1: font.ttf
-        if not font_loaded and os.path.exists("font.ttf"):
-            try:
-                pdf.add_font('CustomFont', '', "font.ttf", uni=True)
-                pdf.set_font("CustomFont", size=12)
-                font_loaded = True
-            except: pass
+        # 2. 如果新字体没有，尝试旧的
+        if not os.path.exists(font_path):
+            font_path = "font.ttf"
             
-        # Fallback 2: Arial (English only, but prevents crash)
-        if not font_loaded:
-            pdf.set_font("Arial", size=12)
+        # 3. 加载字体
+        if os.path.exists(font_path):
+            pdf.add_font('CustomFont', '', font_path, uni=True)
+            pdf.set_font("CustomFont", size=12)
+        else:
+            # 如果真的没找到字体，回退到 Arial 并生成 PDF (可能会乱码，但不会崩)
+            # 或者直接返回错误信息告诉我们缺字体
+            return "Error: Font file (NotoSansCJKtc-Regular.ttf) missing on server."
             
         pdf.cell(0, 10, txt=f"Lai's Lab Report: {role} - {mode}", ln=True, align='C')
         pdf.ln(10)
         
+        # 清理 Markdown
         clean_text = text.replace("**", "").replace("###", "")
         pdf.multi_cell(0, 10, txt=clean_text)
         
-        return pdf.output(dest='S').encode('latin-1')
+        return pdf.output(dest='S').encode('latin-1') # Return bytes if successful
+        
     except Exception as e:
-        print(f"PDF Gen Error: {e}")
-        return None
+        # [DEBUG] 返回具体错误字符串，而不是 None
+        return str(e)
 
 def generate_qr_code(text):
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
