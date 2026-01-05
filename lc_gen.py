@@ -1,6 +1,5 @@
 # lc_gen.py
 # Generation Logic Module
-# Handles: PASEC Engine (Pro Clean / Guest Watermark), PDF Fix
 
 import urllib.parse, os, io, base64
 from fpdf import FPDF
@@ -10,15 +9,12 @@ import dm_core as dc
 import dm_data as dd
 
 def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
-    # [PASEC ENGINE V10.4]
-    
     p_block = f"You are an expert {role}. Your knowledge base covers all aspects of this domain."
     a_block = f"Your specific aim is to execute a {mode} strategy."
     s_block = f"Structure your response strictly according to the framework of: {option}. Ensure all standard elements of this framework are included."
     e_block = f"Maintain a {tone} tone of voice throughout the content. Ensure the delivery is effective for the intended audience."
     c_block = f"The specific topic/context provided by the user is: \"{user_input}\""
 
-    # [GUEST] Markdown + System
     if tier != "Pro":
         header = f"### [PASEC PROTOCOL V3.0]\n"
         header += f"**1. PERSONA**: {p_block}\n"
@@ -31,7 +27,6 @@ def generate_pasec_prompt(role, mode, option, user_input, tier, lang, tone):
         header += "\n(Generated via Free Version - Lai's Lab AI)"
         return header
 
-    # [PRO] Clean Plan A+
     clean_prompt = f"1. PERSONA: {p_block}\n"
     clean_prompt += f"2. AIM: {a_block}\n"
     clean_prompt += f"3. STRUCTURE: {s_block}\n"
@@ -73,12 +68,11 @@ def create_csv(text):
     return ("\ufeff" + text).encode("utf-8")
 
 def create_pdf(text, role, mode):
-    # [PDF FINAL FIX] 优先读新名字字体，失败读旧名字，再失败读系统默认
     try:
         pdf = FPDF()
         pdf.add_page()
         
-        # 1. 优先尝试您的新文件名 (根据截图)
+        # [FONT FIX] 根据截图中的文件名 NotoSansCJKtc-Regular.ttf
         font_path = "NotoSansCJKtc-Regular.ttf"
         font_loaded = False
         
@@ -89,7 +83,7 @@ def create_pdf(text, role, mode):
                 font_loaded = True
             except: pass
         
-        # 2. 如果新名字没有，尝试旧名字 font.ttf
+        # Fallback 1: font.ttf
         if not font_loaded and os.path.exists("font.ttf"):
             try:
                 pdf.add_font('CustomFont', '', "font.ttf", uni=True)
@@ -97,7 +91,7 @@ def create_pdf(text, role, mode):
                 font_loaded = True
             except: pass
             
-        # 3. 实在不行，回退到 Arial (防崩)
+        # Fallback 2: Arial (English only, but prevents crash)
         if not font_loaded:
             pdf.set_font("Arial", size=12)
             
