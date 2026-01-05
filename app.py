@@ -1,5 +1,5 @@
-# app.py (V10.4 - FINAL RELEASE)
-# Features: Dual Active Stats, Absolute Logo Path, Hidden Pro Price, Fixed Footer
+# app.py (V10.5 - FINAL COMMERCIAL RELEASE)
+# Features: Unique Keys (Fix Crash), Mode Locking, Pro Upsell UI
 
 import streamlit as st
 import lc_services as lcs
@@ -43,7 +43,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    /* 强制固定页脚 (Z-Index 9999) */
+    /* 强制固定页脚 */
     .footer-container { 
         position: fixed; 
         bottom: 0; 
@@ -101,7 +101,7 @@ def render_footer():
         <div class="footer-container">
             <div class="footer-row-1">© 2025-2026 LAI'S LAB AI • PROFESSIONAL PROMPT SYSTEM</div>
             <div class="footer-row-2">Disclaimer: Generative AI can make mistakes; please double-check responses. Users are solely responsible for the content generated. Lai's Lab assumes no liability for misuse.</div>
-            <div class="footer-row-3"><span>SYSTEM: V10.4</span><span>STATUS: <span style="color:#27ae60">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
+            <div class="footer-row-3"><span>SYSTEM: V10.5</span><span>STATUS: <span style="color:#27ae60">● ONLINE</span></span><span>LICENSE: <b>{tier}</b></span></div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -124,7 +124,10 @@ def show_login_page():
         st.session_state.language = new_lang
         st.rerun()
 
-    st.title(f"🧬 {ui['sidebar_title']}")
+    # [FIX] Login Page Logo
+    if os.path.exists("logo.png"): st.image("logo.png", width=120)
+    else: st.title(f"🧬 {ui['sidebar_title']}")
+    
     st.info(f"🚀 {ui['subtitle']}")
 
     col1, col2 = st.columns([1, 1.5], gap="large")
@@ -132,14 +135,14 @@ def show_login_page():
         t1, t2 = st.tabs([ui['plan_guest'], ui['plan_pro']])
         with t1:
             e = st.text_input("Email", key="login_email", placeholder="you@example.com")
-            if st.button(ui['generate'], use_container_width=True):
+            if st.button(ui['generate'], use_container_width=True, key="btn_guest_login"):
                 if "@" in e:
                     st.session_state.user_email = e; st.session_state.user_tier = "Guest"; st.session_state.logged_in = True; lcs.log_lead_to_airtable(e); st.rerun()
         with t2:
             st.markdown(f"<span class='price-strike'>$39.90</span> <span class='price-promo'>$12.90</span>", unsafe_allow_html=True)
             pe = st.text_input("Billing Email", key="pro_email")
             lk = st.text_input("License Key", type="password")
-            if st.button("💎 Activate Pro", type="primary", use_container_width=True):
+            if st.button("💎 Activate Pro", type="primary", use_container_width=True, key="btn_pro_login"):
                 with st.spinner("Verifying..."):
                     tier, msg = lcs.check_user_tier(pe, lk)
                     if tier == "Pro":
@@ -169,7 +172,7 @@ def show_main_app():
         st.title(f"{ui['sidebar_title']}")
         st.caption(ui['subtitle'])
         
-        # [ACTIVE USERS FIX] 双行数据
+        # [ACTIVE USERS] 双行数据
         hour = datetime.now().hour
         prompts = 1260 + (hour * 55) + random.randint(10, 80)
         users = int(prompts * 0.72) + random.randint(5, 20)
@@ -219,18 +222,25 @@ def show_main_app():
             if t_msg:
                 hit, ans = lcg.smart_intercept(t_msg, st.session_state.language)
                 if hit: st.warning(f"💡 AI Suggestion: {ans}")
-            if st.button(ui['send_btn'], use_container_width=True):
+            if st.button(ui['send_btn'], use_container_width=True, key="btn_ticket_send"):
                 if t_msg:
                     tid = f"T-{random.randint(1000, 9999)}"
                     lcs.log_ticket_to_airtable(st.session_state.user_email, t_type, t_msg, st.session_state.user_tier, tid)
                     st.success(f"✅ Ticket #{tid} Submitted! Check email.")
                     
-        if st.button(ui['logout'], use_container_width=True): st.session_state.clear(); st.rerun()
+        if st.button(ui['logout'], use_container_width=True, key="btn_logout"): st.session_state.clear(); st.rerun()
 
     role = st.selectbox(ui['role'], list(core.ROLES_CONFIG.keys()))
     modes = list(core.ROLES_CONFIG[role].keys())
-    mode_opts = [f"🔐 {m}" if lcg.check_mode_lock(st.session_state.user_tier, m) else m for m in modes]
-    mode = st.selectbox(ui['mode'], mode_opts).replace("🔐 ", "")
+    
+    # [COMMERCIAL LOGIC] Mode Locking
+    # 任何不含 "Pedagogy" 的模式，对 Guest 用户都视为锁住
+    mode = st.selectbox(ui['mode'], modes)
+    is_pro_mode = ("Visuals" in mode or "Marketing" in mode)
+    
+    if st.session_state.user_tier == "Guest" and is_pro_mode:
+        st.warning("🔒 This Mode is Locked for Free Users. Upgrade to Pro to unlock.")
+    
     opt = st.selectbox(ui['action'], [o["label"] for o in core.ROLES_CONFIG[role][mode]])
     
     c1, c2 = st.columns(2)
@@ -241,8 +251,12 @@ def show_main_app():
     with c2: tone = st.selectbox(ui['tone_lbl'], core.ROLE_TONES.get(role, core.DEFAULT_TONES))
         
     inp = st.text_area(ui['input_label'], height=120)
-    if st.button(ui['generate'], type="primary", use_container_width=True):
-        if lcg.check_mode_lock(st.session_state.user_tier, mode): st.error(ui['lock_msg']); st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy")
+    
+    # [GENERATE BUTTON LOCK]
+    if st.button(ui['generate'], type="primary", use_container_width=True, key="btn_generate_main"):
+        if st.session_state.user_tier == "Guest" and is_pro_mode:
+            st.error("🚫 Premium Mode Selected. Please Upgrade to Pro.")
+            st.link_button(ui['buy_btn'], "https://laislab.lemonsqueezy.com/buy")
         elif not can_gen: st.error("Daily Limit Reached.")
         elif inp:
             st.session_state.daily_usage += 1
@@ -269,6 +283,7 @@ def show_main_app():
             {badge('Meta_AI', '0668E1', 'meta', 'https://www.meta.ai')}
         </div>""", unsafe_allow_html=True)
         
+        # [LAYER 3: SOCIAL] - Free for all
         st.caption(ui['ad_social'])
         links = lcg.get_social_links(res)
         st.markdown(f"""<div class="badge-container">
@@ -280,29 +295,40 @@ def show_main_app():
         
         st.markdown("---")
         c1, c2 = st.columns([1,2])
+        # [LAYER 4: SCAN] - Free for all
         with c1: st.caption("📱 **Scan to Phone:**"); st.image(lcg.generate_qr_code(res), width=150)
+        
+        # [LAYER 5: CLOUD SAVE] - Pro Locked
         with c2: 
             st.caption("☁️ **Cloud Save:**")
-            st.markdown(f"""<div class="badge-container">
-                {badge('Google_Drive', '4285F4', 'googledrive', 'https://drive.google.com')}
-                {badge('Dropbox', '0061FF', 'dropbox', 'https://www.dropbox.com')}
-                {badge('OneDrive', '0078D4', 'microsoftonedrive', 'https://onedrive.live.com')}
-            </div>""", unsafe_allow_html=True)
+            if st.session_state.user_tier == "Pro":
+                st.markdown(f"""<div class="badge-container">
+                    {badge('Google_Drive', '4285F4', 'googledrive', 'https://drive.google.com')}
+                    {badge('Dropbox', '0061FF', 'dropbox', 'https://www.dropbox.com')}
+                    {badge('OneDrive', '0078D4', 'microsoftonedrive', 'https://onedrive.live.com')}
+                </div>""", unsafe_allow_html=True)
+            else:
+                if st.button("🔒 Unlock Cloud Save (Pro)", key="btn_cloud_lock"):
+                    st.error("🚫 Cloud Save is a Pro Feature. Upgrade to access.")
 
         st.markdown("---"); st.caption(ui['ad_download'])
         d1, d2, d3 = st.columns(3)
-        d1.download_button("📄 TXT", res, "prompt.txt", use_container_width=True)
+        # [LAYER 6: TXT] - Free
+        d1.download_button("📄 TXT", res, "prompt.txt", use_container_width=True, key="btn_dl_txt")
         
+        # [LAYER 6: PDF/CSV] - Pro Locked + Duplicate ID Fix
         if st.session_state.user_tier == "Pro":
             pdf_b = lcg.create_pdf(res, role, mode)
             csv_b = lcg.create_csv(res)
             if pdf_b: 
-                d2.download_button("📕 PDF (Direct)", pdf_b, "report.pdf", "application/pdf", use_container_width=True)
+                d2.download_button("📕 PDF (Direct)", pdf_b, "report.pdf", "application/pdf", use_container_width=True, key="btn_dl_pdf_pro")
             else: d2.error("PDF Error")
-            d3.download_button("📊 CSV (Direct)", csv_b, "data.csv", "text/csv", use_container_width=True)
+            d3.download_button("📊 CSV (Direct)", csv_b, "data.csv", "text/csv", use_container_width=True, key="btn_dl_csv_pro")
         else:
-            d2.button("🔒 PDF (Pro)", disabled=True, use_container_width=True)
-            d3.button("🔒 CSV (Pro)", disabled=True, use_container_width=True)
+            if d2.button("🔒 PDF (Pro)", use_container_width=True, key="btn_pdf_lock"):
+                st.error("🚫 PDF Export is for Pro Users.")
+            if d3.button("🔒 CSV (Pro)", use_container_width=True, key="btn_csv_lock"):
+                st.error("🚫 CSV Export is for Pro Users.")
 
     render_footer()
 
